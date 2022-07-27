@@ -1,3 +1,3 @@
 import Config
 
-config :phoenix, :jason_library, Jason
+config :phoenix, :json_library, Jason
