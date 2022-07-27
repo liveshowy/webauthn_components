@@ -14,7 +14,7 @@ defmodule WebauthnLiveComponent.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       package: package(),
       start_permanent: Mix.env() == :prod,
-      version: @version,
+      version: @version
     ]
   end
 
