@@ -1,18 +1,5 @@
 defmodule WebauthnLiveComponent do
   @moduledoc """
-  Documentation for `WebauthnLiveComponent`.
+  API for rendering and interacting with WebAuthnLiveComponent.
   """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> WebauthnLiveComponent.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
 end
