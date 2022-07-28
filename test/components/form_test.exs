@@ -1,0 +1,20 @@
+defmodule WebAuthnLiveComponent.FormTest do
+  use ComponentCase
+  alias WebAuthnLiveComponent.Form
+  doctest Form
+
+  test "socket assigns include a valid changeset on mount" do
+    socket = %Phoenix.LiveView.Socket{}
+    assert {:ok, component} = Form.mount(socket)
+    changeset = component.assigns.changeset
+    assert %Ecto.Changeset{} = changeset
+    assert Enum.empty?(changeset.errors)
+    assert changeset.valid?
+  end
+
+  test "form rendering" do
+    component = Form.render(%{})
+    assert %Phoenix.LiveView.Rendered{static: [static]} = component
+    assert static =~ "form"
+  end
+end
