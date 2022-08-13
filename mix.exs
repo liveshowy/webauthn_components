@@ -12,6 +12,7 @@ defmodule WebauthnLiveComponent.MixProject do
       docs: docs(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
+      name: "WebAuthnLiveComponent",
       package: package(),
       start_permanent: Mix.env() == :prod,
       version: @version
@@ -59,9 +60,10 @@ defmodule WebauthnLiveComponent.MixProject do
 
   defp package do
     [
-      maintainers: ["Owen Bickford"],
       licenses: ["MIT"],
-      links: %{"GitHub" => @source_url}
+      maintainers: ["Owen Bickford"],
+      organization: "liveshowy",
+      source_url: @source_url
     ]
   end
 end
