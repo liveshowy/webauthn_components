@@ -2,12 +2,6 @@
 
 A drop-in LiveComponent for password-less authentication.
 
-## Browser Support
-
-The WebAuthn API has broad support across the most common modern browsers.
-
-https://caniuse.com/?search=webauthn
-
 ## Quick Start
 
 1. Add Mix dependency
@@ -63,6 +57,12 @@ While WebAuthn provides an API for improved authentication security, there are a
 - If a user registers or authenticates on a device without Passkey support, the generated key pair will not be synced, and each device must be registered in order to access an account.
 - Cloud-synced credentials are only accessible to devices authenticated to the cloud account.
   - For example, a credential saved to iCloud Keychain will not be synced automatically to Android's credential manager.
+
+## Browser Support
+
+The WebAuthn API has broad support across the most common modern browsers.
+
+https://caniuse.com/?search=webauthn
 
 ## Additional Resources
 
