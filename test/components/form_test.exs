@@ -1,4 +1,5 @@
 defmodule WebAuthnLiveComponent.FormTest do
+  @moduledoc false
   use ComponentCase
   alias WebAuthnLiveComponent.Form
   import Phoenix.LiveView.Helpers
