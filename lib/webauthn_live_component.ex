@@ -15,6 +15,7 @@ defmodule WebAuthnLiveComponent do
   # prop css_class, :css_class
   # prop register_label, :string
   # prop authenticate_label, :string
+  # prop user, :struct
 
   @doc """
   Ensure required assigns are present, falling back to default values where necessary.
@@ -140,6 +141,7 @@ defmodule WebAuthnLiveComponent do
       |> build_registration_challenge()
 
     challenge_data = map_registration_challenge_data(challenge, app: app, username: username)
+    Logger.info(registration_challenge_sent: username)
 
     {
       :noreply,
@@ -168,6 +170,7 @@ defmodule WebAuthnLiveComponent do
 
     # Send a message to the parent LiveView process, where the user may be persisted.
     send(self(), {:register_user, user: user, key: user_key})
+    Logger.info(registration_attestation_received: {__MODULE__, user.username})
 
     {:noreply, socket}
   end
@@ -181,23 +184,52 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
-    allowed_credentials = []
-    key_ids = []
-
-    challenge_opts = [
-      attestation: "none",
-      origin: get_origin(socket)
-    ]
-
-    challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
-    challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
+    # Send message to parent LiveView requesting a user lookup.
+    send(socket.root_pid, {:find_user_by_username, username: username})
+    Logger.info(finding_user: {__MODULE__, username})
 
     {
       :noreply,
       socket
       |> assign(:changeset, new_changeset)
+    }
+  end
+
+  @doc """
+  `update/2` is used here to catch the `found_user` assign once it's placed by the parent LiveView.
+  """
+  def update(%{found_user: user} = assigns, socket) do
+    Logger.info(user_found: {__MODULE__, user.username})
+
+    %{
+      allowed_credentials: allowed_credentials,
+      key_ids: key_ids
+    } = get_credential_map(user)
+
+    challenge_opts = [
+      attestation: "none",
+      origin: get_origin(socket),
+      rp_id: :auto
+    ]
+
+    challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
+    challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
+    Logger.info(authentication_challenge_sent: {__MODULE__, user.username})
+
+    {
+      :ok,
+      socket
+      |> assign(assigns)
       |> assign(:challenge, challenge)
       |> push_event("authentication_challenge", challenge_data)
+    }
+  end
+
+  def update(assigns, socket) do
+    {
+      :ok,
+      socket
+      |> assign(assigns)
     }
   end
 
@@ -251,5 +283,16 @@ defmodule WebAuthnLiveComponent do
   defp get_origin(socket) do
     %{scheme: scheme, host: host} = socket.host_uri
     "#{scheme}://#{host}"
+  end
+
+  defp get_credential_map(user) do
+    initial_map = %{allowed_credentials: [], key_ids: []}
+
+    for key <- user.keys, reduce: initial_map do
+      result ->
+        result
+        |> Map.update!(:allowed_credentials, &[{key.key_id, key.public_key} | &1])
+        |> Map.update!(:key_ids, &[Base.encode64(key.key_id, padding: false) | &1])
+    end
   end
 end
