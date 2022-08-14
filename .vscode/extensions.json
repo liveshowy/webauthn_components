@@ -1,0 +1,7 @@
+{
+  "recommendations": [
+    "jakebecker.elixir-ls",
+    "phoenixframework.phoenix",
+    "pantajoe.vscode-elixir-credo"
+  ]
+}
