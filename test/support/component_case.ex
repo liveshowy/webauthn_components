@@ -1,4 +1,5 @@
 defmodule ComponentCase do
+  @moduledoc false
   use ExUnit.CaseTemplate
 
   setup do
