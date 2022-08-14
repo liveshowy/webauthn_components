@@ -26,21 +26,6 @@ defmodule WebAuthnLiveComponent.Form do
     }
   end
 
-  defp build_changeset(assigns) do
-    user = Map.get(assigns, :user, %{})
-    types = %{username: :string}
-    params = Map.get(assigns, :params, %{username: ""})
-
-    {user, types}
-    |> Changeset.cast(params, Map.keys(types))
-  end
-
-  defp add_changeset_requirements(changeset) do
-    changeset
-    |> Changeset.validate_required([:username])
-    |> Changeset.validate_length(:username, min: 3, max: 40)
-  end
-
   def render(assigns) do
     ~H"""
     <div class="contents">
@@ -140,5 +125,20 @@ defmodule WebAuthnLiveComponent.Form do
       socket
       |> assign(:changeset, new_changeset)
     }
+  end
+
+  defp build_changeset(assigns) do
+    user = Map.get(assigns, :user, %{})
+    types = %{username: :string}
+    params = Map.get(assigns, :params, %{username: ""})
+
+    {user, types}
+    |> Changeset.cast(params, Map.keys(types))
+  end
+
+  defp add_changeset_requirements(changeset) do
+    changeset
+    |> Changeset.validate_required([:username])
+    |> Changeset.validate_length(:username, min: 3, max: 40)
   end
 end
