@@ -1,6 +1,12 @@
-# WebauthnLiveComponent
+# WebAuthnLiveComponent
 
 A drop-in LiveComponent for password-less authentication.
+
+### 🚨 Status 🚨
+
+This package is a **work in progress**. Additional work is required to reach _alpha_ status.
+
+Please do not use WebAuthnLiveComponent in a production environment until it has completed _beta_ testing.
 
 ## Quick Start
 
