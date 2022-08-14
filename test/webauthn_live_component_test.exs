@@ -1,4 +1,4 @@
-defmodule WebauthnLiveComponentTest do
+defmodule WebAuthnLiveComponentTest do
   @moduledoc false
   use ComponentCase
   import Phoenix.LiveView.Helpers

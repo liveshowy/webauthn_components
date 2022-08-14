@@ -1,4 +1,4 @@
-defmodule WebauthnLiveComponent.MixProject do
+defmodule WebAuthnLiveComponent.MixProject do
   use Mix.Project
 
   @source_url "https://github.com/liveshowy/webauthn_live_component"
