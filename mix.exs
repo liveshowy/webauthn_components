@@ -55,7 +55,7 @@ defmodule WebauthnLiveComponent.MixProject do
 
   defp description do
     """
-    WebAuthnLiveComponent allows Phoenix developers to quickly add passwordless authentication to LiveView applications.
+    Passwordless authentication for LiveView applications.
     """
   end
 
