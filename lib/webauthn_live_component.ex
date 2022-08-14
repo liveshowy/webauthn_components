@@ -16,6 +16,9 @@ defmodule WebAuthnLiveComponent do
   # prop register_label, :string
   # prop authenticate_label, :string
 
+  @doc """
+  Ensure required assigns are present, falling back to default values where necessary.
+  """
   def mount(socket) do
     {
       :ok,
@@ -27,6 +30,9 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
+  @doc """
+  Render the WebAuthn form.
+  """
   def render(assigns) do
     ~H"""
     <div class="contents">
@@ -79,6 +85,32 @@ defmodule WebAuthnLiveComponent do
     </div>
     """
   end
+
+  @doc """
+  Handlers for server and client events.
+
+  ## Server-Side Events
+
+  The following events are triggered by the rendered form:
+
+  - `"change"` - Form data has changed.
+  - `"register"` - The user wants to create a new account.
+  - `"authenticate"` - The user wants to sign in as an existing user.
+
+  While the `change` event handler extracts data from the params argument, `register` and `authenticate` ignore the params argument, pulling state from the socket assigns instead.
+
+  ## Client-Side Events
+
+  `WebAuthnLiveComponent` uses a Javascript (JS) hook to interact with the client-side WebAuthn API.
+
+  The following events are triggered by the WebAuthn JS hook:
+
+  - `"webauthn_supported"` - The JS hook as reported whether webauthn is supported.
+  - `"user_token"` - A token stored in the client's `sessionStorage`.
+  - `"register_attestation"` - A WebAuthn registration attestation created by the client.
+  - `"authenticate_attestation"` - A WebAuthn authentication attestation created by the client.
+  """
+  def handle_event(event, params, socket)
 
   def handle_event("change", %{"auth" => %{"username" => username}}, socket) do
     changeset =

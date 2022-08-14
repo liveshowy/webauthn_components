@@ -2,17 +2,18 @@
 
 A drop-in LiveComponent for password-less authentication.
 
-Complete documentation can be found at <https://hexdocs.pm/webauthn_live_component>.
-
-## Get Started
+## Quick Start
 
 1. Add Mix dependency
 1. Add `WebAuthn` hook to `app.js`
+1. Run Mix task to create `user_keys` migration (TODO)
+1. Run Mix task to add `user_keys` table (TODO)
+1. Update `User` and/or relevant schemas to include keys association (TODO)
+1. Run Mix task to add component config (TODO)
 
-## Installation
+### Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `webauthn_live_component` to your list of dependencies in `mix.exs`:
+Add `webauthn_live_component` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
@@ -21,3 +22,49 @@ def deps do
   ]
 end
 ```
+
+### Usage
+
+See `WebAuthnLiveComponent` for detailed usage instructions.
+
+## WebAuthn & Passkeys
+
+> The Web Authentication API is an extension of the Credential Management API that enables strong authentication with public key cryptography, enabling passwordless authentication and/or secure second-factor authentication without SMS texts.
+>
+> https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
+
+> A passkey is a FIDO login credential, tied to an origin (website or application) and a physical device. Passkeys allow users to authenticate without having to enter a username, password, or provide any additional authentication factor. This technology aims to replace passwords as the primary authentication mechanism.
+>
+> https://developers.google.com/identity/fido
+
+Passkeys are essentially a standard to sync WebAuthn credentials with cloud platforms like [iCloud Keychain](https://developer.apple.com/passkeys/), [Android](https://developers.google.com/identity/fido), [1Password](https://blog.1password.com/1password-is-joining-the-fido-alliance/), with more to come.
+
+### Benefits
+
+There are many benefits to users and application maintainers when passwords are decommissioned.
+
+- Eliminates password reuse by users.
+- Mitigates credential stuffing attacks by hackers.
+- Eliminates phishing attacks by hackers.
+
+For users on a device with Passkey support, WebAuthn credentials may be stored in the cloud. This allows the user to authenticate from other cloud-connected devices without registering each device individually.
+
+### Known Issues
+
+While WebAuthn provides an API for improved authentication security, there are a few limitations to consider before adopting this component.
+
+- As of 2022, Passkeys are not universally supported.
+- If a user registers or authenticates on a device without Passkey support, the generated key pair will not be synced, and each device must be registered in order to access an account.
+- Cloud-synced credentials are only accessible to devices authenticated to the cloud account.
+  - For example, a credential saved to iCloud Keychain will not be synced automatically to Android's credential manager.
+
+### Browser Support
+
+WebAuthn has broad support across the most common modern browsers.
+
+https://caniuse.com/?search=webauthn
+
+### Additional Resources
+
+- https://webauthn.guide/
+- https://fidoalliance.org/fido2-2/fido2-web-authentication-webauthn/
