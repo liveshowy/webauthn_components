@@ -139,7 +139,7 @@ defmodule WebAuthnLiveComponent do
       |> get_origin()
       |> build_registration_challenge()
 
-    challenge_data = build_challenge_data(challenge, %{app: app, username: username})
+    challenge_data = map_registration_challenge_data(challenge, app: app, username: username)
 
     {
       :noreply,
@@ -166,6 +166,7 @@ defmodule WebAuthnLiveComponent do
     %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
     user_key = %{key_id: raw_id_64, public_key: public_key}
 
+    # Send a message to the parent LiveView process, where the user may be persisted.
     send(self(), {:register_user, user: user, key: user_key})
 
     {:noreply, socket}
@@ -180,10 +181,23 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
+    allowed_credentials = []
+    key_ids = []
+
+    challenge_opts = [
+      attestation: "none",
+      origin: get_origin(socket)
+    ]
+
+    challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
+    challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
+
     {
       :noreply,
       socket
       |> assign(:changeset, new_changeset)
+      |> assign(:challenge, challenge)
+      |> push_event("authentication_challenge", challenge_data)
     }
   end
 
@@ -210,19 +224,26 @@ defmodule WebAuthnLiveComponent do
     )
   end
 
-  defp build_authentication_challenge(allowed_credentials, challenge_opts) do
-    Wax.new_authentication_challenge(allowed_credentials, challenge_opts)
-  end
-
-  defp build_challenge_data(challenge, params) do
-    %{app: app, username: username} = params
-
+  defp map_registration_challenge_data(%Wax.Challenge{} = challenge, app: app, username: username) do
     %{
       appName: app,
       attestation: challenge.attestation,
       challenge_64: Base.encode64(challenge.bytes, padding: false),
       rp_id: challenge.rp_id,
       user: %{username: username},
+      user_verification: challenge.user_verification
+    }
+  end
+
+  defp build_authentication_challenge(allowed_credentials, challenge_opts) do
+    Wax.new_authentication_challenge(allowed_credentials, challenge_opts)
+  end
+
+  defp map_authentication_challenge_data(%Wax.Challenge{} = challenge, key_ids: key_ids) do
+    %{
+      attestation: challenge.attestation,
+      challenge_64: Base.encode64(challenge.bytes, padding: false),
+      key_ids_64: key_ids,
       user_verification: challenge.user_verification
     }
   end
