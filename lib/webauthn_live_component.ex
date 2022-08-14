@@ -6,6 +6,7 @@ defmodule WebAuthnLiveComponent do
   import Phoenix.HTML.Form
   import Phoenix.LiveView.Helpers
   alias Ecto.Changeset
+  require Logger
 
   # prop app, :atom, required: true
   # prop changeset, :struct, default: build_changeset()
@@ -38,7 +39,6 @@ defmodule WebAuthnLiveComponent do
         phx-change="change"
         phx-submit="authenticate"
         phx-target={@myself}
-        phx-hook="WebAuthn"
       >
         <%= if !Enum.empty?(@changeset.errors) do %>
           <h2>Errors</h2>
@@ -93,7 +93,8 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register", _payload, %{assigns: %{changeset: changeset, app: app}} = socket) do
+  def handle_event("register", _params, socket) do
+    %{assigns: %{changeset: changeset, app: app}} = socket
     %{changes: %{username: username}} = changeset
 
     new_changeset =
@@ -101,11 +102,12 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
-    challenge = build_registration_challenge(socket)
+    challenge =
+      socket
+      |> get_origin()
+      |> build_registration_challenge()
 
-    challenge_data =
-      build_challenge_data(challenge, %{app: app, username: username})
-      |> IO.inspect(label: :challenge_data)
+    challenge_data = build_challenge_data(challenge, %{app: app, username: username})
 
     {
       :noreply,
@@ -116,23 +118,35 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register_attestation", payload, %{assigns: %{changeset: changeset}} = socket) do
-    %{changes: %{username: username}} = changeset
-    IO.inspect(payload, label: :register_attestation)
-    send(self(), {:register_user, username: username})
+  def handle_event("register_attestation", params, socket) do
+    %{assigns: %{changeset: changeset, challenge: challenge}} = socket
+
+    %{
+      "attestation64" => attestation_64,
+      "clientData" => client_data,
+      "rawId64" => raw_id_64,
+      "type" => "public-key"
+    } = params
+
+    user = changeset.changes
+    attestation = Base.decode64!(attestation_64, padding: false)
+    {:ok, {authenticator_data, _result}} = Wax.register(attestation, client_data, challenge)
+    %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
+    user_key = %{key_id: raw_id_64, public_key: public_key}
+
+    send(self(), {:register_user, user: user, key: user_key})
 
     {:noreply, socket}
   end
 
-  def handle_event("authenticate", _payload, %{assigns: %{changeset: changeset}} = socket) do
+  def handle_event("authenticate", _params, socket) do
+    %{assigns: %{changeset: changeset}} = socket
     %{changes: %{username: username}} = changeset
 
     new_changeset =
       %{params: %{username: username}}
       |> build_changeset()
       |> add_changeset_requirements()
-
-    send(self(), {:authenticate_user, username: username})
 
     {
       :noreply,
@@ -156,15 +170,21 @@ defmodule WebAuthnLiveComponent do
     |> Changeset.validate_length(:username, min: 3, max: 40)
   end
 
-  defp build_registration_challenge(socket) do
+  defp build_registration_challenge(origin) do
     Wax.new_registration_challenge(
       attestation: "none",
-      origin: get_origin(socket),
+      origin: origin,
       rp_id: :auto
     )
   end
 
-  defp build_challenge_data(challenge, %{app: app, username: username} = _params) do
+  defp build_authentication_challenge(allowed_credentials, challenge_opts) do
+    Wax.new_authentication_challenge(allowed_credentials, challenge_opts)
+  end
+
+  defp build_challenge_data(challenge, params) do
+    %{app: app, username: username} = params
+
     %{
       appName: app,
       attestation: challenge.attestation,
