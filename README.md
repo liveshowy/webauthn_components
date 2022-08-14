@@ -1,6 +1,13 @@
 # WebauthnLiveComponent
 
-**TODO: Add description**
+A drop-in LiveComponent for password-less authentication.
+
+Complete documentation can be found at <https://hexdocs.pm/webauthn_live_component>.
+
+## Get Started
+
+1. Add Mix dependency
+1. Add `WebAuthn` hook to `app.js`
 
 ## Installation
 
@@ -14,8 +21,3 @@ def deps do
   ]
 end
 ```
-
-Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
-and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at <https://hexdocs.pm/webauthn_live_component>.
-
