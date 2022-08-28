@@ -46,6 +46,7 @@ defmodule WebAuthnLiveComponent do
         phx-change="change"
         phx-submit="authenticate"
         phx-target={@myself}
+        phx-hook="WebAuthn"
       >
         <%= if !Enum.empty?(@changeset.errors) do %>
           <h2>Errors</h2>
@@ -62,6 +63,7 @@ defmodule WebAuthnLiveComponent do
         <%= text_input form,
           :username,
           class: "col-span-full",
+          "phx-debounce": 500,
           autofocus: true
         %>
 
@@ -113,7 +115,25 @@ defmodule WebAuthnLiveComponent do
   """
   def handle_event(event, params, socket)
 
-  def handle_event("change", %{"auth" => %{"username" => username}}, socket) do
+  def handle_event("webauthn_supported", boolean, socket) do
+    socket =
+      if boolean == false do
+        put_flash(socket, :error, "WebAuthn is not supported")
+      else
+        socket
+      end
+
+    {:noreply, socket}
+  end
+
+  def handle_event("user_token", token, socket) do
+    send(socket.root_pid, {:user_token, token: token})
+    {:noreply, socket}
+  end
+
+  def handle_event("change", params, socket) do
+    %{"auth" => %{"username" => username}} = params
+
     changeset =
       %{params: %{username: username}}
       |> build_changeset()
@@ -169,7 +189,7 @@ defmodule WebAuthnLiveComponent do
     user_key = %{key_id: raw_id_64, public_key: public_key}
 
     # Send a message to the parent LiveView process, where the user may be persisted.
-    send(self(), {:register_user, user: user, key: user_key})
+    send(socket.root_pid, {:register_user, user: user, key: user_key})
     Logger.info(registration_attestation_received: {__MODULE__, user.username})
 
     {:noreply, socket}
@@ -193,6 +213,20 @@ defmodule WebAuthnLiveComponent do
       socket
       |> assign(:changeset, new_changeset)
     }
+  end
+
+  def handle_event("authenticate_attestation", _params, socket) do
+    {:noreply, socket}
+  end
+
+  def handle_event("error", params, socket) do
+    send(socket.root_pid, {:error, {params}})
+    {:noreply, socket}
+  end
+
+  def handle_event(event, payload, socket) do
+    Logger.warning(unhandled_event: {__MODULE__, event, payload})
+    {:noreply, socket}
   end
 
   @doc """
@@ -256,13 +290,17 @@ defmodule WebAuthnLiveComponent do
     )
   end
 
-  defp map_registration_challenge_data(%Wax.Challenge{} = challenge, app: app, username: username) do
+  defp map_registration_challenge_data(%Wax.Challenge{} = challenge, opts) do
+    [app: app, username: username] = opts
+    authenticator_attachment = Keyword.get(opts, :authenticator_attachment)
+
     %{
       appName: app,
       attestation: challenge.attestation,
+      authenticator_attachment: authenticator_attachment,
       challenge_64: Base.encode64(challenge.bytes, padding: false),
       rp_id: challenge.rp_id,
-      user: %{username: username},
+      user: %{name: username, displayName: username},
       user_verification: challenge.user_verification
     }
   end
