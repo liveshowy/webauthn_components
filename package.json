@@ -1,0 +1,12 @@
+{
+  "name": "webauthn_live_component",
+  "version": "0.1.1",
+  "main": "./priv/static/webauthn.js",
+  "repository": {},
+  "files": [
+    "README.md",
+    "LICENSE",
+    "package.json",
+    "priv/static/webauthn.js"
+  ]
+}
