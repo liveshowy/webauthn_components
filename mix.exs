@@ -1,8 +1,9 @@
 defmodule WebAuthnLiveComponent.MixProject do
   use Mix.Project
 
+  # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_live_component"
-  @version "0.1.0"
+  @version "0.1.1"
 
   def project do
     [
@@ -61,10 +62,13 @@ defmodule WebAuthnLiveComponent.MixProject do
 
   defp package do
     [
+      files: ~w(lib priv mix.exs README.md LICENSE package.json),
       licenses: ["MIT"],
+      links: %{
+        Github: @source_url
+      },
       maintainers: ["Owen Bickford"],
-      organization: "liveshowy",
-      source_url: @source_url
+      organization: "liveshowy"
     ]
   end
 end
