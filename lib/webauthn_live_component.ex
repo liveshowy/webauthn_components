@@ -116,7 +116,6 @@ defmodule WebAuthnLiveComponent do
 
   def handle_event("webauthn_supported", boolean, socket) do
     send(socket.root_pid, {:webauthn_supported, boolean})
-
     {:noreply, socket}
   end
 
@@ -181,9 +180,7 @@ defmodule WebAuthnLiveComponent do
     %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
     user_key = %{key_id: raw_id_64, public_key: public_key}
 
-    # Send a message to the parent LiveView process, where the user may be persisted.
     send(socket.root_pid, {:register_user, user: user, key: user_key})
-
     {:noreply, socket}
   end
 
@@ -196,7 +193,6 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
-    # Send message to parent LiveView requesting a user lookup.
     send(socket.root_pid, {:find_user_by_username, username: username})
 
     {
