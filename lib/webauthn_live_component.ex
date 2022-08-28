@@ -319,12 +319,7 @@ defmodule WebAuthnLiveComponent do
   end
 
   defp get_origin(socket) do
-    if Application.fetch_env!(:webauthn_live_component, :env) == :dev do
-      %{scheme: scheme, host: host} = socket.host_uri
-      "#{scheme}://#{host}"
-    else
-      socket.endpoint.url()
-    end
+    socket.endpoint.url()
   end
 
   defp get_credential_map(user) do
