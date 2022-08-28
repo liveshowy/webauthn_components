@@ -6,7 +6,6 @@ defmodule WebAuthnLiveComponent do
   import Phoenix.HTML.Form
   import Phoenix.LiveView.Helpers
   alias Ecto.Changeset
-  require Logger
 
   # prop app, :atom, required: true
   # prop changeset, :struct, default: build_changeset()
@@ -116,12 +115,7 @@ defmodule WebAuthnLiveComponent do
   def handle_event(event, params, socket)
 
   def handle_event("webauthn_supported", boolean, socket) do
-    socket =
-      if boolean == false do
-        put_flash(socket, :error, "WebAuthn is not supported")
-      else
-        socket
-      end
+    send(socket.root_pid, {:webauthn_supported, boolean})
 
     {:noreply, socket}
   end
@@ -161,7 +155,6 @@ defmodule WebAuthnLiveComponent do
       |> build_registration_challenge()
 
     challenge_data = map_registration_challenge_data(challenge, app: app, username: username)
-    Logger.info(registration_challenge_sent: username)
 
     {
       :noreply,
@@ -190,7 +183,6 @@ defmodule WebAuthnLiveComponent do
 
     # Send a message to the parent LiveView process, where the user may be persisted.
     send(socket.root_pid, {:register_user, user: user, key: user_key})
-    Logger.info(registration_attestation_received: {__MODULE__, user.username})
 
     {:noreply, socket}
   end
@@ -206,7 +198,6 @@ defmodule WebAuthnLiveComponent do
 
     # Send message to parent LiveView requesting a user lookup.
     send(socket.root_pid, {:find_user_by_username, username: username})
-    Logger.info(finding_user: {__MODULE__, username})
 
     {
       :noreply,
@@ -225,7 +216,7 @@ defmodule WebAuthnLiveComponent do
   end
 
   def handle_event(event, payload, socket) do
-    Logger.warning(unhandled_event: {__MODULE__, event, payload})
+    send(socket.root_pid, {:unhandled_event, event: event, payload: payload})
     {:noreply, socket}
   end
 
@@ -233,8 +224,6 @@ defmodule WebAuthnLiveComponent do
   `update/2` is used here to catch the `found_user` assign once it's placed by the parent LiveView.
   """
   def update(%{found_user: user} = assigns, socket) do
-    Logger.info(user_found: {__MODULE__, user.username})
-
     %{
       allowed_credentials: allowed_credentials,
       key_ids: key_ids
@@ -248,7 +237,6 @@ defmodule WebAuthnLiveComponent do
 
     challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
     challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
-    Logger.info(authentication_challenge_sent: {__MODULE__, user.username})
 
     {
       :ok,
