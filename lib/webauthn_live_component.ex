@@ -172,7 +172,7 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register_attestation", params, socket) do
+  def handle_event("registration_credentials", params, socket) do
     %{assigns: %{changeset: changeset, challenge: challenge}} = socket
 
     %{
@@ -319,8 +319,12 @@ defmodule WebAuthnLiveComponent do
   end
 
   defp get_origin(socket) do
-    %{scheme: scheme, host: host} = socket.host_uri
-    "#{scheme}://#{host}"
+    if Application.fetch_env!(:webauthn_live_component, :env) == :dev do
+      %{scheme: scheme, host: host} = socket.host_uri
+      "#{scheme}://#{host}"
+    else
+      socket.endpoint.url()
+    end
   end
 
   defp get_credential_map(user) do
