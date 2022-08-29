@@ -6,7 +6,6 @@ defmodule WebAuthnLiveComponent do
   import Phoenix.HTML.Form
   import Phoenix.LiveView.Helpers
   alias Ecto.Changeset
-  require Logger
 
   # prop app, :atom, required: true
   # prop changeset, :struct, default: build_changeset()
@@ -43,8 +42,8 @@ defmodule WebAuthnLiveComponent do
         as={:auth}
         id={@id}
         class={@css_class}
-        phx-change="change"
-        phx-submit="authenticate"
+        phx-change="update_changeset"
+        phx-submit="start_authentication"
         phx-target={@myself}
         phx-hook="WebAuthn"
       >
@@ -63,14 +62,13 @@ defmodule WebAuthnLiveComponent do
         <%= text_input form,
           :username,
           class: "col-span-full",
-          "phx-debounce": 500,
+          "phx-debounce": 250,
           autofocus: true
         %>
 
         <button
           type="button"
-          value="authenticate"
-          phx-click="authenticate"
+          phx-click="start_authentication"
           phx-target={@myself}
         >
             <%= @authenticate_label %>
@@ -78,8 +76,7 @@ defmodule WebAuthnLiveComponent do
 
         <button
           type="button"
-          value="register"
-          phx-click="register"
+          phx-click="start_registration"
           phx-target={@myself}
         >
             <%= @register_label %>
@@ -96,11 +93,11 @@ defmodule WebAuthnLiveComponent do
 
   The following events are triggered by the rendered form:
 
-  - `"change"` - Form data has changed.
-  - `"register"` - The user wants to create a new account.
-  - `"authenticate"` - The user wants to sign in as an existing user.
+  - `"update_changeset"` - Form data has changed.
+  - `"start_registration"` - The user wants to create a new account.
+  - `"start_authentication"` - The user wants to sign in as an existing user.
 
-  While the `change` event handler extracts data from the params argument, `register` and `authenticate` ignore the params argument, pulling state from the socket assigns instead.
+  While the `update_changeset` event handler extracts data from the params argument, `start_registration` and `start_authentication` ignore the params argument, pulling state from the socket assigns instead.
 
   ## Client-Side Events
 
@@ -116,13 +113,7 @@ defmodule WebAuthnLiveComponent do
   def handle_event(event, params, socket)
 
   def handle_event("webauthn_supported", boolean, socket) do
-    socket =
-      if boolean == false do
-        put_flash(socket, :error, "WebAuthn is not supported")
-      else
-        socket
-      end
-
+    send(socket.root_pid, {:webauthn_supported, boolean})
     {:noreply, socket}
   end
 
@@ -131,7 +122,7 @@ defmodule WebAuthnLiveComponent do
     {:noreply, socket}
   end
 
-  def handle_event("change", params, socket) do
+  def handle_event("update_changeset", params, socket) do
     %{"auth" => %{"username" => username}} = params
 
     changeset =
@@ -146,7 +137,7 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register", _params, socket) do
+  def handle_event("start_registration", _params, socket) do
     %{assigns: %{changeset: changeset, app: app}} = socket
     %{changes: %{username: username}} = changeset
 
@@ -161,7 +152,6 @@ defmodule WebAuthnLiveComponent do
       |> build_registration_challenge()
 
     challenge_data = map_registration_challenge_data(challenge, app: app, username: username)
-    Logger.info(registration_challenge_sent: username)
 
     {
       :noreply,
@@ -172,7 +162,7 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register_attestation", params, socket) do
+  def handle_event("registration_credentials", params, socket) do
     %{assigns: %{changeset: changeset, challenge: challenge}} = socket
 
     %{
@@ -188,14 +178,11 @@ defmodule WebAuthnLiveComponent do
     %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
     user_key = %{key_id: raw_id_64, public_key: public_key}
 
-    # Send a message to the parent LiveView process, where the user may be persisted.
     send(socket.root_pid, {:register_user, user: user, key: user_key})
-    Logger.info(registration_attestation_received: {__MODULE__, user.username})
-
     {:noreply, socket}
   end
 
-  def handle_event("authenticate", _params, socket) do
+  def handle_event("start_authentication", _params, socket) do
     %{assigns: %{changeset: changeset}} = socket
     %{changes: %{username: username}} = changeset
 
@@ -204,9 +191,8 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
-    # Send message to parent LiveView requesting a user lookup.
+    # TODO: await user search response from parent live view
     send(socket.root_pid, {:find_user_by_username, username: username})
-    Logger.info(finding_user: {__MODULE__, username})
 
     {
       :noreply,
@@ -215,7 +201,34 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("authenticate_attestation", _params, socket) do
+  def handle_event("authentication_attestation", params, socket) do
+    challenge = socket.assigns.challenge
+
+    %{
+      "authenticatorData64" => authenticator_data_64,
+      "clientDataArray" => client_data_raw,
+      "rawId64" => raw_id_64,
+      "signature64" => signature_64,
+      "type" => "public-key"
+    } = params
+
+    authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
+    raw_id = Base.decode64!(raw_id_64, padding: false)
+    signature = Base.decode64!(signature_64, padding: false)
+
+    {:ok, _wax_auth} =
+      Wax.authenticate(raw_id, authenticator_data, signature, client_data_raw, challenge)
+
+    send(socket.root_pid, {:authentication_successful, key_id: raw_id})
+
+    {:noreply, socket}
+  rescue
+    error ->
+      send(socket.root_pid, {:invalid_attestation, error})
+  end
+
+  def handle_event("token_stored", %{"token" => _token}, socket) do
+    send(socket.root_pid, {:redirect})
     {:noreply, socket}
   end
 
@@ -225,16 +238,14 @@ defmodule WebAuthnLiveComponent do
   end
 
   def handle_event(event, payload, socket) do
-    Logger.warning(unhandled_event: {__MODULE__, event, payload})
+    send(socket.root_pid, {:unhandled_event, event: event, payload: payload})
     {:noreply, socket}
   end
 
   @doc """
   `update/2` is used here to catch the `found_user` assign once it's placed by the parent LiveView.
   """
-  def update(%{found_user: user} = assigns, socket) do
-    Logger.info(user_found: {__MODULE__, user.username})
-
+  def update(%{found_user: user}, socket) do
     %{
       allowed_credentials: allowed_credentials,
       key_ids: key_ids
@@ -248,12 +259,10 @@ defmodule WebAuthnLiveComponent do
 
     challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
     challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
-    Logger.info(authentication_challenge_sent: {__MODULE__, user.username})
 
     {
       :ok,
       socket
-      |> assign(assigns)
       |> assign(:challenge, challenge)
       |> push_event("authentication_challenge", challenge_data)
     }
@@ -319,18 +328,18 @@ defmodule WebAuthnLiveComponent do
   end
 
   defp get_origin(socket) do
-    %{scheme: scheme, host: host} = socket.host_uri
-    "#{scheme}://#{host}"
+    socket.endpoint.url()
   end
 
   defp get_credential_map(user) do
-    initial_map = %{allowed_credentials: [], key_ids: []}
-
-    for key <- user.keys, reduce: initial_map do
+    for key <- user.keys, reduce: %{key_ids: [], allowed_credentials: []} do
       result ->
         result
-        |> Map.update!(:allowed_credentials, &[{key.key_id, key.public_key} | &1])
-        |> Map.update!(:key_ids, &[Base.encode64(key.key_id, padding: false) | &1])
+        |> Map.update!(:allowed_credentials, &List.insert_at(&1, 0, {key.key_id, key.public_key}))
+        |> Map.update!(
+          :key_ids,
+          &List.insert_at(&1, 0, Base.encode64(key.key_id, padding: false))
+        )
     end
   end
 end

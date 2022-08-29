@@ -1,6 +1,6 @@
 {
   "name": "webauthn_live_component",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "./priv/static/webauthn.js",
   "repository": {},
   "files": [
