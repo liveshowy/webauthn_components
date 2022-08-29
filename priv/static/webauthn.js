@@ -182,7 +182,7 @@ const WebAuthn = {
     try {
       const { token } = detail;
       window.sessionStorage.setItem("user_token", token);
-      context.pushEvent("token_stored", { token });
+      context.pushEventTo(socket.el, "token_stored", { token });
     } catch (error) {
       this.handleError(error, context);
     }
