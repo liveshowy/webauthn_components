@@ -1,4 +1,4 @@
-defmodule LiveShowy.Types.CoseKey do
+defmodule WebAuthnLiveComponent.CoseKey do
   @moduledoc """
   Custom type for WebAuthn cose keys.
   """
