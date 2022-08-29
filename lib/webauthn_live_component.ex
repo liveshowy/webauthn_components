@@ -42,8 +42,8 @@ defmodule WebAuthnLiveComponent do
         as={:auth}
         id={@id}
         class={@css_class}
-        phx-change="change"
-        phx-submit="authenticate"
+        phx-change="update_changeset"
+        phx-submit="start_authentication"
         phx-target={@myself}
         phx-hook="WebAuthn"
       >
@@ -68,8 +68,7 @@ defmodule WebAuthnLiveComponent do
 
         <button
           type="button"
-          value="authenticate"
-          phx-click="authenticate"
+          phx-click="start_authentication"
           phx-target={@myself}
         >
             <%= @authenticate_label %>
@@ -77,8 +76,7 @@ defmodule WebAuthnLiveComponent do
 
         <button
           type="button"
-          value="register"
-          phx-click="register"
+          phx-click="start_registration"
           phx-target={@myself}
         >
             <%= @register_label %>
@@ -95,11 +93,11 @@ defmodule WebAuthnLiveComponent do
 
   The following events are triggered by the rendered form:
 
-  - `"change"` - Form data has changed.
-  - `"register"` - The user wants to create a new account.
-  - `"authenticate"` - The user wants to sign in as an existing user.
+  - `"update_changeset"` - Form data has changed.
+  - `"start_registration"` - The user wants to create a new account.
+  - `"start_authentication"` - The user wants to sign in as an existing user.
 
-  While the `change` event handler extracts data from the params argument, `register` and `authenticate` ignore the params argument, pulling state from the socket assigns instead.
+  While the `update_changeset` event handler extracts data from the params argument, `start_registration` and `start_authentication` ignore the params argument, pulling state from the socket assigns instead.
 
   ## Client-Side Events
 
@@ -124,7 +122,7 @@ defmodule WebAuthnLiveComponent do
     {:noreply, socket}
   end
 
-  def handle_event("change", params, socket) do
+  def handle_event("update_changeset", params, socket) do
     %{"auth" => %{"username" => username}} = params
 
     changeset =
@@ -139,7 +137,7 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("register", _params, socket) do
+  def handle_event("start_registration", _params, socket) do
     %{assigns: %{changeset: changeset, app: app}} = socket
     %{changes: %{username: username}} = changeset
 
@@ -184,7 +182,7 @@ defmodule WebAuthnLiveComponent do
     {:noreply, socket}
   end
 
-  def handle_event("authenticate", _params, socket) do
+  def handle_event("start_authentication", _params, socket) do
     %{assigns: %{changeset: changeset}} = socket
     %{changes: %{username: username}} = changeset
 
@@ -193,6 +191,7 @@ defmodule WebAuthnLiveComponent do
       |> build_changeset()
       |> add_changeset_requirements()
 
+    # TODO: await user search response from parent live view
     send(socket.root_pid, {:find_user_by_username, username: username})
 
     {
@@ -202,7 +201,7 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("authenticate_attestation", _params, socket) do
+  def handle_event("authentication_attestation", _params, socket) do
     {:noreply, socket}
   end
 

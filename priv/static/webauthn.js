@@ -164,7 +164,7 @@ const WebAuthn = {
       const authenticatorData64 = this.arrayBufferToBase64(authenticatorData);
       const signature64 = this.arrayBufferToBase64(signature);
 
-      context.pushEventTo(context.el, "authenticate", {
+      context.pushEventTo(context.el, "authentication_attestation", {
         rawId64,
         type,
         clientDataArray,
