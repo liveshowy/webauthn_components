@@ -227,11 +227,6 @@ defmodule WebAuthnLiveComponent do
       send(socket.root_pid, {:invalid_attestation, error})
   end
 
-  def handle_event("token_stored", %{"token" => _token}, socket) do
-    send(socket.root_pid, {:redirect})
-    {:noreply, socket}
-  end
-
   def handle_event("error", params, socket) do
     send(socket.root_pid, {:error, {params}})
     {:noreply, socket}
