@@ -62,7 +62,7 @@ defmodule WebAuthnLiveComponent do
         <%= text_input form,
           :username,
           class: "col-span-full",
-          "phx-debounce": 500,
+          "phx-debounce": 250,
           autofocus: true
         %>
 
@@ -201,8 +201,30 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  def handle_event("authentication_attestation", _params, socket) do
+  def handle_event("authentication_attestation", params, socket) do
+    challenge = socket.assigns.challenge
+
+    %{
+      "authenticatorData64" => authenticator_data_64,
+      "clientDataArray" => client_data_raw,
+      "rawId64" => raw_id_64,
+      "signature64" => signature_64,
+      "type" => "public-key"
+    } = params
+
+    authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
+    raw_id = Base.decode64!(raw_id_64, padding: false)
+    signature = Base.decode64!(signature_64, padding: false)
+
+    {:ok, _wax_auth} =
+      Wax.authenticate(raw_id, authenticator_data, signature, client_data_raw, challenge)
+
+    send(socket.root_pid, {:authentication_successful, key_id: raw_id})
+
     {:noreply, socket}
+  rescue
+    error ->
+      send(socket.root_pid, {:invalid_attestation, error})
   end
 
   def handle_event("error", params, socket) do
@@ -218,7 +240,7 @@ defmodule WebAuthnLiveComponent do
   @doc """
   `update/2` is used here to catch the `found_user` assign once it's placed by the parent LiveView.
   """
-  def update(%{found_user: user} = assigns, socket) do
+  def update(%{found_user: user}, socket) do
     %{
       allowed_credentials: allowed_credentials,
       key_ids: key_ids
@@ -236,7 +258,6 @@ defmodule WebAuthnLiveComponent do
     {
       :ok,
       socket
-      |> assign(assigns)
       |> assign(:challenge, challenge)
       |> push_event("authentication_challenge", challenge_data)
     }
@@ -306,13 +327,14 @@ defmodule WebAuthnLiveComponent do
   end
 
   defp get_credential_map(user) do
-    initial_map = %{allowed_credentials: [], key_ids: []}
-
-    for key <- user.keys, reduce: initial_map do
+    for key <- user.keys, reduce: %{key_ids: [], allowed_credentials: []} do
       result ->
         result
-        |> Map.update!(:allowed_credentials, &[{key.key_id, key.public_key} | &1])
-        |> Map.update!(:key_ids, &[Base.encode64(key.key_id, padding: false) | &1])
+        |> Map.update!(:allowed_credentials, &List.insert_at(&1, 0, {key.key_id, key.public_key}))
+        |> Map.update!(
+          :key_ids,
+          &List.insert_at(&1, 0, Base.encode64(key.key_id, padding: false))
+        )
     end
   end
 end
