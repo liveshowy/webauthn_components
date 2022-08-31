@@ -3,7 +3,7 @@ defmodule WebAuthnLiveComponent.MixProject do
 
   # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_live_component"
-  @version "0.1.2"
+  @version "0.1.3"
 
   def project do
     [
@@ -67,8 +67,7 @@ defmodule WebAuthnLiveComponent.MixProject do
       links: %{
         Github: @source_url
       },
-      maintainers: ["Owen Bickford"],
-      organization: "liveshowy"
+      maintainers: ["Owen Bickford"]
     ]
   end
 end
