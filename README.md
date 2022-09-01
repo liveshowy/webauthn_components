@@ -4,16 +4,33 @@ A drop-in LiveComponent for password-less authentication.
 
 ### 🚨 Status 🚨
 
-This package is a **work in progress**. Additional work is required to reach _alpha_ status.
+This package is a **work in progress**, and it is in early alpha status. Feel free to experiment with this package and contribute feedback through [GitHub discussions](https://github.com/liveshowy/webauthn_live_component/discussions).
 
-Please do not use WebAuthnLiveComponent in a production environment until it has completed _beta_ testing.
+Please **do not use WebAuthnLiveComponent in a production environment** until it has completed _beta_ testing.
+
+## Roadmap
+
+View the planned work for this repo in the public [WebAuthnLiveComponent v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
 
 ## Quick Start
 
+During the beta phase, generators will be added to streamline initial setup, including running migrations, generating related modules, etc. Steps marked `(TODO)` need additional documentation, and some may be streamlined by Mix tasks during the beta phase.
+
 1. Add Mix dependency
 1. Add `WebAuthn` hook to `app.js`
-1. Run Mix task to create `user_keys` migration (TODO)
-1. Run Mix task to add `user_keys` table (TODO)
+1. Run Mix task to create `user_keys` schema & migration
+   - `mix ecto.gen.migration --binary-id Authentication UserKey user_keys key_id:binary label last_used:utc_datetime public_key:binary user_id:references:users`
+1. Update `UserKey` schema (TODO)
+   - Add default value to the `label` field
+   - Update the `public_key` field to use `WebAuthnLiveComponent.CoseKey` as its type
+   - Add `new_changeset/2` & `update_changeset/2` (TODO)
+1. Run Mix task to create `user_tokens` schema & migration
+   - `mix ecto.gen.migration --binary-id Authentication UserToken user_tokens user_id:references:users token:binary context`
+1. Update `UserToken` schema
+   - Update the `context` field to use `Ecto.Enum` as its type with `values: [:session, :device_code]` and `default: :session`
+   - Replace `user_id` field with `belongs_to` `User` association
+   - Add `foreign_key_constraint` `:user_id`
+   - Add token helper functions (TODO)
 1. Update `User` and/or relevant schemas to include keys association (TODO)
 1. Run Mix task to add component config (TODO)
 
