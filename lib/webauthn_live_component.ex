@@ -4,7 +4,6 @@ defmodule WebAuthnLiveComponent do
   """
   use Phoenix.LiveComponent
   import Phoenix.HTML.Form
-  import Phoenix.LiveView.Helpers
   alias Ecto.Changeset
 
   # prop app, :atom, required: true
