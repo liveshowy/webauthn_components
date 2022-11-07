@@ -19,13 +19,13 @@ During the beta phase, generators will be added to streamline initial setup, inc
 1. Add Mix dependency
 1. Add `WebAuthn` hook to `app.js`
 1. Run Mix task to create `user_keys` schema & migration
-   - `mix ecto.gen.migration --binary-id Authentication UserKey user_keys key_id:binary label last_used:utc_datetime public_key:binary user_id:references:users`
+   - `mix phx.gen.context --binary-id Authentication UserKey user_keys key_id:binary label last_used:utc_datetime public_key:binary user_id:references:users`
 1. Update `UserKey` schema (TODO)
    - Add default value to the `label` field
    - Update the `public_key` field to use `WebAuthnLiveComponent.CoseKey` as its type
    - Add `new_changeset/2` & `update_changeset/2` (TODO)
 1. Run Mix task to create `user_tokens` schema & migration
-   - `mix ecto.gen.migration --binary-id Authentication UserToken user_tokens user_id:references:users token:binary context`
+   - `mix phx.gen.context --binary-id Authentication UserToken user_tokens user_id:references:users token:binary context`
 1. Update `UserToken` schema
    - Update the `context` field to use `Ecto.Enum` as its type with `values: [:session, :device_code]` and `default: :session`
    - Replace `user_id` field with `belongs_to` `User` association
