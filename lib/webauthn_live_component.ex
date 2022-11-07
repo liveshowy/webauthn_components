@@ -4,7 +4,6 @@ defmodule WebAuthnLiveComponent do
   """
   use Phoenix.LiveComponent
   import Phoenix.HTML.Form
-  import Phoenix.LiveView.Helpers
   alias Ecto.Changeset
 
   # prop app, :atom, required: true
@@ -254,10 +253,11 @@ defmodule WebAuthnLiveComponent do
     challenge_opts = [
       attestation: "none",
       origin: get_origin(socket),
-      rp_id: :auto
+      rp_id: :auto,
+      allowed_credentials: allowed_credentials
     ]
 
-    challenge = build_authentication_challenge(allowed_credentials, challenge_opts)
+    challenge = build_authentication_challenge(challenge_opts)
     challenge_data = map_authentication_challenge_data(challenge, key_ids: key_ids)
 
     {
@@ -314,8 +314,8 @@ defmodule WebAuthnLiveComponent do
     }
   end
 
-  defp build_authentication_challenge(allowed_credentials, challenge_opts) do
-    Wax.new_authentication_challenge(allowed_credentials, challenge_opts)
+  defp build_authentication_challenge(challenge_opts) do
+    Wax.new_authentication_challenge(challenge_opts)
   end
 
   defp map_authentication_challenge_data(%Wax.Challenge{} = challenge, key_ids: key_ids) do
