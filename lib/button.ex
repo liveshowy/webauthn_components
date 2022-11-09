@@ -1,4 +1,7 @@
 defmodule WebAuthnLiveComponent.Button do
+  @moduledoc """
+  Component which renders a basic HTML button.
+  """
   use Phoenix.Component
 
   attr :label, :string,
