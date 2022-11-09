@@ -7,9 +7,11 @@ defmodule WebAuthnLiveComponent.Button do
 
   attr :class, :string, default: "px-4 p-2 bg-blue-500 text-white rounded shadow-md"
 
+  attr :rest, :global
+
   def render(assigns) do
     ~H"""
-    <button class={@class}>
+    <button class={@class} {@rest}>
       <%= @label %>
     </button>
     """
