@@ -5,6 +5,7 @@ defmodule WebAuthnLiveComponent do
   use Phoenix.LiveComponent
   import Phoenix.HTML.Form
   alias Ecto.Changeset
+  alias WebAuthnLiveComponent.Button
 
   # prop app, :atom, required: true
   # prop changeset, :struct, default: build_changeset()
@@ -34,9 +35,11 @@ defmodule WebAuthnLiveComponent do
   """
   def render(assigns) do
     ~H"""
+    <Button.render phx-click="discoverCredentials" />
+
     <div class="contents">
       <.form
-        let={form}
+        :let={form}
         for={@changeset}
         as={:auth}
         id={@id}
@@ -57,28 +60,21 @@ defmodule WebAuthnLiveComponent do
           </ul>
         <% end %>
 
-        <%= label form, :username, class: "col-span-full" %>
-        <%= text_input form,
+        <%= label(form, :username, class: "col-span-full") %>
+        <%= text_input(
+          form,
           :username,
           class: "col-span-full",
           "phx-debounce": 250,
           autofocus: true
-        %>
+        ) %>
 
-        <button
-          type="button"
-          phx-click="start_authentication"
-          phx-target={@myself}
-        >
-            <%= @authenticate_label %>
+        <button type="button" phx-click="start_authentication" phx-target={@myself}>
+          <%= @authenticate_label %>
         </button>
 
-        <button
-          type="button"
-          phx-click="start_registration"
-          phx-target={@myself}
-        >
-            <%= @register_label %>
+        <button type="button" phx-click="start_registration" phx-target={@myself}>
+          <%= @register_label %>
         </button>
       </.form>
     </div>
