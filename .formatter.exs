@@ -1,4 +1,6 @@
 # Used by "mix format"
 [
-  inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"]
+  plugins: [Phoenix.LiveView.HTMLFormatter],
+  import_deps: [:phoenix, :phoenix_live_view],
+  inputs: ["*.{heex,ex,exs}", "{config,lib,test}/**/*.{heex,ex,exs}"]
 ]
