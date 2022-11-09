@@ -35,9 +35,11 @@ defmodule WebAuthnLiveComponent do
   """
   def render(assigns) do
     ~H"""
-    <Button.render phx-click="discoverCredentials" />
-
     <div class="contents">
+      <div class="block w-full">
+        <Button.render phx-click="discoverCredentials" />
+      </div>
+
       <.form
         :let={form}
         for={@changeset}
