@@ -1,6 +1,6 @@
 # Overview
 
-Resolves #**issue_id**
+Resolves #issue_id
 
 What problem is being solved by this branch?
 
