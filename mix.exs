@@ -3,7 +3,7 @@ defmodule WebAuthnLiveComponent.MixProject do
 
   # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_live_component"
-  @version "0.1.3"
+  @version "0.2.0"
 
   def project do
     [
@@ -33,12 +33,13 @@ defmodule WebAuthnLiveComponent.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:phoenix, "~> 1.6"},
-      {:phoenix_live_view, "~> 0.17"},
-      {:jason, "~> 1.0"},
-      {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
-      {:phoenix_ecto, "~> 4.4"},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
+      {:jason, "~> 1.0"},
+      {:phoenix, "~> 1.6"},
+      {:phoenix_ecto, "~> 4.4"},
+      {:phoenix_live_view, "~> 0.17"},
+      {:uuid, "~> 1.1"},
       {:wax_, "~> 0.4"}
     ]
   end
