@@ -1,4 +1,4 @@
-const Passkey = {
+const PasskeyHook = {
   // PROPERTIES
 
   abortController: new AbortController(),
