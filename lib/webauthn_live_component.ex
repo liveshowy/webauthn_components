@@ -1,11 +1,11 @@
-defmodule WebAuthnLiveComponent do
+defmodule WebAuthnComponents do
   @moduledoc """
   A LiveComponent for passwordless authentication via WebAuthn.
   """
   use Phoenix.LiveComponent
   import Phoenix.HTML.Form
   alias Ecto.Changeset
-  alias WebAuthnLiveComponent.Button
+  alias WebAuthnComponents.Button
 
   # prop app, :atom, required: true
   # prop changeset, :struct, default: build_changeset()
@@ -98,7 +98,7 @@ defmodule WebAuthnLiveComponent do
 
   ## Client-Side Events
 
-  `WebAuthnLiveComponent` uses a Javascript (JS) hook to interact with the client-side WebAuthn API.
+  `WebAuthnComponents` uses a Javascript (JS) hook to interact with the client-side WebAuthn API.
 
   The following events are triggered by the WebAuthn JS hook:
 

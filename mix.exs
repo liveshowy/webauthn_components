@@ -1,19 +1,19 @@
-defmodule WebAuthnLiveComponent.MixProject do
+defmodule WebAuthnComponents.MixProject do
   use Mix.Project
 
   # Don't forget to change the version in `package.json`
-  @source_url "https://github.com/liveshowy/webauthn_live_component"
+  @source_url "https://github.com/liveshowy/webauthn_components"
   @version "0.2.2"
 
   def project do
     [
-      app: :webauthn_live_component,
+      app: :webauthn_components,
       deps: deps(),
       description: description(),
       docs: docs(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
-      name: "WebAuthnLiveComponent",
+      name: "WebAuthnComponents",
       package: package(),
       start_permanent: Mix.env() == :prod,
       version: @version
@@ -49,7 +49,7 @@ defmodule WebAuthnLiveComponent.MixProject do
       main: "readme",
       name: "WebAuthn LiveComponent",
       source_ref: "v#{@version}",
-      canonical: "http://hexdocs.pm/webauthn_live_component",
+      canonical: "http://hexdocs.pm/webauthn_components",
       source_url: @source_url,
       extras: ["README.md"]
     ]

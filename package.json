@@ -1,5 +1,5 @@
 {
-  "name": "webauthn_live_component",
+  "name": "webauthn_components",
   "version": "0.1.2",
   "main": "./priv/static/passkey_hook.js",
   "repository": {},

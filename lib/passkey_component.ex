@@ -1,4 +1,4 @@
-defmodule WebAuthnLiveComponent.PasskeyComponent do
+defmodule WebAuthnComponents.PasskeyComponent do
   @moduledoc """
   LiveComponent for interacting with Passkeys.
 
