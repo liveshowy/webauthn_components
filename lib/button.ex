@@ -1,4 +1,4 @@
-defmodule WebAuthnLiveComponent.Button do
+defmodule WebAuthnComponents.Button do
   @moduledoc """
   Component which renders a basic HTML button.
   """

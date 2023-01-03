@@ -1,4 +1,4 @@
-defmodule WebAuthnLiveComponent.CoseKey do
+defmodule WebAuthnComponents.CoseKey do
   @moduledoc """
   Custom type for WebAuthn cose keys.
   """

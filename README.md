@@ -1,16 +1,16 @@
-# WebAuthnLiveComponent
+# WebAuthnComponents
 
 A drop-in LiveComponent for password-less authentication.
 
 ### 🚨 Status 🚨
 
-This package is a **work in progress**, and it is in early alpha status. Feel free to experiment with this package and contribute feedback through [GitHub discussions](https://github.com/liveshowy/webauthn_live_component/discussions).
+This package is a **work in progress**, and it is in early alpha status. Feel free to experiment with this package and contribute feedback through [GitHub discussions](https://github.com/liveshowy/webauthn_components/discussions).
 
-Please **do not use WebAuthnLiveComponent in a production environment** until it has completed _beta_ testing.
+Please **do not use WebAuthnComponents in a production environment** until it has completed _beta_ testing.
 
 ## Roadmap
 
-View the planned work for this repo in the public [WebAuthnLiveComponent v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
+View the planned work for this repo in the public [WebAuthnComponents v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
 
 ## Quick Start
 
@@ -22,7 +22,7 @@ During the beta phase, generators will be added to streamline initial setup, inc
    - `mix phx.gen.context --binary-id Authentication UserKey user_keys key_id:binary label last_used:utc_datetime public_key:binary user_id:references:users`
 1. Update `UserKey` schema (TODO)
    - Add default value to the `label` field
-   - Update the `public_key` field to use `WebAuthnLiveComponent.CoseKey` as its type
+   - Update the `public_key` field to use `WebAuthnComponents.CoseKey` as its type
    - Add `new_changeset/2` & `update_changeset/2` (TODO)
 1. Run Mix task to create `user_tokens` schema & migration
    - `mix phx.gen.context --binary-id Authentication UserToken user_tokens user_id:references:users token:binary context`
@@ -36,19 +36,19 @@ During the beta phase, generators will be added to streamline initial setup, inc
 
 ### Installation
 
-Add `webauthn_live_component` to your list of dependencies in `mix.exs`:
+Add `webauthn_components` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:webauthn_live_component, "~> 0.1.0"}
+    {:webauthn_components, "~> 0.1.0"}
   ]
 end
 ```
 
 ### Usage
 
-See `WebAuthnLiveComponent` for detailed usage instructions.
+See `WebAuthnComponents` for detailed usage instructions.
 
 ## WebAuthn & Passkeys
 
