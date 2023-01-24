@@ -1,16 +1,18 @@
-# WebAuthnComponents
+# WebauthnComponents
 
-A drop-in LiveComponent for password-less authentication.
+A collection of drop-in LiveComponents for password-less authentication.
 
-### 🚨 Status 🚨
+### Status: Beta 💅🏻
 
-This package is a **work in progress**, and it is in early alpha status. Feel free to experiment with this package and contribute feedback through [GitHub discussions](https://github.com/liveshowy/webauthn_components/discussions).
+Please **do not use WebauthnComponents in a production environment** until it has completed _beta_ testing.
 
-Please **do not use WebAuthnComponents in a production environment** until it has completed _beta_ testing.
+This package is a **work in progress**, and it is in early beta status.
+
+Feel free to experiment with this package and contribute feedback through [GitHub discussions](https://github.com/liveshowy/webauthn_components/discussions) or the related topic in [Elixir Forum](https://elixirforum.com/t/webauthnlivecomponent-passwordless-auth-for-liveview-apps/49941).
 
 ## Roadmap
 
-View the planned work for this repo in the public [WebAuthnComponents v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
+View the planned work for this repo in the public [WebauthnComponents v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
 
 ## Quick Start
 
@@ -22,7 +24,7 @@ During the beta phase, generators will be added to streamline initial setup, inc
    - `mix phx.gen.context --binary-id Authentication UserKey user_keys key_id:binary label last_used:utc_datetime public_key:binary user_id:references:users`
 1. Update `UserKey` schema (TODO)
    - Add default value to the `label` field
-   - Update the `public_key` field to use `WebAuthnComponents.CoseKey` as its type
+   - Update the `public_key` field to use `WebauthnComponents.CoseKey` as its type
    - Add `new_changeset/2` & `update_changeset/2` (TODO)
 1. Run Mix task to create `user_tokens` schema & migration
    - `mix phx.gen.context --binary-id Authentication UserToken user_tokens user_id:references:users token:binary context`
@@ -32,7 +34,6 @@ During the beta phase, generators will be added to streamline initial setup, inc
    - Add `foreign_key_constraint` `:user_id`
    - Add token helper functions (TODO)
 1. Update `User` and/or relevant schemas to include keys association (TODO)
-1. Run Mix task to add component config (TODO)
 
 ### Installation
 
@@ -48,7 +49,118 @@ end
 
 ### Usage
 
-See `WebAuthnComponents` for detailed usage instructions.
+See [USAGE.md](./USAGE.md) for detailed usage instructions.
+
+### WebAuthn Flows
+
+`WebauthnComponents` contains a few modular components which may be combined to detect passkey support, register new keys, authenticate keys for existing users, and manage session tokens in the client.
+
+See module documentation for each component for more detailed descriptions.
+
+#### Support Detection
+
+```mermaid
+sequenceDiagram
+   autonumber
+   participant Client
+   participant SupportComponent
+   participant ParentLiveView
+   participant RegistrationComponent
+   participant AuthenticationComponent
+
+   Client->>SupportComponent: "passkeys-supported"
+   SupportComponent->>ParentLiveView: `{:passkeys_supported, boolean}`
+   ParentLiveView->>RegistrationComponent: `@disabled = !@passkeys_supported`
+   ParentLiveView->>AuthenticationComponent: `@disabled = !@passkeys_supported`
+```
+
+#### Registration
+
+**Sign Up**
+
+```mermaid
+sequenceDiagram
+   autonumber
+   actor User
+   participant Client
+   participant RegistrationComponent
+   participant ParentLiveView
+
+   User->>Client: Click `register`
+   Client->>RegistrationComponent: "register"
+   RegistrationComponent->>Client: "registration-challenge"
+   Client->>RegistrationComponent: "registration-attestation"
+   RegistrationComponent->>ParentLiveView: `{:registration_successful, ...}`
+```
+
+Once the parent LiveView receives the `{:registration_successful, ...}` message, it must persist the user, the user's new key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
+
+#### Token Management
+
+**Successful Sign Up / Sign In**
+
+```mermaid
+sequenceDiagram
+   autonumber
+   participant Client
+   participant TokenComponent
+   participant ParentLiveView
+
+   ParentLiveView->>TokenComponent: `@token = b64_token`
+   TokenComponent->>Client: "store-token"
+   Client->>TokenComponent: "token-stored"
+   TokenComponent->>ParentLiveView: `{:token_stored, ...}`
+```
+
+**Active Session**
+
+```mermaid
+sequenceDiagram
+   autonumber
+   participant Client
+   participant TokenComponent
+   participant ParentLiveView
+
+   Client->>TokenComponent: "token-exists"
+   TokenComponent->>ParentLiveView: `{:token_exists, ...}`
+   ParentLiveView-->ParentLiveView: "[user lookup by token]"
+```
+
+**Sign Out**
+
+```mermaid
+sequenceDiagram
+   autonumber
+   participant Client
+   participant TokenComponent
+   participant ParentLiveView
+
+   ParentLiveView->>TokenComponent: `@token = :clear`
+   TokenComponent->>Client: "clear-token"
+   Client->>TokenComponent: "token-cleared"
+   TokenComponent->>ParentLiveView: `{:token_cleared}`
+```
+
+#### Authentication
+
+**Sign In**
+
+```mermaid
+sequenceDiagram
+   autonumber
+   actor User
+   participant Client
+   participant AuthenticationComponent
+   participant ParentLiveView
+
+   User->>Client: Click `authenticate`
+   Client->>AuthenticationComponent: "authenticate"
+   AuthenticationComponent->>Client: "authentication-challenge"
+   Client->>AuthenticationComponent: "authentication-attestation"
+   AuthenticationComponent->>ParentLiveView: `{:find_credentials, ...}`
+```
+
+Once the parent LiveView receives the `{:find_credentials, ...}` message, it must lookup the user via the user's existing key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
 
 ## WebAuthn & Passkeys
 
