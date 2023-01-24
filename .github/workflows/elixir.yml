@@ -2,58 +2,57 @@ name: Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 permissions:
   contents: read
-  
+
 env:
   MIX_ENV: test
 
 jobs:
   build:
-
     name: Build & Test
     runs-on: ubuntu-latest
     container: ${{ matrix.elixir }}
     concurrency: production
     strategy:
       matrix:
-        elixir: ["elixir:1.13.3"]
+        elixir: ["elixir:latest"]
 
     steps:
-    - uses: actions/checkout@v3
-    - run: elixir --version
-    - run: mix local.hex --force
-    - run: mix local.rebar --force
-    
-    - name: Hex Cache
-      uses: actions/cache@v3
-      with:
-        path: deps
-        key: ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
-        restore-keys: ${{ runner.os }}-${{ matrix.elixir }}-mix-
-        
-    - name: Install dependencies
-      run: mix deps.get
-      
-    - name: Compilation Cache
-      uses: actions/checkout@v3
-      with:
-        path: _build/test
-        key: ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
-          ${{ runner.os }}-${{ matrix.elixir }}-compiled-
-          ${{ runner.os }}-
-    
-    - name: Compile
-      run: mix compile --warnings-as-errors
-      
-    - name: Run tests
-      run: mix test --warnings-as-errors
-      
-    - name: Credo
-      run: mix credo --all
+      - uses: actions/checkout@v3
+      - run: elixir --version
+      - run: mix local.hex --force
+      - run: mix local.rebar --force
+
+      - name: Hex Cache
+        uses: actions/cache@v3
+        with:
+          path: deps
+          key: ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
+          restore-keys: ${{ runner.os }}-${{ matrix.elixir }}-mix-
+
+      - name: Install dependencies
+        run: mix deps.get
+
+      - name: Compilation Cache
+        uses: actions/cache@v3
+        with:
+          path: _build/test
+          key: ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
+            ${{ runner.os }}-${{ matrix.elixir }}-compiled-
+            ${{ runner.os }}-
+
+      - name: Compile
+        run: mix compile --warnings-as-errors
+
+      - name: Run tests
+        run: mix test --warnings-as-errors
+
+      - name: Credo
+        run: mix credo --all
