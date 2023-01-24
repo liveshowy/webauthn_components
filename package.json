@@ -1,12 +1,16 @@
 {
   "name": "webauthn_components",
-  "version": "0.1.2",
-  "main": "./priv/static/passkey_hook.js",
+  "version": "0.3.0",
+  "main": "./priv/static/main.js",
   "repository": {},
   "files": [
     "README.md",
     "LICENSE",
     "package.json",
-    "priv/static/passkey_hook.js"
+    "priv/static/utils.js",
+    "priv/static/support_hook.js",
+    "priv/static/token_hook.js",
+    "priv/static/registration_hook.js",
+    "priv/static/authentication_hook.js"
   ]
 }
