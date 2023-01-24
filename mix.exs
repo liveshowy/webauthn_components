@@ -1,9 +1,9 @@
-defmodule WebAuthnComponents.MixProject do
+defmodule WebauthnComponents.MixProject do
   use Mix.Project
 
   # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.2.2"
+  @version "0.3.0"
 
   def project do
     [
@@ -13,7 +13,7 @@ defmodule WebAuthnComponents.MixProject do
       docs: docs(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
-      name: "WebAuthnComponents",
+      name: "WebauthnComponents",
       package: package(),
       start_permanent: Mix.env() == :prod,
       version: @version
@@ -35,7 +35,9 @@ defmodule WebAuthnComponents.MixProject do
     [
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
+      {:floki, "~> 0.34.0", only: [:test]},
       {:jason, "~> 1.0"},
+      {:live_isolated_component, "~> 0.6.2", only: [:test]},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 0.17"},
@@ -47,11 +49,14 @@ defmodule WebAuthnComponents.MixProject do
   defp docs do
     [
       main: "readme",
-      name: "WebAuthn LiveComponent",
+      name: "WebauthnComponents",
+      formatters: ["html"],
       source_ref: "v#{@version}",
       canonical: "http://hexdocs.pm/webauthn_components",
+      nest_modules_by_prefix: [WebauthnComponents],
       source_url: @source_url,
-      extras: ["README.md"]
+      before_closing_body_tag: &before_closing_body_tag/1,
+      extras: ["README.md", "USAGE.md"]
     ]
   end
 
@@ -71,4 +76,30 @@ defmodule WebAuthnComponents.MixProject do
       maintainers: ["Owen Bickford"]
     ]
   end
+
+  defp before_closing_body_tag(:html) do
+    """
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@8.13.3/dist/mermaid.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        mermaid.initialize({ startOnLoad: false });
+        let id = 0;
+        for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
+          const preEl = codeEl.parentElement;
+          const graphDefinition = codeEl.textContent;
+          const graphEl = document.createElement("div");
+          const graphId = "mermaid-graph-" + id++;
+          mermaid.render(graphId, graphDefinition, function (svgSource, bindListeners) {
+            graphEl.innerHTML = svgSource;
+            bindListeners && bindListeners(graphEl);
+            preEl.insertAdjacentElement("afterend", graphEl);
+            preEl.remove();
+          });
+        }
+      });
+    </script>
+    """
+  end
+
+  defp before_closing_body_tag(_), do: ""
 end
