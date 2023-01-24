@@ -3,13 +3,19 @@ defmodule ComponentCase do
   use ExUnit.CaseTemplate
 
   setup do
-    :ok
+    conn = Phoenix.ConnTest.build_conn()
+    socket = %Phoenix.LiveView.Socket{}
+    %{conn: conn, socket: socket}
   end
 
   using do
     quote do
+      import Factory
+      import LiveIsolatedComponent
       import Phoenix.LiveViewTest
       import Phoenix.LiveView.Helpers
+
+      @endpoint TestEndpoint
     end
   end
 end
