@@ -42,7 +42,7 @@ Add `webauthn_components` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:webauthn_components, "~> 0.1.0"}
+    {:webauthn_components, "~> 0.3"}
   ]
 end
 ```
