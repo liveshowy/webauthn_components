@@ -35,7 +35,7 @@ defmodule WebauthnComponents.TokenComponent do
 
   - `"token-exists"`: Sent by the client when `sessionStorage` contains a `userToken`.
   - `"token-stored"`: Sent by the client when a token has been stored in `sessionStorage`.
-  - `"token-cleared"`: Sent by the client when a token has been cleared frmo `sessionStorage`.
+  - `"token-cleared"`: Sent by the client when a token has been cleared from `sessionStorage`.
   - `"error"`: Sent by the client when an error occurs.
 
   ## Messages
