@@ -56,6 +56,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       socket
       |> assign(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "registration-component" end)
+      |> assign_new(:class, fn -> "" end)
       |> assign_new(:user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:require_resident_key, fn -> true end)
@@ -70,6 +71,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         phx-hook="RegistrationHook"
         phx-target={@myself}
         phx-click="register"
+        class={@class}
         title="Create a new account"
         disabled={@disabled}
       >
