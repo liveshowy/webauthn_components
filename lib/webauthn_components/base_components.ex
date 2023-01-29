@@ -6,8 +6,6 @@ defmodule WebauthnComponents.BaseComponents do
   attr :type, :string, default: "button"
   attr :disabled, :boolean, default: false
 
-  attr :class, :string, default: ""
-
   attr :rest, :global
 
   slot :inner_block, required: true
@@ -15,7 +13,7 @@ defmodule WebauthnComponents.BaseComponents do
   @doc false
   def button(assigns) do
     ~H"""
-    <button id={@id} type={@type} class={"px-2 py-1 border border-gray-300 hover:border-transparent bg-gray-200 hover:bg-blue-200 focus:bg-blue-300 text-gray-900 transition rounded text-base shadow-sm flex gap-2 items-center hover:-translate-y-px hover:shadow-md " <> @class} {@rest}>
+    <button id={@id} type={@type} class="px-2 py-1 border border-gray-300 hover:border-transparent bg-gray-200 hover:bg-blue-200 focus:bg-blue-300 text-gray-900 transition rounded text-base shadow-sm flex gap-2 items-center hover:-translate-y-px hover:shadow-md" {@rest}>
       <%= render_slot(@inner_block) %>
     </button>
     """
