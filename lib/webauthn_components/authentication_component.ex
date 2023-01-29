@@ -42,6 +42,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       socket
       |> assign(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "authentication-component" end)
+      |> assign_new(:class, fn -> "" end)
       |> assign_new(:disabled, fn -> nil end)
     }
   end
@@ -55,6 +56,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
         phx-target={@myself}
         type="button"
         phx-click="authenticate"
+        class={@class}
         title="Use an existing account"
         disabled={@disabled}
       >
