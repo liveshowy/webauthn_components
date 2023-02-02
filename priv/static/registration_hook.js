@@ -10,7 +10,6 @@ const RegistrationHook = {
   },
 
   async handleRegistration(event, context) {
-    console.log(event);
     try {
       const {
         attestation,
