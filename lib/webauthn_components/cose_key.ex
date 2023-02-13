@@ -43,6 +43,13 @@ defmodule WebauthnComponents.CoseKey do
     end
   end
 
+  def cast(value) when is_binary(value) do
+    case CBOR.decode(value) do
+      {:ok, _decoded_value, ""} -> value
+      {:error, _error} -> :error
+    end
+  end
+
   def cast(_), do: :error
 
   def load(data) when is_binary(data) do
@@ -57,6 +64,13 @@ defmodule WebauthnComponents.CoseKey do
 
   def dump(value) when is_map(value) do
     {:ok, CBOR.encode(value)}
+  end
+
+  def dump(value) when is_binary(value) do
+    case CBOR.decode(value) do
+      {:ok, _decoded_value, ""} -> {:ok, value}
+      {:error, _error} -> :error
+    end
   end
 
   def dump(value), do: {:ok, value}
