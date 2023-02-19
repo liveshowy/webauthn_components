@@ -67,21 +67,22 @@ defmodule WebauthnComponents.AuthenticationComponent do
     """
   end
 
-  def update(%{challenge: challenge, attestation: attestation, user_key: user_key} = assigns, socket) do
+  def update(%{user_key: user_key} = assigns, socket) do
+    %{challenge: challenge, attestation: attestation} = socket.assigns
+
     %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
-      # raw_id: raw_id,
       signature: signature,
-      # user_handle: user_handle
     } = attestation
 
     %{
       key_id: key_id,
-      # user_handle: user_handle,
-      # public_key: public_key,
-      user: user,
+      public_key: public_key,
+      user: user
     } = user_key
+
+    credentials = [{key_id, public_key}]
 
     wax_response = Wax.authenticate(
       key_id,
@@ -89,9 +90,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
       signature,
       client_data_array,
       challenge,
-      [user_key]
+      credentials
     )
-    |> IO.inspect(label: :wax_authenticate)
 
     case wax_response do
       {:ok, _authenticator_data} ->
@@ -118,8 +118,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       Wax.new_authentication_challenge(
         origin: endpoint.url,
         rp_id: :auto,
-        user_verification: "preferred",
-        allow_credentials: []
+        user_verification: "preferred"
       )
 
     challenge_data = %{
