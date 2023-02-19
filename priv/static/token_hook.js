@@ -20,7 +20,6 @@ const TokenHook = {
   storeToken({ token }, context) {
     try {
       window.sessionStorage.setItem("userToken", token);
-      console.log(token, sessionStorage);
       console.info(`Stored user token`);
       context.pushEventTo(context.el, "token-stored", { token });
     } catch (error) {
@@ -32,7 +31,6 @@ const TokenHook = {
   clearToken(context) {
     try {
       window.sessionStorage.removeItem("userToken");
-      console.log(sessionStorage);
       console.info(`Cleared user token`);
       context.pushEventTo(context.el, "token-cleared", { token: null });
     } catch (error) {

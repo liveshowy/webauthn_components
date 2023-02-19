@@ -67,6 +67,49 @@ defmodule WebauthnComponents.AuthenticationComponent do
     """
   end
 
+  def update(%{user_key: user_key} = assigns, socket) do
+    %{challenge: challenge, attestation: attestation} = socket.assigns
+
+    %{
+      authenticator_data: authenticator_data,
+      client_data_array: client_data_array,
+      signature: signature,
+    } = attestation
+
+    %{
+      key_id: key_id,
+      public_key: public_key,
+      user: user
+    } = user_key
+
+    credentials = [{key_id, public_key}]
+
+    wax_response = Wax.authenticate(
+      key_id,
+      authenticator_data,
+      signature,
+      client_data_array,
+      challenge,
+      credentials
+    )
+
+    case wax_response do
+      {:ok, _authenticator_data} ->
+        send(self(), {:authentication_successful, user: user})
+        {:ok, assign(socket, assigns)}
+
+      {:error, error} ->
+        message = Exception.message(error)
+        send(self(), {:authentication_failure, message: message})
+        {:ok, assign(socket, assigns)}
+    end
+
+  end
+
+  def update(assigns, socket) do
+    {:ok, assign(socket, assigns)}
+  end
+
   def handle_event("authenticate", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
     %{id: id} = assigns
@@ -75,8 +118,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       Wax.new_authentication_challenge(
         origin: endpoint.url,
         rp_id: :auto,
-        user_verification: "preferred",
-        allow_credentials: []
+        user_verification: "preferred"
       )
 
     challenge_data = %{
