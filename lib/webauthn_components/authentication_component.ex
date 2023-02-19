@@ -91,6 +91,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       challenge,
       [user_key]
     )
+    |> IO.inspect(label: :wax_authenticate)
 
     case wax_response do
       {:ok, _authenticator_data} ->
