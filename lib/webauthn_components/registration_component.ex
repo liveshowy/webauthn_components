@@ -48,7 +48,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
   import WebauthnComponents.BaseComponents
-  import WebauthnComponents.WebauthnUser
+  alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
     {
@@ -57,9 +57,25 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "registration-component" end)
       |> assign_new(:class, fn -> "" end)
-      |> assign_new(:user, fn -> nil end)
+      |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:require_resident_key, fn -> true end)
+    }
+  end
+
+  def update(%{webauthn_user: webauthn_user}, socket) do
+    {
+      :ok,
+      socket
+      |> assign(:webauthn_user, webauthn_user)
+    }
+  end
+
+  def update(assigns, socket) do
+    {
+      :ok,
+      socket
+      |> assign(assigns)
     }
   end
 
@@ -84,9 +100,15 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   def handle_event("register", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
-    %{app: app_name, id: id, require_resident_key: require_resident_key, user: user} = assigns
 
-    if not is_struct(user, WebauthnUser) do
+    %{
+      app: app_name,
+      id: id,
+      require_resident_key: require_resident_key,
+      webauthn_user: webauthn_user
+    } = assigns
+
+    if not is_struct(webauthn_user, WebauthnUser) do
       raise "user must be a WebauthnComponents.WebauthnUser struct."
     end
 
@@ -111,7 +133,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         name: app_name
       },
       timeout: 60_000,
-      user: user
+      user: webauthn_user
     }
 
     {
@@ -123,7 +145,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def handle_event("registration-attestation", payload, socket) do
-    %{challenge: challenge, user: user} = socket.assigns
+    %{challenge: challenge, webauthn_user: webauthn_user} = socket.assigns
 
     %{
       "attestation64" => attestation_64,
@@ -140,7 +162,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       {:ok, {authenticator_data, _result}} ->
         %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
         key = %{key_id: raw_id, public_key: public_key}
-        send(self(), {:registration_successful, key: key, user: user})
+        send(self(), {:registration_successful, key: key, webauthn_user: webauthn_user})
 
       {:error, error} ->
         message = Exception.message(error)
