@@ -64,11 +64,16 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def update(%{webauthn_user: webauthn_user}, socket) do
-    {
-      :ok,
-      socket
-      |> assign(:webauthn_user, webauthn_user)
-    }
+    if is_struct(webauthn_user, WebauthnUser) do
+      {
+        :ok,
+        socket
+        |> assign(:webauthn_user, webauthn_user)
+      }
+    else
+      send(self(), {:invalid_webauthn_user, webauthn_user})
+      {:ok, socket}
+    end
   end
 
   def update(assigns, socket) do
