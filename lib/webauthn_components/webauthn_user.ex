@@ -10,4 +10,16 @@ defmodule WebauthnComponents.WebauthnUser do
           name: String.t(),
           display_name: String.t()
         }
+
+  defimpl Jason.Encoder, for: __MODULE__ do
+    def encode(struct, opts) do
+      map =
+        struct
+        |> Map.from_struct()
+        |> Map.put(:displayName, struct.display_name)
+        |> Map.delete(:display_name)
+
+      Jason.Encode.map(map, opts)
+    end
+  end
 end
