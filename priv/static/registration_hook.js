@@ -23,7 +23,6 @@ const RegistrationHook = {
       const challengeArray = base64ToArray(challenge);
 
       user.id = base64ToArray(user.id).buffer;
-      user.displayName = user.display_name;
 
       const publicKey = {
         attestation,
