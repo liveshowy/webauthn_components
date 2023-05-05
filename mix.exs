@@ -3,7 +3,7 @@ defmodule WebauthnComponents.MixProject do
 
   # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.3.3"
+  @version "0.4.0"
 
   def project do
     [
