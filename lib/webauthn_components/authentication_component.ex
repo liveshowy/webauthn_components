@@ -39,7 +39,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   ## Messages
 
-  - `{:find_credentials, key_id: key_id}`
+  - `{:find_credential, key_id: key_id}`
     - `key_id` is a raw binary representing the id stored associated with the credential in both the client and server during registration.
     - The parent LiveView must successfully lookup the user with this data before storing a token and redirecting to another view.
   - `{:error, payload}`
@@ -173,7 +173,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       type: type
     }
 
-    send(self(), {:find_credentials, key_id: raw_id})
+    send(self(), {:find_credential, key_id: raw_id})
 
     {
       :noreply,
