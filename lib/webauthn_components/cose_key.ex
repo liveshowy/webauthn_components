@@ -19,7 +19,6 @@ defmodule WebauthnComponents.CoseKey do
     schema "user_keys" do
       field :label, :string, default: "default"
       field :key_id, :binary
-      field :user_handle, :binary
       field :public_key, CoseKey
       belongs_to :user, User
       field :last_used, :utc_datetime

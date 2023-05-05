@@ -34,7 +34,6 @@ defmodule WebauthnComponents.RegistrationComponentTest do
     test "fails registration with invalid payload", %{element: element, view: view} do
       challenge = build(:registration_challenge)
       live_assign(view, :challenge, challenge)
-      live_assign(view, :user_handle, :crypto.strong_rand_bytes(64))
 
       attestation_64 = Base.encode64(:crypto.strong_rand_bytes(64), padding: false)
       raw_id_64 = Base.encode64(:crypto.strong_rand_bytes(64), padding: false)
