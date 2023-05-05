@@ -4,7 +4,7 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   > Registration = Sign Up
 
-  Registration is the process of creating and associating a new key with a user account. Depending on your implementation, a new user may register a new account using only a Passkey, which does not require username or email.
+  Registration is the process of creating and associating a new key with a user account.
 
   Existing users may also register additional keys for backup, survivorship, sharing, or other purposes. Your application may set limits on how many keys are associated with an account based on business concerns.
 
