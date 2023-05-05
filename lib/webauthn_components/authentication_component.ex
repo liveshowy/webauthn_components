@@ -73,7 +73,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
     %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
-      signature: signature,
+      signature: signature
     } = attestation
 
     %{
@@ -84,14 +84,15 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
     credentials = [{key_id, public_key}]
 
-    wax_response = Wax.authenticate(
-      key_id,
-      authenticator_data,
-      signature,
-      client_data_array,
-      challenge,
-      credentials
-    )
+    wax_response =
+      Wax.authenticate(
+        key_id,
+        authenticator_data,
+        signature,
+        client_data_array,
+        challenge,
+        credentials
+      )
 
     case wax_response do
       {:ok, _authenticator_data} ->
@@ -103,7 +104,6 @@ defmodule WebauthnComponents.AuthenticationComponent do
         send(self(), {:authentication_failure, message: message})
         {:ok, assign(socket, assigns)}
     end
-
   end
 
   def update(assigns, socket) do
@@ -143,25 +143,22 @@ defmodule WebauthnComponents.AuthenticationComponent do
       "clientDataArray" => client_data_array,
       "rawId64" => raw_id_64,
       "signature64" => signature_64,
-      "type" => type,
-      "userHandle64" => user_handle_64
+      "type" => type
     } = payload
 
     authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
     raw_id = Base.decode64!(raw_id_64, padding: false)
     signature = Base.decode64!(signature_64, padding: false)
-    user_handle = Base.decode64!(user_handle_64, padding: false)
 
     attestation = %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
       raw_id: raw_id,
       signature: signature,
-      type: type,
-      user_handle: user_handle
+      type: type
     }
 
-    send(self(), {:find_credentials, user_handle: user_handle})
+    send(self(), {:find_credentials, key_id: raw_id})
 
     {
       :noreply,
