@@ -1,6 +1,7 @@
 defmodule WebauthnComponents.RegistrationComponentTest do
   use ComponentCase, async: true
   alias WebauthnComponents.RegistrationComponent
+  alias WebauthnComponents.WebauthnUser
 
   @id "registration-component"
 
@@ -19,7 +20,14 @@ defmodule WebauthnComponents.RegistrationComponentTest do
   end
 
   describe "handle_event/3 - register" do
-    test "sends registration challenge to client", %{element: element} do
+    test "sends registration challenge to client", %{element: element, view: view} do
+      webauthn_user = %WebauthnUser{
+        id: :crypto.strong_rand_bytes(64),
+        name: "testUser",
+        display_name: "Test User"
+      }
+
+      live_assign(view, :webauthn_user, webauthn_user)
       clicked_element = render_click(element)
       assert clicked_element =~ "<button"
       assert clicked_element =~ "phx-click=\"register\""
