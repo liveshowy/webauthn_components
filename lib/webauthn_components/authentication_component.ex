@@ -24,8 +24,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   ## Messages
 
-  - `{:find_credentials, user_handle: user_handle}`
-    - `user_handle` is a raw binary representing the user id or random id stored in the credential during registration.
+  - `{:find_credentials, key_id: key_id}`
+    - `key_id` is a raw binary representing the id stored associated with the credential in both the client and server during registration.
     - The parent LiveView must successfully lookup the user with this data before storing a token and redirecting to another view.
   - `{:error, payload}`
     - `payload` contains the `message`, `name`, and `stack` returned by the browser upon timeout or other client-side errors.
