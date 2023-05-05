@@ -34,7 +34,7 @@ defmodule WebauthnComponents.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.29.4", only: [:dev], runtime: false},
       {:floki, "~> 0.34.0", only: [:test]},
       {:jason, "~> 1.0"},
       {:live_isolated_component, "~> 0.6.2", only: [:test]},
