@@ -4,7 +4,7 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   > Registration = Sign Up
 
-  Registration is the process of creating and associating a new key with a user account. Depending on your implementation, a new user may register a new account using only a Passkey, which does not require username or email.
+  Registration is the process of creating and associating a new key with a user account.
 
   Existing users may also register additional keys for backup, survivorship, sharing, or other purposes. Your application may set limits on how many keys are associated with an account based on business concerns.
 
@@ -12,12 +12,12 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   ## Assigns
 
+  - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@require_resident_key` (Optional) Set to `false` to allow non-passkey credentials. Defaults to `true`.
-  - `@user`: (Optional) A map or struct containing an `id`, `username` or `email`, and `display_name`. If no user is provided, a random `id` will be generated, which will be encoded as the `user_handle` during registration.
 
   ## Events
 
@@ -34,10 +34,9 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   The following messages **must be handled by the parent LiveView** using [`Phoenix.LiveView.handle_info/2`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#c:handle_info/2):
 
-  - `{:registration_successful, key_id: raw_id, public_key: public_key, user_handle: user_handle}`
+  - `{:registration_successful, key_id: raw_id, public_key: public_key}`
     - `:key_id` is a raw binary containing the credential id created by the browser.
     - `:public_key` is a map of raw binaries which may be used later for authentication.
-    - `:user_handle` is a raw binary representing the provided user id, or a randomly generated uuid.
     - These values must be persisted by the parent application in order to be used later during authentication.
   - `{:registration_failure, message: message}`
     - `:message` is an exception message returned by Wax when registration fails.
@@ -49,6 +48,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
   import WebauthnComponents.BaseComponents
+  alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
     {
@@ -57,9 +57,30 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "registration-component" end)
       |> assign_new(:class, fn -> "" end)
-      |> assign_new(:user, fn -> nil end)
+      |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:require_resident_key, fn -> true end)
+    }
+  end
+
+  def update(%{webauthn_user: webauthn_user}, socket) do
+    if is_struct(webauthn_user, WebauthnUser) do
+      {
+        :ok,
+        socket
+        |> assign(:webauthn_user, webauthn_user)
+      }
+    else
+      send(self(), {:invalid_webauthn_user, webauthn_user})
+      {:ok, socket}
+    end
+  end
+
+  def update(assigns, socket) do
+    {
+      :ok,
+      socket
+      |> assign(assigns)
     }
   end
 
@@ -84,21 +105,19 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   def handle_event("register", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
-    %{app: app_name, id: id, require_resident_key: require_resident_key, user: user} = assigns
+
+    %{
+      app: app_name,
+      id: id,
+      require_resident_key: require_resident_key,
+      webauthn_user: webauthn_user
+    } = assigns
+
+    if not is_struct(webauthn_user, WebauthnUser) do
+      raise "user must be a WebauthnComponents.WebauthnUser struct."
+    end
+
     attestation = "none"
-
-    user_handle =
-      if user do
-        user[:id]
-      else
-        :crypto.strong_rand_bytes(64)
-      end
-
-    user = %{
-      id: Base.encode64(user_handle, padding: false),
-      name: app_name,
-      displayName: app_name
-    }
 
     challenge =
       Wax.new_registration_challenge(
@@ -119,20 +138,19 @@ defmodule WebauthnComponents.RegistrationComponent do
         name: app_name
       },
       timeout: 60_000,
-      user: user
+      user: webauthn_user
     }
 
     {
       :noreply,
       socket
       |> assign(:challenge, challenge)
-      |> assign(:user_handle, user_handle)
       |> push_event("registration-challenge", challenge_data)
     }
   end
 
   def handle_event("registration-attestation", payload, socket) do
-    %{challenge: challenge, user_handle: user_handle} = socket.assigns
+    %{challenge: challenge, webauthn_user: webauthn_user} = socket.assigns
 
     %{
       "attestation64" => attestation_64,
@@ -148,12 +166,8 @@ defmodule WebauthnComponents.RegistrationComponent do
     case wax_response do
       {:ok, {authenticator_data, _result}} ->
         %{attested_credential_data: %{credential_public_key: public_key}} = authenticator_data
-
-        send(
-          self(),
-          {:registration_successful,
-           key_id: raw_id, public_key: public_key, user_handle: user_handle}
-        )
+        key = %{key_id: raw_id, public_key: public_key}
+        send(self(), {:registration_successful, key: key, webauthn_user: webauthn_user})
 
       {:error, error} ->
         message = Exception.message(error)

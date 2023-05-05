@@ -47,7 +47,7 @@ def deps do
 end
 ```
 
-### Usage
+## Usage
 
 See [USAGE.md](./USAGE.md) for detailed usage instructions.
 
@@ -56,6 +56,16 @@ See [USAGE.md](./USAGE.md) for detailed usage instructions.
 `WebauthnComponents` contains a few modular components which may be combined to detect passkey support, register new keys, authenticate keys for existing users, and manage session tokens in the client.
 
 See module documentation for each component for more detailed descriptions.
+
+## Cross-Device Authentication
+
+When a user attempts to authenticate on a device where their Passkey is **not** stored, they may scan a QR code to use a cloud-sync'd Passkey.
+
+### Example
+
+Imagine a user, Amal, registers a Passkey for example.com on their iPhone and it's stored in iCloud. When they attempt to sign into example.com on a non-Apple device or any browser which cannot access their OS keychain, they may choose to scan a QR code using their iPhone. Assuming the prompts on the iPhone are successful, the other device will be authenticated using the same web account which was initially registered on the iPhone.
+
+While this example refers to Apple's Passkey implementation, the process on other platforms may vary. Cross-device credential managers like 1Password may provide a more seamless flow for users who are not constrained to one OS or browser.
 
 #### Support Detection
 
@@ -157,10 +167,10 @@ sequenceDiagram
    Client->>AuthenticationComponent: "authenticate"
    AuthenticationComponent->>Client: "authentication-challenge"
    Client->>AuthenticationComponent: "authentication-attestation"
-   AuthenticationComponent->>ParentLiveView: `{:find_credentials, ...}`
+   AuthenticationComponent->>ParentLiveView: `{:find_credential, ...}`
 ```
 
-Once the parent LiveView receives the `{:find_credentials, ...}` message, it must lookup the user via the user's existing key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
+Once the parent LiveView receives the `{:find_credential, ...}` message, it must lookup the user via the user's existing key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
 
 ## WebAuthn & Passkeys
 

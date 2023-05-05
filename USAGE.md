@@ -73,7 +73,7 @@ defmodule MyAppWeb.AuthLive do
     }
   end
 
-  def handle_info({:registration_successful, key_id: raw_id, public_key: public_key, user_handle: user_handle}, socket) do
+  def handle_info({:registration_successful, key_id: raw_id, public_key: public_key}, socket) do
     # Persist the user here.
   end
 

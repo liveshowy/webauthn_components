@@ -6,7 +6,22 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   Authentication is the process of matching a registered key to an existing user.
 
+  With Passkeys, the user is presented with a native modal from the browser or OS.
+
+  - If the user has only one passkey registered to the application's origin URL, they will be prompted to confirm acceptance via biometric ID (touch, face, etc.), OS password, or an OS PIN.
+  - If multiple accounts are registered to the device for the origin URL, the user may select an account to use for the current session.
+
   See [USAGE.md](./USAGE.md) for example code.
+
+  ## Cross-Device Authentication
+
+  When a user attempts to authenticate on a device where their Passkey is **not** stored, they may scan a QR code to use a cloud-sync'd Passkey.
+
+  ### Example
+
+  Imagine a user, Amal, registers a Passkey for example.com on their iPhone and it's stored in iCloud. When they attempt to sign into example.com on a non-Apple device or any browser which cannot access their OS keychain, they may choose to scan a QR code using their iPhone. Assuming the prompts on the iPhone are successful, the other device will be authenticated using the same web account which was initially registered on the iPhone.
+
+  While this example refers to Apple's Passkey implementation, the process on other platforms may vary. Cross-device credential managers like 1Password may provide a more seamless flow for users who are not constrained to one OS or browser.
 
   ## Assigns
 
@@ -24,8 +39,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   ## Messages
 
-  - `{:find_credentials, user_handle: user_handle}`
-    - `user_handle` is a raw binary representing the user id or random id stored in the credential during registration.
+  - `{:find_credential, key_id: key_id}`
+    - `key_id` is a raw binary representing the id stored associated with the credential in both the client and server during registration.
     - The parent LiveView must successfully lookup the user with this data before storing a token and redirecting to another view.
   - `{:error, payload}`
     - `payload` contains the `message`, `name`, and `stack` returned by the browser upon timeout or other client-side errors.
@@ -73,7 +88,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
     %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
-      signature: signature,
+      signature: signature
     } = attestation
 
     %{
@@ -84,14 +99,15 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
     credentials = [{key_id, public_key}]
 
-    wax_response = Wax.authenticate(
-      key_id,
-      authenticator_data,
-      signature,
-      client_data_array,
-      challenge,
-      credentials
-    )
+    wax_response =
+      Wax.authenticate(
+        key_id,
+        authenticator_data,
+        signature,
+        client_data_array,
+        challenge,
+        credentials
+      )
 
     case wax_response do
       {:ok, _authenticator_data} ->
@@ -103,7 +119,6 @@ defmodule WebauthnComponents.AuthenticationComponent do
         send(self(), {:authentication_failure, message: message})
         {:ok, assign(socket, assigns)}
     end
-
   end
 
   def update(assigns, socket) do
@@ -143,25 +158,22 @@ defmodule WebauthnComponents.AuthenticationComponent do
       "clientDataArray" => client_data_array,
       "rawId64" => raw_id_64,
       "signature64" => signature_64,
-      "type" => type,
-      "userHandle64" => user_handle_64
+      "type" => type
     } = payload
 
     authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
     raw_id = Base.decode64!(raw_id_64, padding: false)
     signature = Base.decode64!(signature_64, padding: false)
-    user_handle = Base.decode64!(user_handle_64, padding: false)
 
     attestation = %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
       raw_id: raw_id,
       signature: signature,
-      type: type,
-      user_handle: user_handle
+      type: type
     }
 
-    send(self(), {:find_credentials, user_handle: user_handle})
+    send(self(), {:find_credential, key_id: raw_id})
 
     {
       :noreply,
