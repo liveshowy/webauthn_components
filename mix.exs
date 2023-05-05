@@ -42,7 +42,7 @@ defmodule WebauthnComponents.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 0.17"},
       {:uuid, "~> 1.1"},
-      {:wax_, "~> 0.4"}
+      {:wax_, "~> 0.6.1"}
     ]
   end
 
