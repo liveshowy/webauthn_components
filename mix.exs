@@ -33,16 +33,16 @@ defmodule WebauthnComponents.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.24", only: [:dev], runtime: false},
-      {:floki, "~> 0.34.0", only: [:test]},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.29.4", only: [:dev], runtime: false},
+      {:floki, "~> 0.34.2", only: [:test]},
       {:jason, "~> 1.0"},
-      {:live_isolated_component, "~> 0.6.2", only: [:test]},
+      {:live_isolated_component, "~> 0.6.4", only: [:test]},
       {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 0.17"},
       {:uuid, "~> 1.1"},
-      {:wax_, "~> 0.4"}
+      {:wax_, "~> 0.6.1"}
     ]
   end
 
