@@ -3,7 +3,7 @@ defmodule WebauthnComponents.MixProject do
 
   # Don't forget to change the version in `package.json`
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.4.1"
+  @version "0.5.0"
 
   def project do
     [
@@ -34,7 +34,7 @@ defmodule WebauthnComponents.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.29.4", only: [:dev], runtime: false},
+      {:ex_doc, "~> 0.30", only: [:dev], runtime: false},
       {:floki, "~> 0.34.2", only: [:test]},
       {:jason, "~> 1.0"},
       {:live_isolated_component, "~> 0.6.4", only: [:test]},
