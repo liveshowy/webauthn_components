@@ -1,11 +1,13 @@
-defmodule Mix.Tasks.Wac.Gen.Schemas do
+defmodule Mix.Tasks.Wac.Install do
   @moduledoc """
   Generates schemas, migrations, and contexts for users with WebauthnComponents as the primary authentication mechanism.
   """
   @shortdoc "Generates a user schema."
 
   use Mix.Task
-  alias Wac.Gen.Builder
+  alias Wac.Gen.Contexts
+  alias Wac.Gen.Schemas
+  alias Wac.Gen.Migrations
 
   @version Mix.Project.config()[:version]
 
@@ -36,7 +38,9 @@ defmodule Mix.Tasks.Wac.Gen.Schemas do
           app_pascal_case: Module.concat([dirname_camelized])
         ]
 
-        Builder.copy_templates(assigns)
+        Schemas.copy_templates(assigns)
+        Migrations.copy_templates(assigns)
+        Contexts.copy_templates(assigns)
 
       {_parsed, _args, errors} ->
         invalid_opts =
