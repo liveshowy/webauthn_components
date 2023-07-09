@@ -1,12 +1,12 @@
-defmodule <%= @app_pascal_case %>.Users do
+defmodule <%= inspect @app_pascal_case %>.Users do
   @moduledoc """
   Functions for managing users.
   """
 
   import Ecto.Query
   alias Ecto.Changeset
-  alias <%= @app_pascal_case %>.Repo
-  alias <%= @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Repo
+  alias <%= inspect @app_pascal_case %>.Users.User
 
   @doc """
   Returns all `User` records matching the optional query parameters.

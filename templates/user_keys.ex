@@ -1,11 +1,11 @@
-defmodule <%= @app_pascal_case %>.UserKeys do
+defmodule <%= inspect @app_pascal_case %>.UserKeys do
   @moduledoc """
   Functions for managing user keys.
   """
   import Ecto.Query
   alias Ecto.Changeset
-  alias <%= @app_pascal_case %>.Repo
-  alias <%= @app_pascal_case %>.UserKeys.UserKey
+  alias <%= inspect @app_pascal_case %>.Repo
+  alias <%= inspect @app_pascal_case %>.UserKeys.UserKey
 
   @doc """
   Returns all `UserKey` records matching the optional query parameters.

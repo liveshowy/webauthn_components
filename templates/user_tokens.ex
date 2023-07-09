@@ -1,12 +1,12 @@
-defmodule <%= @app_pascal_case %>.UserTokens do
+defmodule <%= inspect @app_pascal_case %>.UserTokens do
   @moduledoc """
   Functions for managing user tokens.
   """
 
   import Ecto.Query
   alias Ecto.Changeset
-  alias <%= @app_pascal_case %>.Repo
-  alias <%= @app_pascal_case %>.UserTokens.UserToken
+  alias <%= inspect @app_pascal_case %>.Repo
+  alias <%= inspect @app_pascal_case %>.UserTokens.UserToken
 
   @rand_size 32
   @session_validity_in_days 7

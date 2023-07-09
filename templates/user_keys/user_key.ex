@@ -1,10 +1,10 @@
-defmodule <%= @app_pascal_case %>.UserKeys.UserKey do
+defmodule <%= inspect @app_pascal_case %>.UserKeys.UserKey do
   @moduledoc """
   Schema representing a `User`'s Webauthn key.
   """
   use Ecto.Schema
   import Ecto.Changeset
-  alias <%= @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Users.User
   alias WebauthnComponents.CoseKey
 
   @type t :: %__MODULE__{
