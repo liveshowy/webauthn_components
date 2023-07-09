@@ -1,15 +1,12 @@
-defmodule Wac.Gen.Builder do
+defmodule Wac.Gen.Contexts do
   @moduledoc """
   Functions for generating a User schema and migration.
   """
 
   @template_paths %{
-    users_context: "users.ex",
-    user_schema: "users/user.ex",
-    user_keys_context: "user_keys.ex",
-    user_key_schema: "user_keys/user_key.ex",
-    user_tokens_context: "user_tokens.ex",
-    user_token_schema: "user_tokens/user_token.ex"
+    users: "users.ex",
+    user_keys: "user_keys.ex",
+    user_tokens: "user_tokens.ex"
   }
 
   @templates Map.keys(@template_paths)
