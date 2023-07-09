@@ -3,20 +3,18 @@ defmodule <%= inspect @app_pascal_case %>.Users do
   Functions for managing users.
   """
 
-  import Ecto.Query
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
   alias <%= inspect @app_pascal_case %>.Users.User
 
   @doc """
-  Returns all `User` records matching the optional query parameters.
-
-  See `Ecto.Query.from/2` for supported options.
+  Returns all `User` records with optional preloads.
   """
-  @spec query(opts :: Keyword.t()) :: [User.t()]
-  def query(opts \\ []) when is_list(opts) do
-    from(user in User, opts)
+  @spec list(preloads :: list()) :: [User.t()]
+  def list(preloads \\ []) when is_list(preloads) do
+    User
     |> Repo.all()
+    |> Repo.preload(preloads)
   end
 
   @doc """

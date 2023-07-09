@@ -2,20 +2,19 @@ defmodule <%= inspect @app_pascal_case %>.UserKeys do
   @moduledoc """
   Functions for managing user keys.
   """
-  import Ecto.Query
+
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
   alias <%= inspect @app_pascal_case %>.UserKeys.UserKey
 
   @doc """
-  Returns all `UserKey` records matching the optional query parameters.
-
-  See `Ecto.Query.from/2` for supported options.
+  Returns all `UserKey` records with optional preloads.
   """
-  @spec query(opts :: Keyword.t()) :: [UserKey.t()]
-  def query(opts \\ []) when is_list(opts) do
-    from(user_key in UserKey, opts)
+  @spec list(preloads :: list()) :: [User.t()]
+  def list(preloads \\ []) when is_list(preloads) do
+    UserKey
     |> Repo.all()
+    |> Repo.preload(preloads)
   end
 
   @doc """

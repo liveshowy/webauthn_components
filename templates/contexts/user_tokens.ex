@@ -46,7 +46,7 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens do
   def verify_token_query(token, validity_in_days \\ @session_validity_in_days) do
     from token in token_and_context_query(token, :session),
       join: user in assoc(token, :user),
-      where: token.inserted_at > ago(validity_in_days, "day"),
+      where: token.inserted_at > ago(^validity_in_days, "day"),
       select: user
   end
 
@@ -58,14 +58,13 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens do
   end
 
   @doc """
-  Returns all `UserToken` records matching the optional query parameters.
-
-  See `Ecto.Query.from/2` for supported options.
+  Returns all `UserToken` records with optional preloads.
   """
-  @spec query(opts :: Keyword.t()) :: [UserToken.t()]
-  def query(opts \\ []) when is_list(opts) do
-    from(user_token in UserToken, opts)
+  @spec list(preloads :: list()) :: [User.t()]
+  def list(preloads \\ []) when is_list(preloads) do
+    UserToken
     |> Repo.all()
+    |> Repo.preload(preloads)
   end
 
   @doc """
