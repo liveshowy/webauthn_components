@@ -11,7 +11,7 @@ defmodule Mix.Tasks.Wac.Install do
 
   @version Mix.Project.config()[:version]
 
-  @mix_task "wac.gen.schemas"
+  @mix_task "wac.install"
   @switches []
 
   @impl Mix.Task
