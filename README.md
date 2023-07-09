@@ -49,6 +49,30 @@ end
 
 ## Usage
 
+The schemas, migrations, and contexts required by WebauthnComponents may be generated using the `wac.install` Mix Task:
+
+```bash
+# Generate a new Phoenix app if necessary
+mix phx.new my_app
+cd my_app
+
+# Generate modules for WebauthnComponents
+mix wac.install
+* creating lib/my_app/users/user.ex
+* creating lib/my_app/user_keys/user_key.ex
+* creating lib/my_app/user_tokens/user_token.ex
+* creating priv/repo/migrations/20230709155207_user_keys.ex
+* creating priv/repo/migrations/20230709155207_user_tokens.ex
+* creating priv/repo/migrations/20230709155207_users.ex
+* creating lib/my_app/users.ex
+* creating lib/my_app/user_keys.ex
+* creating lib/my_app/user_tokens.ex
+```
+
+The `wax.install` task is currently designed for Phoenix apps with no existing authentication. If your application has existing authentication, you may manually add or modify the modules required by `WebauthnComponents`.
+
+\*Additional generators for authentication and registration LiveViews are planned for a future release.
+
 See [USAGE.md](./USAGE.md) for detailed usage instructions.
 
 ### WebAuthn Flows
