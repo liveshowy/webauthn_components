@@ -9,11 +9,16 @@ defmodule Mix.Tasks.Wac.Gen.Schemas do
 
   @version Mix.Project.config()[:version]
 
+  @mix_task "wac.gen.schemas"
   @switches []
 
   @impl Mix.Task
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("WebauthnComponents Schemas generator v#{@version}")
+  end
+
+  def run([version]) when version in ~w(-h --help) do
+    Mix.Tasks.Help.run([@mix_task])
   end
 
   def run(args) do
@@ -24,10 +29,11 @@ defmodule Mix.Tasks.Wac.Gen.Schemas do
     case OptionParser.parse(args, strict: @switches) do
       {_parsed, _args, []} ->
         dirname = File.cwd!() |> Path.basename()
+        dirname_camelized = Macro.camelize(dirname)
 
         assigns = [
           app_snake_case: dirname,
-          app_pascal_case: Module.concat([Macro.camelize(dirname)])
+          app_pascal_case: Module.concat([dirname_camelized])
         ]
 
         Builder.copy_templates(assigns)
@@ -37,7 +43,7 @@ defmodule Mix.Tasks.Wac.Gen.Schemas do
           errors
           |> Enum.map_join(", ", &elem(&1, 0))
 
-        Mix.Tasks.Help.run(["wac.gen.schemas"])
+        Mix.Tasks.Help.run([@mix_task])
         Mix.shell().error("Invalid option(s): #{invalid_opts}")
     end
   end
