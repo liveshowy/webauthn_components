@@ -18,8 +18,8 @@ defmodule <%= inspect @app_pascal_case %>.Users.User do
   @foreign_key_type Ecto.ULID
   schema "users" do
     field :email, :string
-    has_many :keys, UserKey, preload_order: [:desc, :last_used_at]
-    has_many :tokens, UserToken, preload_order: [:desc, :inserted_at]
+    has_many :keys, UserKey, preload_order: [desc: :last_used_at]
+    has_many :tokens, UserToken, preload_order: [desc: :inserted_at]
 
     timestamps()
   end
