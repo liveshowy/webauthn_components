@@ -8,6 +8,8 @@ defmodule Mix.Tasks.Wac.Install do
   alias Wac.Gen.Contexts
   alias Wac.Gen.Schemas
   alias Wac.Gen.Migrations
+  alias Wac.Gen.Tests
+  alias Wac.Gen.Fixtures
 
   @version Mix.Project.config()[:version]
 
@@ -41,6 +43,8 @@ defmodule Mix.Tasks.Wac.Install do
         Schemas.copy_templates(assigns)
         Migrations.copy_templates(assigns)
         Contexts.copy_templates(assigns)
+        Tests.copy_templates(assigns)
+        Fixtures.copy_templates(assigns)
 
       {_parsed, _args, errors} ->
         invalid_opts =
