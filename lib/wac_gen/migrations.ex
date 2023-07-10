@@ -14,6 +14,7 @@ defmodule Wac.Gen.Migrations do
   def copy_templates(assigns) do
     for template <- @templates do
       copy_template(template, assigns)
+      # Pause to ensure unique timestamped files
       Process.sleep(1_000)
     end
   end
