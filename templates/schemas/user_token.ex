@@ -8,8 +8,8 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens.UserToken do
 
   @type t :: %__MODULE__{
           id: binary(),
-          context: atom(),
-          token: binary(),
+          type: atom(),
+          value: binary(),
           user_id: binary(),
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
@@ -18,18 +18,20 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens.UserToken do
   @primary_key {:id, Ecto.ULID, autogenerate: true}
   @foreign_key_type Ecto.ULID
   schema "user_tokens" do
-    field :context, Ecto.Enum, values: [:session], default: :session
-    field :token, :binary
+    field :type, Ecto.Enum, values: [:session], default: :session
+    field :value, :binary
     belongs_to :user, User
 
-    timestamps()
+    timestamps(updated_at: false)
   end
 
   @doc false
   def changeset(%__MODULE__{} = user_token, attrs) do
+    fields = __MODULE__.__schema__(:fields)
+
     user_token
-    |> cast(attrs, [:token, :context, :user_id])
-    |> validate_required([:token, :context, :user_id])
+    |> cast(attrs, fields)
+    |> validate_required([:type, :value, :user_id])
     |> foreign_key_constraint(:user_id)
   end
 end
