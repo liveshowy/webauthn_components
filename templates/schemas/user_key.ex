@@ -38,8 +38,10 @@ defmodule <%= inspect @app_pascal_case %>.UserKeys.UserKey do
 
   @doc false
   def new_changeset(%__MODULE__{} = user_key, attrs) do
+    fields = __MODULE__.__schema__(:fields) -- [:last_used_at]
+
     user_key
-    |> cast(attrs, [:user_id, :key_id, :public_key, :label])
+    |> cast(attrs, fields)
     |> validate_required([:user_id, :key_id, :public_key, :label])
     |> foreign_key_constraint(:user_id)
     |> unique_constraint([:user_id, :label], message: "label already taken")
