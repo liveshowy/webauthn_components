@@ -44,17 +44,17 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens do
   not expired (after @session_validity_in_days).
   """
   def verify_token_query(token, validity_in_days \\ @session_validity_in_days) do
-    from token in token_and_context_query(token, :session),
+    from token in token_and_type_query(token, :session),
       join: user in assoc(token, :user),
       where: token.inserted_at > ago(^validity_in_days, "day"),
       select: user
   end
 
   @doc """
-  Returns the token struct for the given token value and context.
+  Returns the token struct for the given token value and type.
   """
-  def token_and_context_query(token, context) do
-    from UserToken, where: [token: ^token, context: ^context]
+  def token_and_type_query(token, type) do
+    from UserToken, where: [token: ^token, type: ^type]
   end
 
   @doc """
