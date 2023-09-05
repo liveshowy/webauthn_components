@@ -12,7 +12,6 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens.UserToken do
           value: binary(),
           user_id: binary(),
           inserted_at: NaiveDateTime.t(),
-          updated_at: NaiveDateTime.t()
         }
 
   @primary_key {:id, Ecto.ULID, autogenerate: true}

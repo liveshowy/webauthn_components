@@ -30,9 +30,9 @@ defmodule <%= inspect @app_pascal_case %>.UserTokens do
   and devices in the UI and allow users to explicitly expire any
   session they deem invalid.
   """
-  def build_token(user, context \\ :session) do
-    token = :crypto.strong_rand_bytes(@rand_size)
-    %UserToken{token: token, context: context, user_id: user.id}
+  def build_token(user, type \\ :session) do
+    value = :crypto.strong_rand_bytes(@rand_size)
+    %UserToken{value: value, type: type, user_id: user.id}
   end
 
   @doc """
