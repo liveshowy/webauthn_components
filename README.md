@@ -69,7 +69,7 @@ mix wac.install
 * creating lib/my_app/user_tokens.ex
 ```
 
-The `wax.install` task is currently designed for Phoenix apps with no existing authentication. If your application has existing authentication, you may manually add or modify the modules required by `WebauthnComponents`.
+The `wac.install` task is currently designed for Phoenix apps with no existing authentication. If your application has existing authentication, you may manually add or modify the modules required by `WebauthnComponents`.
 
 \*Additional generators for authentication and registration LiveViews are planned for a future release.
 
