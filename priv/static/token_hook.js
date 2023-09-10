@@ -1,6 +1,6 @@
 import { handleError } from "./utils";
 
-const TokenHook = {
+export const TokenHook = {
   mounted() {
     console.info(`TokenHook mounted`);
 
@@ -39,5 +39,3 @@ const TokenHook = {
     }
   },
 };
-
-module.exports = { TokenHook };
