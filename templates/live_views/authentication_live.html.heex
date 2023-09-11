@@ -16,7 +16,7 @@
         disabled={@form.source.valid? == false}
         module={RegistrationComponent}
         id="registration-component"
-        app="LiveShowy Chords"
+        app={<%= inspect @app_pascal_case %>}
         class="h-8 bg-gray-600 flex gap-2 items-center p-4 rounded disabled:cursor-not-allowed disabled:opacity-25 transition"
       />
     </fieldset>
