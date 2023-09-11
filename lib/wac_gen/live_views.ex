@@ -4,7 +4,8 @@ defmodule Wac.Gen.LiveViews do
   @template_path "../../templates/live_views"
 
   @template_files %{
-    session: "session.ex"
+    authentication: "authentication_live.ex",
+    authentication_html: "authentication_live.html.heex"
   }
 
   @templates Map.keys(@template_files)
@@ -20,6 +21,9 @@ defmodule Wac.Gen.LiveViews do
     source = Path.join([template_dir, file_name])
     target = Path.join(["lib", web_snake_case, "live", file_name])
     Mix.Generator.copy_template(source, target, assigns)
-    Code.format_file!(target)
+
+    unless String.contains?(file_name, ".html.heex") do
+      Code.format_file!(target)
+    end
   end
 end
