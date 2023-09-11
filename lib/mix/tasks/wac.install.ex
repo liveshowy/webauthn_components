@@ -41,6 +41,12 @@ defmodule Mix.Tasks.Wac.Install do
     tests: :boolean,
     web: :boolean
   ]
+  @default_opts [
+    contexts: true,
+    schemas: true,
+    tests: true,
+    web: true
+  ]
 
   @impl Mix.Task
   def run([version]) when version in ~w(-v --version) do
@@ -58,6 +64,7 @@ defmodule Mix.Tasks.Wac.Install do
 
     case OptionParser.parse(args, strict: @switches) do
       {flags, _args, []} ->
+        opts = Keyword.merge(@default_opts, flags)
         dirname = File.cwd!() |> Path.basename()
         dirname_camelized = Macro.camelize(dirname)
         web_dirname = dirname <> "_web"
@@ -70,21 +77,21 @@ defmodule Mix.Tasks.Wac.Install do
           web_pascal_case: Module.concat([web_dirname_camelized])
         ]
 
-        if Keyword.get(flags, :contexts, true) do
+        if opts[:contexts] do
           Contexts.copy_templates(assigns)
         end
 
-        if Keyword.get(flags, :schemas, true) do
+        if opts[:schemas] do
           Schemas.copy_templates(assigns)
           Migrations.copy_templates(assigns)
         end
 
-        if Keyword.get(flags, :tests, true) do
+        if opts[:tests] do
           Tests.copy_templates(assigns)
           Fixtures.copy_templates(assigns)
         end
 
-        if Keyword.get(flags, :web, true) do
+        if opts[:web] do
           Controllers.copy_templates(assigns)
           SessionHooks.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
