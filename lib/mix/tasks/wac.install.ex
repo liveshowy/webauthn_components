@@ -1,6 +1,24 @@
 defmodule Mix.Tasks.Wac.Install do
   @moduledoc """
   Generates schemas, migrations, and contexts for users with WebauthnComponents as the primary authentication mechanism.
+
+  ## Options
+
+  By default, contexts, schemas, tests, and web modules are generated or modified by `wac.install`. You may opt out of one or more generators with the following options:
+
+  - `--no-contexts`: Do not generate context modules.
+  - `--no-schemas`: Do not generate schema & migration modules.
+  - `--no-tests`: Do not generate test modules & scripts.
+  - `--no-web`: Do not generate the authentication LiveView, the session controller, session hooks, and do not modify the router.
+
+  ## Templates
+
+  Within the [`webauthn_components`](https://github.com/liveshowy/webauthn_components) repo, the following templates are used by `wac.install` to scaffold the modules needed to support Passkeys in a LiveView application:
+
+  #{for dir <- File.ls!("templates") |> Enum.sort(),
+  file <- Path.join(["templates", dir]) |> File.ls!() |> Enum.sort() do
+    "\n- `#{dir}/#{file}`"
+  end}
   """
   use Mix.Task
   alias Wac.Gen.Contexts
@@ -17,7 +35,12 @@ defmodule Mix.Tasks.Wac.Install do
   @shortdoc "Generates a user schema."
 
   @mix_task "wac.install"
-  @switches []
+  @switches [
+    contexts: :boolean,
+    schemas: :boolean,
+    tests: :boolean,
+    web: :boolean
+  ]
 
   @impl Mix.Task
   def run([version]) when version in ~w(-v --version) do
@@ -34,7 +57,7 @@ defmodule Mix.Tasks.Wac.Install do
     end
 
     case OptionParser.parse(args, strict: @switches) do
-      {_parsed, _args, []} ->
+      {flags, _args, []} ->
         dirname = File.cwd!() |> Path.basename()
         dirname_camelized = Macro.camelize(dirname)
         web_dirname = dirname <> "_web"
@@ -47,15 +70,26 @@ defmodule Mix.Tasks.Wac.Install do
           web_pascal_case: Module.concat([web_dirname_camelized])
         ]
 
-        Schemas.copy_templates(assigns)
-        Migrations.copy_templates(assigns)
-        Contexts.copy_templates(assigns)
-        Tests.copy_templates(assigns)
-        Fixtures.copy_templates(assigns)
-        Controllers.copy_templates(assigns)
-        SessionHooks.copy_templates(assigns)
-        LiveViews.copy_templates(assigns)
-        Router.update_router(assigns)
+        if Keyword.get(flags, :contexts, true) do
+          Contexts.copy_templates(assigns)
+        end
+
+        if Keyword.get(flags, :schemas, true) do
+          Schemas.copy_templates(assigns)
+          Migrations.copy_templates(assigns)
+        end
+
+        if Keyword.get(flags, :tests, true) do
+          Tests.copy_templates(assigns)
+          Fixtures.copy_templates(assigns)
+        end
+
+        if Keyword.get(flags, :web, true) do
+          Controllers.copy_templates(assigns)
+          SessionHooks.copy_templates(assigns)
+          LiveViews.copy_templates(assigns)
+          Router.update_router(assigns)
+        end
 
       {_parsed, _args, errors} ->
         invalid_opts =
