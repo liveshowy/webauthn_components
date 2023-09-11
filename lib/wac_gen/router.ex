@@ -4,5 +4,6 @@ defmodule Wac.Gen.Router do
   def update_router(assigns) do
     web_snake_case = Keyword.fetch!(assigns, :web_snake_case)
     router_path = Path.join(["lib", web_snake_case, "router.ex"])
+    IO.puts("Skipping #{router_path} for now")
   end
 end
