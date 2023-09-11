@@ -1,7 +1,5 @@
 defmodule Wac.Gen.Schemas do
-  @moduledoc """
-  Functions for generating a User schema and migration.
-  """
+  @moduledoc false
 
   @template_files %{
     user: "user.ex",

@@ -1,7 +1,5 @@
 defmodule Wac.Gen.Fixtures do
-  @moduledoc """
-  Functions for generating a User schema and migration.
-  """
+  @moduledoc false
 
   @template_files %{
     users: "user_fixtures.ex"

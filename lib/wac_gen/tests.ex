@@ -1,7 +1,5 @@
 defmodule Wac.Gen.Tests do
-  @moduledoc """
-  Functions for generating a User schema and migration.
-  """
+  @moduledoc false
 
   @template_files %{
     users: "users_test.exs"
