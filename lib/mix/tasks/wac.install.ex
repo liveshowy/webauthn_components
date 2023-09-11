@@ -2,8 +2,6 @@ defmodule Mix.Tasks.Wac.Install do
   @moduledoc """
   Generates schemas, migrations, and contexts for users with WebauthnComponents as the primary authentication mechanism.
   """
-  @shortdoc "Generates a user schema."
-
   use Mix.Task
   alias Wac.Gen.Contexts
   alias Wac.Gen.Schemas
@@ -12,6 +10,7 @@ defmodule Mix.Tasks.Wac.Install do
   alias Wac.Gen.Fixtures
 
   @version Mix.Project.config()[:version]
+  @shortdoc "Generates a user schema."
 
   @mix_task "wac.install"
   @switches []
