@@ -4,8 +4,12 @@ defmodule Mix.Tasks.Wac.Install do
   """
   use Mix.Task
   alias Wac.Gen.Contexts
+  alias Wac.Gen.Controllers
   alias Wac.Gen.Schemas
+  alias Wac.Gen.LiveViews
+  alias Wac.Gen.SessionHooks
   alias Wac.Gen.Migrations
+  alias Wac.Gen.Router
   alias Wac.Gen.Tests
   alias Wac.Gen.Fixtures
 
@@ -33,10 +37,14 @@ defmodule Mix.Tasks.Wac.Install do
       {_parsed, _args, []} ->
         dirname = File.cwd!() |> Path.basename()
         dirname_camelized = Macro.camelize(dirname)
+        web_dirname = dirname <> "_web"
+        web_dirname_camelized = Macro.camelize(web_dirname)
 
         assigns = [
           app_snake_case: dirname,
-          app_pascal_case: Module.concat([dirname_camelized])
+          app_pascal_case: Module.concat([dirname_camelized]),
+          web_snake_case: web_dirname,
+          web_pascal_case: Module.concat([web_dirname_camelized])
         ]
 
         Schemas.copy_templates(assigns)
@@ -44,6 +52,10 @@ defmodule Mix.Tasks.Wac.Install do
         Contexts.copy_templates(assigns)
         Tests.copy_templates(assigns)
         Fixtures.copy_templates(assigns)
+        Controllers.copy_templates(assigns)
+        SessionHooks.copy_templates(assigns)
+        LiveViews.copy_templates(assigns)
+        Router.update_router(assigns)
 
       {_parsed, _args, errors} ->
         invalid_opts =

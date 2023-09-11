@@ -4,8 +4,8 @@ defmodule <%= inspect @app_pascal_case %>.Users.User do
   """
   use Ecto.Schema
   import Ecto.Changeset
-  alias <%= inspect @app_pascal_case %>.UserKeys.UserKey
-  alias <%= inspect @app_pascal_case %>.UserTokens.UserToken
+  alias <%= inspect @app_pascal_case %>.Users.UserKey
+  alias <%= inspect @app_pascal_case %>.Users.UserToken
 
   @type t :: %__MODULE__{
           id: binary(),

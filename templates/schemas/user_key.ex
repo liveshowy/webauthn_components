@@ -1,4 +1,4 @@
-defmodule <%= inspect @app_pascal_case %>.UserKeys.UserKey do
+defmodule <%= inspect @app_pascal_case %>.Users.UserKey do
   @moduledoc """
   Schema representing a `User`'s Webauthn key.
   """

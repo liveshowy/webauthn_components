@@ -59,6 +59,13 @@ defmodule WebauthnComponents.MixProject do
       nest_modules_by_prefix: [
         WebauthnComponents
       ],
+      groups_for_modules: [
+        Components: ~r/Component$/,
+        Support: [
+          WebauthnComponents.CoseKey,
+          WebauthnComponents.WebauthnUser
+        ]
+      ],
       source_url: @source_url,
       before_closing_body_tag: &before_closing_body_tag/1,
       extras: ["README.md", "USAGE.md"]

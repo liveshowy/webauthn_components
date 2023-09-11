@@ -4,8 +4,8 @@ defmodule <%= inspect @app_pascal_case %>.UsersTest do
   alias <%= inspect @app_pascal_case %>.UserFixtures
   alias <%= inspect @app_pascal_case %>.Users
   alias <%= inspect @app_pascal_case %>.Users.User
-  alias <%= inspect @app_pascal_case %>.UserKeys.UserKey
-  alias <%= inspect @app_pascal_case %>.UserTokens.UserToken
+  alias <%= inspect @app_pascal_case %>.Users.UserKey
+  alias <%= inspect @app_pascal_case %>.Users.UserToken
 
 
   describe "list/1" do

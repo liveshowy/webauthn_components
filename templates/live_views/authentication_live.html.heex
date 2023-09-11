@@ -1,0 +1,56 @@
+<section class="mx-auto w-96">
+  <.live_component module={SupportComponent} id="support-component" />
+
+  <.simple_form
+    :let={form}
+    :if={@form}
+    for={@form}
+    phx-change="update-form"
+    phx-submit={JS.dispatch("click", to: "#registration-component")}
+    class="grid gap-8"
+  >
+    <fieldset class="grid gap-4 bg-gray-800 p-6 rounded-lg">
+      <p>Want a new account?</p>
+      <.input type="email" field={form[:email]} label="Email" phx-debounce="250" />
+      <.live_component
+        disabled={@form.source.valid? == false}
+        module={RegistrationComponent}
+        id="registration-component"
+        app="LiveShowy Chords"
+        class="h-8 bg-gray-600 flex gap-2 items-center p-4 rounded disabled:cursor-not-allowed disabled:opacity-25 transition"
+      />
+    </fieldset>
+
+    <fieldset class="grid gap-4 bg-gray-800 p-6 rounded-lg">
+      <p>Already have an account?</p>
+
+      <.live_component
+        disabled={@form.source.valid? == false}
+        module={AuthenticationComponent}
+        id="authentication-component"
+        class="h-8 bg-gray-600 flex gap-2 items-center p-4 rounded disabled:cursor-not-allowed disabled:opacity-25 transition"
+      />
+    </fieldset>
+  </.simple_form>
+
+  <%!--
+    - The form is only rendered when a token has been created by the registration or authentication component.
+    - The form is present in the markup, but hidden from view.
+    - When the form is mounted, JS is used to click the submit button.
+    - This is a bit hacky, but it works.
+  --%>
+
+  <.simple_form
+    :let={f}
+    :if={@token_form}
+    for={@token_form}
+    method="post"
+    id="token-form"
+    action={~p"/session"}
+    phx-mounted={JS.dispatch("click", to: "#token-form button[type='submit']")}
+    class="hidden"
+  >
+    <.input type="text" field={f[:value]} label="Value" />
+    <.button type="submit">Go</.button>
+  </.simple_form>
+</section>

@@ -1,4 +1,4 @@
-defmodule <%= inspect @app_pascal_case %>.UserTokens.UserToken do
+defmodule <%= inspect @app_pascal_case %>.Users.UserToken do
   @moduledoc """
   Schema representing a token generated for a `User`.
   """

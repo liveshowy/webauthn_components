@@ -6,6 +6,8 @@ defmodule <%= inspect @app_pascal_case %>.Users do
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
   alias <%= inspect @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Users.UserToken
+  import Ecto.Query
 
   @doc """
   Returns all `User` records with optional preloads.
@@ -47,6 +49,54 @@ defmodule <%= inspect @app_pascal_case %>.Users do
   end
 
   @doc """
+  Retrieves a `User` by querying a valid token.
+  """
+  @spec get_by_token(raw_value :: binary(), type :: atom()) ::
+          {:ok, User.t()} | {:error, :not_found}
+  def get_by_token(raw_value, type \\ :session) when is_binary(raw_value) do
+    expiration_hours = 24
+
+    query =
+      from(user in User,
+        join: token in assoc(user, :tokens),
+        where:
+          token.value == ^raw_value and
+            token.type == ^type and
+            token.inserted_at > ago(^expiration_hours, "hour"),
+        order_by: [desc: token.inserted_at],
+        limit: 1
+      )
+
+    case Repo.one(query) do
+      %User{} = user ->
+        {:ok, user}
+
+      nil ->
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
+  Retrieves a `User` by querying an associated `:key_id`.
+  """
+  @spec get_by_key_id(key_id :: binary()) :: {:ok, User.t()} | {:error, :not_found}
+  def get_by_key_id(key_id) when is_binary(key_id) do
+    query =
+      from(user in User,
+        join: key in assoc(user, :keys),
+        where: key.key_id == ^key_id
+      )
+
+    case Repo.one(query) do
+      %User{} = user ->
+        {:ok, user}
+
+      nil ->
+        {:error, :not_found}
+    end
+  end
+
+  @doc """
   Modifies an existing `User` in the repo.
   """
   @spec update(user :: User.t(), attrs :: map()) :: {:ok, User.t()} | {:error, Changeset.t()}
@@ -62,5 +112,25 @@ defmodule <%= inspect @app_pascal_case %>.Users do
   @spec delete(user :: User.t()) :: {:ok, User.t()} | {:error, Changeset.t()}
   def delete(%User{} = user) do
     Repo.delete(user)
+  end
+
+  # USER TOKENS
+
+  @doc """
+  Inserts a new `UserToken` into the repo.
+  """
+  @spec create_token(attrs :: map()) :: {:ok, UserToken.t()} | {:error, Changeset.t()}
+  def create_token(attrs) do
+    %UserToken{}
+    |> UserToken.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Deletes all session tokens belonging to a user.
+  """
+  def delete_all_user_sessions(user_id) do
+    from(token in UserToken, where: token.user_id == ^user_id and token.type == :session)
+    |> Repo.delete_all()
   end
 end
