@@ -13,35 +13,53 @@ defmodule Wac.Gen.Router do
     guest_routes = guest_routes(assigns)
     authenticated_routes = authenticated_routes(assigns)
 
+    format_opts = [
+      locals_without_parens: [
+        plug: :*,
+        get: :*,
+        scope: :*,
+        delete: :*,
+        live: :*,
+        post: :*,
+        forward: :*,
+        live_dashboard: :*,
+        live_session: :*,
+        pipe_through: :*
+      ]
+    ]
+
     modified_router_contents =
       router_path
       |> File.read!()
       |> Sourceror.parse_string!()
       |> Zipper.zip()
       |> Zipper.find(&find_aliases/1)
-      |> Zipper.insert_child(aliases)
-      |> Zipper.root()
+      |> Zipper.insert_right(aliases)
       |> Zipper.find(&find_browser_pipeline/1)
       |> Zipper.insert_right(plug_fetch_current_user)
-      |> Zipper.root()
       |> Zipper.find(&find_first_scope/1)
-      |> Zipper.insert_right(session_routes)
-      |> Zipper.insert_right(guest_routes)
       |> Zipper.insert_right(authenticated_routes)
+      |> Zipper.insert_right(guest_routes)
+      |> Zipper.insert_right(session_routes)
       |> Zipper.root()
-      |> Sourceror.to_string()
+      |> Sourceror.to_string(format_opts)
 
     File.write!(router_path, modified_router_contents)
+
+    # Code.format_file!(router_path)
     IO.puts("Updated #{router_path}")
   end
 
-  defp find_aliases({:defmodule, _meta, [{:__aliases__, _, _} | _]}), do: true
+  defp find_aliases({:use, _meta, [{_, _, _}, {:__block__, _, [:router]} | _]}), do: true
+  # defp find_aliases({:defmodule, _meta, [{_, _, _} | _]}), do: true
   defp find_aliases(_), do: false
 
-  defp find_browser_pipeline({:plug, _, [{:__block__, _, [:protect_from_forgery]} | _]}), do: true
+  defp find_browser_pipeline({:plug, _, [{:__block__, _, [:put_secure_browser_headers]} | _]}),
+    do: true
+
   defp find_browser_pipeline(_), do: false
 
-  defp find_first_scope({:scope, _, [{:block, _, ["/"]} | _]}), do: true
+  defp find_first_scope({:scope, _, [{:__block__, _, ["/"]} | _]}), do: true
   defp find_first_scope(_), do: false
 
   # AST Trees
