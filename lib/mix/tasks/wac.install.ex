@@ -51,6 +51,8 @@ defmodule Mix.Tasks.Wac.Install do
     router: true
   ]
 
+  @requirements ["app.start"]
+
   @impl Mix.Task
   def run([version]) when version in ~w(-v --version) do
     Mix.shell().info("WebauthnComponents Schemas generator v#{@version}")
