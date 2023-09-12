@@ -36,16 +36,17 @@ defmodule WebauthnComponents.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.30", only: [:dev], runtime: false},
+      {:ecto_ulid, "~> 0.3"},
       {:ecto, "~> 3.10"},
+      {:ex_doc, "~> 0.30", only: [:dev], runtime: false},
       {:floki, "~> 0.34.2", only: [:test]},
       {:jason, "~> 1.0"},
       {:live_isolated_component, "~> 0.6.4", only: [:test]},
-      {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 0.17"},
+      {:phoenix, "~> 1.6"},
+      {:sourceror, "~> 0.13"},
       {:uuid, "~> 1.1"},
-      {:ecto_ulid, "~> 0.3"},
       {:wax_, "~> 0.6.1"}
     ]
   end
