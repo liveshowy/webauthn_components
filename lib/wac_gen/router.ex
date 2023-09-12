@@ -1,11 +1,103 @@
 defmodule Wac.Gen.Router do
   @moduledoc false
+  alias Sourceror.Zipper
 
   def update_router(assigns) do
     web_snake_case = Keyword.fetch!(assigns, :web_snake_case)
     router_path = Path.join(["lib", web_snake_case, "router.ex"])
-    # Slack request for help:
-    # https://elixir-lang.slack.com/archives/C03EPRA3B/p1694398121220679
-    IO.puts("Skipping #{router_path} for now")
+
+    # Child AST trees to be inserted
+    aliases = aliases(assigns)
+    plug_fetch_current_user = plug_fetch_current_user()
+    session_routes = session_routes(assigns)
+    guest_routes = guest_routes(assigns)
+    authenticated_routes = authenticated_routes(assigns)
+
+    modified_router_contents =
+      router_path
+      |> File.read!()
+      |> Sourceror.parse_string!()
+      |> Zipper.zip()
+      |> Zipper.find(&find_aliases/1)
+      |> Zipper.insert_child(aliases)
+      |> Zipper.root()
+      |> Zipper.find(&find_browser_pipeline/1)
+      |> Zipper.insert_right(plug_fetch_current_user)
+      |> Zipper.root()
+      |> Zipper.find(&find_first_scope/1)
+      |> Zipper.insert_right(session_routes)
+      |> Zipper.insert_right(guest_routes)
+      |> Zipper.insert_right(authenticated_routes)
+      |> Zipper.root()
+      |> Sourceror.to_string()
+
+    File.write!(router_path, modified_router_contents)
+    IO.puts("Updated #{router_path}")
+  end
+
+  defp find_aliases({:defmodule, _meta, [{:__aliases__, _, _} | _]}), do: true
+  defp find_aliases(_), do: false
+
+  defp find_browser_pipeline({:plug, _, [{:__block__, _, [:protect_from_forgery]} | _]}), do: true
+  defp find_browser_pipeline(_), do: false
+
+  defp find_first_scope({:scope, _, [{:block, _, ["/"]} | _]}), do: true
+  defp find_first_scope(_), do: false
+
+  # AST Trees
+
+  defp aliases(assigns) do
+    web_pascal_case = assigns[:web_pascal_case]
+
+    quote do
+      alias unquote(web_pascal_case).SessionHooks.AssignUser
+      alias unquote(web_pascal_case).SessionHooks.RequireUser
+      import unquote(web_pascal_case).Session, only: [fetch_current_user: 2]
+    end
+  end
+
+  defp plug_fetch_current_user do
+    quote do
+      plug :fetch_current_user
+    end
+  end
+
+  defp session_routes(assigns) do
+    quote do
+      # HTTP controller routes
+      scope "/", unquote(assigns[:web_pascal_case]) do
+        pipe_through :browser
+
+        post "/session", Session, :create
+        delete "/session", Session, :delete
+      end
+    end
+  end
+
+  defp guest_routes(assigns) do
+    quote do
+      # Unprotected LiveViews
+      live_session :guest, on_mount: [AssignUser] do
+        scope "/", unquote(assigns[:web_pascal_case]) do
+          pipe_through :browser
+
+          live "/sign-in", AuthenticationLive
+        end
+      end
+    end
+  end
+
+  defp authenticated_routes(assigns) do
+    quote do
+      # Protected LiveViews
+      live_session :authenticated, on_mount: [AssignUser, RequireUser] do
+        scope "/", unquote(assigns[:web_pascal_case]) do
+          pipe_through :browser
+
+          # Example
+          # live "/room/:room_id", RoomLive
+        end
+      end
+    end
   end
 end

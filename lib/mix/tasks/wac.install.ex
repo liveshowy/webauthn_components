@@ -9,7 +9,8 @@ defmodule Mix.Tasks.Wac.Install do
   - `--no-contexts`: Do not generate context modules.
   - `--no-schemas`: Do not generate schema & migration modules.
   - `--no-tests`: Do not generate test modules & scripts.
-  - `--no-web`: Do not generate the authentication LiveView, the session controller, session hooks, and do not modify the router.
+  - `--no-web`: Do not generate the authentication LiveView, the session controller, or session hooks.
+  - `--no-router`: Do not modify the router.
 
   ## Templates
 
@@ -39,13 +40,15 @@ defmodule Mix.Tasks.Wac.Install do
     contexts: :boolean,
     schemas: :boolean,
     tests: :boolean,
-    web: :boolean
+    web: :boolean,
+    router: :boolean
   ]
   @default_opts [
     contexts: true,
     schemas: true,
     tests: true,
-    web: true
+    web: true,
+    router: true
   ]
 
   @impl Mix.Task
@@ -95,6 +98,9 @@ defmodule Mix.Tasks.Wac.Install do
           Controllers.copy_templates(assigns)
           SessionHooks.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
+        end
+
+        if opts[:router] do
           Router.update_router(assigns)
         end
 
