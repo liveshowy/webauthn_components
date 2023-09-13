@@ -18,7 +18,7 @@ defmodule Mix.Tasks.Wac.Install do
 
   #{for dir <- File.ls!("templates") |> Enum.sort(),
   file <- Path.join(["templates", dir]) |> File.ls!() |> Enum.sort() do
-    "\n- `#{dir}/#{file}`"
+    "\n- `templates/#{dir}/#{file}`"
   end}
   """
   use Mix.Task
