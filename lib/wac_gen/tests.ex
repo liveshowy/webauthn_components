@@ -4,9 +4,7 @@ defmodule Wac.Gen.Tests do
   @template_path "../../templates/tests"
 
   @template_files %{
-    users: "users_test.exs"
-    # user_keys: "user_keys_test.exs",
-    # user_tokens: "user_tokens_test.exs"
+    identity: "identity_test.exs"
   }
 
   @templates Map.keys(@template_files)

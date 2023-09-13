@@ -6,7 +6,7 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.RequireUser do
 
   This hook should follow `<%= inspect @web_pascal_case %>.SessionHooks.AssignUser` in a `Phoenix.LiveView.Router.live_session/3`.
   """
-  alias <%= inspect @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Identity.User
   import Phoenix.LiveView
   use <%= inspect @web_pascal_case %>, :verified_routes
 

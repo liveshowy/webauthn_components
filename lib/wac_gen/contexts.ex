@@ -4,7 +4,7 @@ defmodule Wac.Gen.Contexts do
   @template_path "../../templates/contexts"
 
   @template_files %{
-    users: "users.ex"
+    identity: "identity.ex"
   }
 
   @templates Map.keys(@template_files)

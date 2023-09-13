@@ -63,8 +63,8 @@ mix wac.install
 * creating lib/my_app/user_tokens/user_token.ex
 * creating priv/repo/migrations/20230709155207_user_keys.ex
 * creating priv/repo/migrations/20230709155207_user_tokens.ex
-* creating priv/repo/migrations/20230709155207_users.ex
-* creating lib/my_app/users.ex
+* creating priv/repo/migrations/20230709155207_identity.ex
+* creating lib/my_app/identity.ex
 * creating lib/my_app/user_keys.ex
 * creating lib/my_app/user_tokens.ex
 ```

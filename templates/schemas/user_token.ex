@@ -1,10 +1,10 @@
-defmodule <%= inspect @app_pascal_case %>.Users.UserToken do
+defmodule <%= inspect @app_pascal_case %>.Identity.UserToken do
   @moduledoc """
   Schema representing a token generated for a `User`.
   """
   use Ecto.Schema
   import Ecto.Changeset
-  alias <%= inspect @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Identity.User
 
   @type t :: %__MODULE__{
           id: binary(),

@@ -1,11 +1,11 @@
-defmodule <%= inspect @app_pascal_case %>.Users.User do
+defmodule <%= inspect @app_pascal_case %>.Identity.User do
   @moduledoc """
   Schema representing a user of the application.
   """
   use Ecto.Schema
   import Ecto.Changeset
-  alias <%= inspect @app_pascal_case %>.Users.UserKey
-  alias <%= inspect @app_pascal_case %>.Users.UserToken
+  alias <%= inspect @app_pascal_case %>.Identity.UserKey
+  alias <%= inspect @app_pascal_case %>.Identity.UserToken
 
   @type t :: %__MODULE__{
           id: binary(),

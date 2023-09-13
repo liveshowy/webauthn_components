@@ -4,8 +4,8 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.AssignUser do
 
   If a **valid** `user_id` or `user_token` is set in the session, the user will be assigned, otherwise `@current_user` will be `nil`.
   """
-  alias <%= inspect @app_pascal_case %>.Users
-  alias <%= inspect @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Identity
+  alias <%= inspect @app_pascal_case %>.Identity.User
   import Phoenix.Component
 
   def on_mount(:default, _params, _session, %{assigns: %{current_user: %User{}}} = socket) do
@@ -13,7 +13,7 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.AssignUser do
   end
 
   def on_mount(:default, _params, %{"user_id" => user_id}, socket) do
-    case Users.get(user_id) do
+    case Identity.get(user_id) do
       {:ok, %User{} = user} ->
         {
           :cont,
@@ -31,7 +31,7 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.AssignUser do
   end
 
   def on_mount(:default, _params, %{"user_token" => user_token}, socket) do
-    case Users.get_by_token(user_token) do
+    case Identity.get_by_token(user_token) do
       {:ok, %User{} = user} ->
         {
           :cont,

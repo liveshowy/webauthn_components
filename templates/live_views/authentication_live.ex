@@ -4,8 +4,8 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   """
   use <%= inspect @web_pascal_case %>, :live_view
 
-  alias <%= inspect @app_pascal_case %>.Users
-  alias <%= inspect @app_pascal_case %>.Users.User
+  alias <%= inspect @app_pascal_case %>.Identity
+  alias <%= inspect @app_pascal_case %>.Identity.User
 
   alias WebauthnComponents.SupportComponent
   alias WebauthnComponents.RegistrationComponent
@@ -80,7 +80,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
     user_attrs = %{email: form[:email].value, keys: [params[:key]], tokens: [%{}]}
 
-    case Users.create(user_attrs) do
+    case Identity.create(user_attrs) do
       {:ok, %User{tokens: [token | _]}} ->
         token_attrs = %{"value" => Base.encode64(token.value, padding: false)}
 
@@ -100,8 +100,8 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
-    with {:ok, user} <- Users.get_by_key_id(key_id),
-         {:ok, user_token} <- Users.create_token(%{user_id: user.id}) do
+    with {:ok, user} <- Identity.get_by_key_id(key_id),
+         {:ok, user_token} <- Identity.create_token(%{user_id: user.id}) do
       token_attrs = %{"value" => Base.encode64(user_token.value, padding: false)}
 
       {

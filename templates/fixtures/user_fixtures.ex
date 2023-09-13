@@ -1,6 +1,6 @@
 defmodule <%= inspect @app_pascal_case %>.UserFixtures do
   @moduledoc false
-  alias <%= inspect @app_pascal_case %>.Users
+  alias <%= inspect @app_pascal_case %>.Identity
 
   def valid_user_attrs(attrs \\ []) do
     Enum.into(attrs, %{
@@ -12,7 +12,7 @@ defmodule <%= inspect @app_pascal_case %>.UserFixtures do
     {:ok, user} =
       attrs
       |> valid_user_attrs()
-      |> Users.create()
+      |> Identity.create()
 
     user
   end

@@ -1,12 +1,12 @@
-defmodule <%= inspect @app_pascal_case %>.Users do
+defmodule <%= inspect @app_pascal_case %>.Identity do
   @moduledoc """
   Functions for managing users.
   """
 
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
-  alias <%= inspect @app_pascal_case %>.Users.User
-  alias <%= inspect @app_pascal_case %>.Users.UserToken
+  alias <%= inspect @app_pascal_case %>.Identity.User
+  alias <%= inspect @app_pascal_case %>.Identity.UserToken
   import Ecto.Query
 
   @doc """
