@@ -106,6 +106,20 @@ defmodule Mix.Tasks.Wac.Install do
           Router.update_router(assigns)
         end
 
+        success_message =
+          """
+
+          ✅ Successfully scaffolded WebauthnComponents for #{assigns[:app_pascal_case]}
+
+          📚 Resources
+
+          - Repo:\thttps://github.com/liveshowy/webauthn_components
+          - Hex:\thttps://hex.pm/packages/webauthn_components
+          - Docs:\thttps://hexdocs.pm/webauthn_components/readme.html
+          """
+
+        IO.puts(success_message)
+
       {_parsed, _args, errors} ->
         invalid_opts =
           errors
