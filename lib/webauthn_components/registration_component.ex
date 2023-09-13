@@ -51,10 +51,6 @@ defmodule WebauthnComponents.RegistrationComponent do
   alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
-    if !socket.assigns.app do
-      raise "`@app` is required"
-    end
-
     {
       :ok,
       socket
@@ -89,6 +85,10 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def render(assigns) do
+    if !assigns[:app] do
+      raise "`@app` is required"
+    end
+
     ~H"""
     <span>
       <.button

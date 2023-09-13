@@ -3,19 +3,20 @@ defmodule WebauthnComponents.RegistrationComponentTest do
   alias WebauthnComponents.RegistrationComponent
   alias WebauthnComponents.WebauthnUser
 
+  @app "Test App"
   @id "registration-component"
 
   setup do
-    {:ok, view, html} = live_isolated_component(RegistrationComponent, %{id: @id})
-    element = element(view, "##{@id}")
-    live_assign(view, :app, :demo)
-    %{view: view, html: html, element: element}
+    assigns = %{app: @app, id: @id}
+    {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
+    live_assign(view, app: assigns.app, id: assigns.id)
+    element = element(view, "##{assigns.id}")
+    %{view: view, element: element}
   end
 
   describe "render/1" do
-    test "returns element with id and phx hook", %{html: html} do
-      assert html =~ "id=\"#{@id}\""
-      assert html =~ "phx-hook=\"RegistrationHook\""
+    test "returns element with id and phx hook", %{view: view} do
+      assert has_element?(view, "##{@id}[phx-hook='RegistrationHook']")
     end
   end
 
