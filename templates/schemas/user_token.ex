@@ -26,11 +26,12 @@ defmodule <%= inspect @app_pascal_case %>.Identity.UserToken do
 
   @doc false
   def changeset(%__MODULE__{} = user_token, attrs) do
-    fields = __MODULE__.__schema__(:fields)
+    fields = __MODULE__.__schema__(:fields) -- [:value]
 
     user_token
     |> cast(attrs, fields)
-    |> validate_required([:type, :value, :user_id])
+    |> put_change(:value, :crypto.strong_rand_bytes(64))
+    |> validate_required([:type, :value])
     |> foreign_key_constraint(:user_id)
   end
 end
