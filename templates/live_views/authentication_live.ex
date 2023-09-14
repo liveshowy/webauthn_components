@@ -79,7 +79,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:registration_successful, params}, socket) do
-    %{connect_info: %{"_csrf_token" => csrf_token}} = socket.private
+    %{connect_info: %{session: %{"_csrf_token" => csrf_token}}} = socket.private
     %{form: form} = socket.assigns
 
     user_attrs = %{email: form[:email].value, keys: [params[:key]]}
@@ -116,7 +116,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
-    %{connect_info: %{"_csrf_token" => csrf_token}} = socket.private
+    %{connect_info: %{session: %{"_csrf_token" => csrf_token}}} = socket.private
 
     with {:ok, user} <- Identity.get_by_key_id(key_id),
          {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
