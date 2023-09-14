@@ -9,6 +9,9 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   alias <%= inspect @app_pascal_case %>.Identity.UserToken
   import Ecto.Query
 
+  #
+  @token_expiration {24, :hour}
+
   @doc """
   Returns all `User` records with optional preloads.
   """
@@ -54,7 +57,11 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @spec get_by_token(raw_value :: binary(), type :: atom()) ::
           {:ok, User.t()} | {:error, :not_found}
   def get_by_token(raw_value, type \\ :session) when is_binary(raw_value) do
-    expiration_hours = 24
+    {expiration, unit} = @token_expiration
+
+    expiration_timestamp =
+      NaiveDateTime.utc_now()
+      |> NaiveDateTime.add(-expiration, unit)
 
     query =
       from(user in User,
@@ -62,7 +69,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
         where:
           token.value == ^raw_value and
             token.type == ^type and
-            token.inserted_at > ago(^expiration_hours, "hour"),
+            token.inserted_at < ^expiration_timestamp,
         order_by: [desc: token.inserted_at],
         limit: 1
       )
