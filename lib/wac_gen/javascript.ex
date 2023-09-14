@@ -22,8 +22,8 @@ defmodule Wac.Gen.Javascript do
     updated_contents =
       javascript_path
       |> File.read!()
-      |> String.replace(@import_regex, "\g{1}\n#{@import_hooks}")
-      |> String.replace(@socket_regex, "\g{1},\n#{@socket_hooks}")
+      |> String.replace(@import_regex, "\\1\n#{@import_hooks}")
+      |> String.replace(@socket_regex, "\\1,\n#{@socket_hooks}")
 
     File.write!(javascript_path, updated_contents)
   end
