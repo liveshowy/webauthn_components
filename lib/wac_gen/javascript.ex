@@ -1,8 +1,8 @@
 defmodule Wac.Gen.Javascript do
   @moduledoc false
 
-  @import_regex Regex.compile!("(import { LiveSocket } from \"phoenix_live_view\";)")
-  @socket_regex Regex.compile!("(params: { _csrf_token: csrfToken })")
+  @import_regex Regex.compile!("(import {\s?LiveSocket\s?} from \"phoenix_live_view\";?)")
+  @socket_regex Regex.compile!("(params: {\s?_csrf_token: csrfToken\s?})")
 
   @import_hooks """
   import {
