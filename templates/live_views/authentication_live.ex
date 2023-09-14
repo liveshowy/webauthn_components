@@ -23,7 +23,6 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def mount(_params, _session, socket) do
-    %{connect_info: %{session: %{"_csrf_token" => csrf_token}}} = socket.private
     webauthn_user = %WebauthnUser{id: generate_encoded_id(), name: nil, display_name: nil}
 
     if connected?(socket) do
@@ -37,7 +36,6 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
       :ok,
       socket
       |> assign(:page_title, "Sign In")
-      |> assign(:csrf_token, csrf_token)
       |> assign(:form, build_form())
       |> assign(:show_registration?, true)
       |> assign(:show_authentication?, true)
@@ -81,14 +79,14 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:registration_successful, params}, socket) do
-    %{csrf_token: csrf_token, form: form} = socket.assigns
+    %{form: form} = socket.assigns
 
     user_attrs = %{email: form[:email].value, keys: [params[:key]]}
 
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
     {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}),
         value <- Base.encode64(token_value, padding: false),
-        {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [csrf_token: csrf_token, value: value]) do
+        {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [value: value]) do
 
         {
           :noreply,
@@ -117,12 +115,10 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
-    %{csrf_token: csrf_token} = socket.assigns
-
     with {:ok, user} <- Identity.get_by_key_id(key_id),
          {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
          value <- Base.encode64(token_value, padding: false),
-         {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [csrf_token: csrf_token, value: value]) do
+         {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [value: value]) do
 
       {
         :noreply,
