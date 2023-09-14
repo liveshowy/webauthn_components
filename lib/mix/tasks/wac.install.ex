@@ -31,6 +31,7 @@ defmodule Mix.Tasks.Wac.Install do
   alias Wac.Gen.Router
   alias Wac.Gen.Tests
   alias Wac.Gen.Fixtures
+  alias Wac.Gen.Javascript
 
   @version Mix.Project.config()[:version]
   @shortdoc "Generates a user schema."
@@ -100,6 +101,7 @@ defmodule Mix.Tasks.Wac.Install do
           Controllers.copy_templates(assigns)
           SessionHooks.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
+          Javascript.inject_hooks()
         end
 
         if opts[:router] do
