@@ -14,6 +14,8 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
+  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign Up".
+  - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
@@ -60,6 +62,8 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:require_resident_key, fn -> true end)
+      |> assign_new(:display_text, fn -> "Sign Up" end)
+      |> assign_new(:show_icon?, fn -> true end)
     }
   end
 
@@ -100,8 +104,8 @@ defmodule WebauthnComponents.RegistrationComponent do
         title="Create a new account"
         disabled={@disabled}
       >
-        <span class="w-4 opacity-70"><.icon_key /></span>
-        <span>Register</span>
+        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
+        <span><%= @display_text %></span>
       </.button>
     </span>
     """

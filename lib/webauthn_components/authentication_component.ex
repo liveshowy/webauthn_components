@@ -26,6 +26,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
   ## Assigns
 
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to request an existing credential in the client.
+  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign In".
+  - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
@@ -59,6 +61,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:id, fn -> "authentication-component" end)
       |> assign_new(:class, fn -> "" end)
       |> assign_new(:disabled, fn -> nil end)
+      |> assign_new(:display_text, fn -> "Sign In" end)
+      |> assign_new(:show_icon?, fn -> true end)
     }
   end
 
@@ -75,8 +79,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
         title="Use an existing account"
         disabled={@disabled}
       >
-        <span class="w-4 opacity-70"><.icon_key /></span>
-        <span>Authenticate</span>
+        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
+        <span><%= @display_text %></span>
       </.button>
     </span>
     """
