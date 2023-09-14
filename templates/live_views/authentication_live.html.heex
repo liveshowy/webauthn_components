@@ -11,7 +11,11 @@
     phx-submit={JS.dispatch("click", to: "#registration-component")}
     class="grid gap-8"
   >
-    <fieldset :if={@show_registration?} id="fieldset-registration" class="grid gap-4 bg-gray-50 shadow-lg p-6 rounded-lg">
+    <fieldset
+      :if={@show_registration?}
+      id="fieldset-registration"
+      class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg p-6 rounded-lg"
+    >
       <p>Create a <strong>new</strong> account:</p>
 
       <.input type="email" field={form[:email]} label="Email" phx-debounce="250" />
@@ -29,7 +33,11 @@
       />
     </fieldset>
 
-    <fieldset :if={@show_authentication?} id="fieldset-authentication" class="grid gap-4 bg-gray-50 shadow-lg p-6 rounded-lg">
+    <fieldset
+      :if={@show_authentication?}
+      id="fieldset-authentication"
+      class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg p-6 rounded-lg"
+    >
       <p>Sign into an existing account:</p>
 
       <.live_component
