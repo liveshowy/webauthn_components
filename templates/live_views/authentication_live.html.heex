@@ -1,4 +1,6 @@
 <section class="mx-auto w-96">
+  <h1 class="text-4xl"><%= @page_title %></h1>
+
   <.live_component module={SupportComponent} id="support-component" />
 
   <.simple_form
@@ -9,48 +11,38 @@
     phx-submit={JS.dispatch("click", to: "#registration-component")}
     class="grid gap-8"
   >
-    <fieldset class="grid gap-4 bg-gray-800 p-6 rounded-lg">
-      <p>Want a new account?</p>
+    <fieldset :if={@show_registration?} id="fieldset-registration" class="grid gap-4 bg-gray-50 shadow-lg p-6 rounded-lg">
+      <p>Create a <strong>new</strong> account:</p>
+
       <.input type="email" field={form[:email]} label="Email" phx-debounce="250" />
       <.live_component
         disabled={@form.source.valid? == false}
         module={RegistrationComponent}
         id="registration-component"
         app={<%= inspect @app_pascal_case %>}
-        class="h-8 bg-gray-600 flex gap-2 items-center p-4 rounded disabled:cursor-not-allowed disabled:opacity-25 transition"
+        class={[
+          "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
+          "ring ring-transparent focus:ring-gray-400 focus:outline-none",
+          "flex gap-2 items-center justify-center px-4 py-2 w-full",
+          "disabled:cursor-not-allowed disabled:opacity-25"
+        ]}
       />
     </fieldset>
 
-    <fieldset class="grid gap-4 bg-gray-800 p-6 rounded-lg">
-      <p>Already have an account?</p>
+    <fieldset :if={@show_authentication?} id="fieldset-authentication" class="grid gap-4 bg-gray-50 shadow-lg p-6 rounded-lg">
+      <p>Sign into an existing account:</p>
 
       <.live_component
         disabled={@form.source.valid? == false}
         module={AuthenticationComponent}
         id="authentication-component"
-        class="h-8 bg-gray-600 flex gap-2 items-center p-4 rounded disabled:cursor-not-allowed disabled:opacity-25 transition"
+        class={[
+          "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
+          "ring ring-transparent focus:ring-gray-400 focus:outline-none",
+          "flex gap-2 items-center justify-center px-4 py-2 w-full",
+          "disabled:cursor-not-allowed disabled:opacity-25"
+        ]}
       />
     </fieldset>
-  </.simple_form>
-
-  <%!--
-    - The form is only rendered when a token has been created by the registration or authentication component.
-    - The form is present in the markup, but hidden from view.
-    - When the form is mounted, JS is used to click the submit button.
-    - This is a bit hacky, but it works.
-  --%>
-
-  <.simple_form
-    :let={f}
-    :if={@token_form}
-    for={@token_form}
-    method="post"
-    id="token-form"
-    action={~p"/session"}
-    phx-mounted={JS.dispatch("click", to: "#token-form button[type='submit']")}
-    class="hidden"
-  >
-    <.input type="text" field={f[:value]} label="Value" />
-    <.button type="submit">Go</.button>
   </.simple_form>
 </section>

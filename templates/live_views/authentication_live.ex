@@ -3,6 +3,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   LiveView for registering new users and authenticating existing users.
   """
   use <%= inspect @web_pascal_case %>, :live_view
+  require Logger
 
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
@@ -35,7 +36,8 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
       socket
       |> assign(:page_title, "Sign In")
       |> assign(:form, build_form())
-      |> assign(:token_form, nil)
+      |> assign(:show_registration?, true)
+      |> assign(:show_authentication?, true)
       |> assign(:webauthn_user, webauthn_user)
     }
   end
@@ -80,44 +82,56 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
     user_attrs = %{email: form[:email].value, keys: [params[:key]], tokens: [%{}]}
 
-    case Identity.create(user_attrs) do
-      {:ok, %User{tokens: [token | _]}} ->
-        token_attrs = %{"value" => Base.encode64(token.value, padding: false)}
+    with {:ok, %User{tokens: [token | _]}} <- Identity.create(user_attrs),
+        value <- Base.encode64(token.value, padding: false),
+        {:ok, _cookie_resp} <- Req.post(~p"/session", value: value) do
 
         {
           :noreply,
           socket
-          |> assign(:token_form, to_form(token_attrs, as: "token"))
+          |> put_flash(:info, "Welcome!")
+          |> push_redirect(to: ~p"/")
         }
-
+    else
       {:error, changeset} ->
         {
           :noreply,
           socket
           |> assign(:form, to_form(changeset))
         }
+
+      {:error, req_exception} ->
+        Logger.error(session_error: {__MODULE__, req_exception})
+
+        {
+          :noreply,
+          socket
+          |> assign(:show_registration?, false)
+          |> put_flash(:error, "Failed to create session. Please use the authentication button below to sign in.")
+        }
     end
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
     with {:ok, user} <- Identity.get_by_key_id(key_id),
-         {:ok, user_token} <- Identity.create_token(%{user_id: user.id}) do
-      token_attrs = %{"value" => Base.encode64(user_token.value, padding: false)}
+         {:ok, user_token} <- Identity.create_token(%{user_id: user.id}),
+         value <- Base.encode64(user_token.value, padding: false),
+         {:ok, _cookie_resp} <- Req.post(~p"/session", value: value) do
 
       {
         :noreply,
         socket
-        |> assign(:token_form, to_form(token_attrs, as: "token"))
+        |> put_flash(:info, "Welcome back!")
+        |> push_navigate(to: ~p"/")
       }
     else
-      error ->
+      {:error, error} ->
         Logger.warning(authentication_error: {__MODULE__, error})
 
         {
           :noreply,
           socket
           |> put_flash(:error, "Failed to sign in")
-          |> assign(:token_form, nil)
         }
     end
   end
