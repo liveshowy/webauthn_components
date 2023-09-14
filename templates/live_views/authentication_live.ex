@@ -7,6 +7,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
+  alias <%= inspect @app_pascal_case %>.Identity.UserToken
 
   alias WebauthnComponents.SupportComponent
   alias WebauthnComponents.RegistrationComponent
@@ -80,10 +81,11 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   def handle_info({:registration_successful, params}, socket) do
     %{form: form} = socket.assigns
 
-    user_attrs = %{email: form[:email].value, keys: [params[:key]], tokens: [%{}]}
+    user_attrs = %{email: form[:email].value, keys: [params[:key]]}
 
-    with {:ok, %User{tokens: [token | _]}} <- Identity.create(user_attrs),
-        value <- Base.encode64(token.value, padding: false),
+    with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
+    {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}),
+        value <- Base.encode64(token_value, padding: false),
         {:ok, _cookie_resp} <- Req.post(~p"/session", value: value) do
 
         {
@@ -114,8 +116,8 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
     with {:ok, user} <- Identity.get_by_key_id(key_id),
-         {:ok, user_token} <- Identity.create_token(%{user_id: user.id}),
-         value <- Base.encode64(user_token.value, padding: false),
+         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
+         value <- Base.encode64(token_value, padding: false),
          {:ok, _cookie_resp} <- Req.post(~p"/session", value: value) do
 
       {
