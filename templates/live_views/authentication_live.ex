@@ -22,7 +22,8 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     }
   end
 
-  def mount(_params, %{"_csrf_token" => csrf_token}, socket) do
+  def mount(_params, _session, socket) do
+    %{connect_info: %{session: %{"_csrf_token" => csrf_token}}} = socket.private
     webauthn_user = %WebauthnUser{id: generate_encoded_id(), name: nil, display_name: nil}
 
     if connected?(socket) do
