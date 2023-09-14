@@ -80,13 +80,14 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
   def handle_info({:registration_successful, params}, socket) do
     %{form: form} = socket.assigns
+    uri = Map.put(socket.host_uri, :path, ~p"/session")
 
     user_attrs = %{email: form[:email].value, keys: [params[:key]]}
 
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
     {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}),
         value <- Base.encode64(token_value, padding: false),
-        {:ok, %Req.Response{status: 200}} <- Req.post(socket.host_uri, form: [value: value]) do
+        {:ok, %Req.Response{status: 200}} <- Req.post(uri, form: [value: value]) do
 
         {
           :noreply,
@@ -115,10 +116,12 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
+    uri = Map.put(socket.host_uri, :path, ~p"/session")
+
     with {:ok, user} <- Identity.get_by_key_id(key_id),
          {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
          value <- Base.encode64(token_value, padding: false),
-         {:ok, %Req.Response{status: 200}} <- Req.post(socket.host_uri, form: [value: value]) do
+         {:ok, %Req.Response{status: 200}} <- Req.post(uri, form: [value: value]) do
 
       {
         :noreply,
