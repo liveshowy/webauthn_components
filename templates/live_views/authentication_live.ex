@@ -40,6 +40,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
       |> assign(:show_registration?, true)
       |> assign(:show_authentication?, true)
       |> assign(:webauthn_user, webauthn_user)
+      |> assign(:token_form, nil)
     }
   end
 
