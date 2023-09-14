@@ -27,12 +27,12 @@ defmodule <%= inspect @web_pascal_case %>.Session do
         conn
         |> put_session(:user_token, value)
         |> put_session(:user_id, user_id)
-        |> redirect(to: ~p"/")
+        |> resp(200, "successfully authenticated")
 
       {:error, _} ->
         conn
         |> clear_session()
-        |> redirect(to: ~p"/sign-in")
+        |> resp(498, "invalid token")
     end
   end
 

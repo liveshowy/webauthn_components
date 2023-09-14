@@ -86,7 +86,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
     {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}),
         value <- Base.encode64(token_value, padding: false),
-        {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [value: value]) do
+        {:ok, %Req.Response{status: 200}} <- Req.post(socket.host_uri, form: [value: value]) do
 
         {
           :noreply,
@@ -118,7 +118,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     with {:ok, user} <- Identity.get_by_key_id(key_id),
          {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
          value <- Base.encode64(token_value, padding: false),
-         {:ok, _cookie_resp} <- Req.post(socket.host_uri, form: [value: value]) do
+         {:ok, %Req.Response{status: 200}} <- Req.post(socket.host_uri, form: [value: value]) do
 
       {
         :noreply,
