@@ -80,23 +80,22 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
   def handle_info({:registration_successful, params}, socket) do
     %{form: form} = socket.assigns
-    uri = Map.put(socket.host_uri, :path, ~p"/session")
-
     user_attrs = %{email: form[:email].value, keys: [params[:key]]}
 
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
-    {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}),
-        value <- Base.encode64(token_value, padding: false),
-        {:ok, %Req.Response{status: 200}} <- Req.post(uri, form: [value: value]) do
+        {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}) do
+        encoded_token <- Base.encode64(token_value, padding: false)
+        token_attrs = %{"value" => encoded_token}
 
         {
           :noreply,
           socket
-          |> put_flash(:info, "Welcome!")
-          |> push_redirect(to: ~p"/")
+          |> assign(:token_form, to_form(token_attrs, as: "token"))
         }
     else
       {:error, changeset} ->
+        Logger.error(registration_error: {__MODULE__, changeset.changes, changeset.errors})
+
         {
           :noreply,
           socket
@@ -110,6 +109,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
           :noreply,
           socket
           |> assign(:show_registration?, false)
+          |> assign(:token_form, nil)
           |> put_flash(:error, "Failed to create session. Please use the authentication button below to sign in.")
         }
     end
@@ -119,15 +119,14 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     uri = Map.put(socket.host_uri, :path, ~p"/session")
 
     with {:ok, user} <- Identity.get_by_key_id(key_id),
-         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}),
-         value <- Base.encode64(token_value, padding: false),
-         {:ok, %Req.Response{status: 200}} <- Req.post(uri, form: [value: value]) do
+         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}) do
+      encoded_token <- Base.encode64(token_value, padding: false)
+      token_attrs = %{"value" => encoded_token}
 
       {
         :noreply,
         socket
-        |> put_flash(:info, "Welcome back!")
-        |> push_navigate(to: ~p"/")
+        |> assign(:token_form, to_form(token_attrs, as: "token"))
       }
     else
       {:error, error} ->
@@ -137,6 +136,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
           :noreply,
           socket
           |> put_flash(:error, "Failed to sign in")
+          |> assign(:token_form, nil)
         }
     end
   end
