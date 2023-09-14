@@ -9,7 +9,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   alias <%= inspect @app_pascal_case %>.Identity.UserToken
   import Ecto.Query
 
-  #
   @token_expiration {24, :hour}
 
   @doc """
