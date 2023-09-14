@@ -84,7 +84,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
 
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}) do
-        encoded_token <- Base.encode64(token_value, padding: false)
+        encoded_token = Base.encode64(token_value, padding: false)
         token_attrs = %{"value" => encoded_token}
 
         {
@@ -116,11 +116,9 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   end
 
   def handle_info({:find_credential, [key_id: key_id]}, socket) do
-    uri = Map.put(socket.host_uri, :path, ~p"/session")
-
     with {:ok, user} <- Identity.get_by_key_id(key_id),
          {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}) do
-      encoded_token <- Base.encode64(token_value, padding: false)
+      encoded_token = Base.encode64(token_value, padding: false)
       token_attrs = %{"value" => encoded_token}
 
       {
