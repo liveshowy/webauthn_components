@@ -4,6 +4,8 @@ defmodule <%= @web_pascal_case %>.NavigationComponents do
   """
   use Phoenix.Component
 
+  embed_templates "/navigation/*"
+
   alias <%= @app_pascal_case %>.Identity.User
 
   attr :current_user, User, required: true
