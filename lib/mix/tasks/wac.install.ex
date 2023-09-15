@@ -103,6 +103,7 @@ defmodule Mix.Tasks.Wac.Install do
           Controllers.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
           AppHtml.update_app_html(assigns)
+          AppHtml.update_page_html(assigns)
           SessionHooks.copy_templates(assigns)
           Components.copy_templates(assigns)
 
