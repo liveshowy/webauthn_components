@@ -1,0 +1,16 @@
+<nav class="flex gap-2 items-baseline">
+  <.nav_link navigate={~p"/"}>Home</.nav_link>
+
+  <span class="flex-grow" />
+
+  <%= if !@current_user do %>
+    <%!-- Unauthenticated Routes --%>
+    <.nav_link navigate={~p"/sign-in"}>Sign In</.nav_link>
+  <% end %>
+
+  <%= if @current_user do %>
+    <%!-- Authenticated Routes --%>
+
+    <.nav_link href={~p"/sign-out"} method="delete">Sign Out</.nav_link>
+  <% end %>
+</nav>

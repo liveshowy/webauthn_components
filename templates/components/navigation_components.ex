@@ -1,0 +1,17 @@
+defmodule <%= @web_pascal_case %>.NavigationComponents do
+  @moduledoc """
+  Components for navigating the application.
+  """
+  use Phoenix.Component
+
+  alias <%= @app_pascal_case %>.Identity.User
+
+  attr :current_user, User, required: true
+
+  def navbar(assigns)
+
+  attr :rest, :global, include: ~w(href navigate patch method class)
+  slot :inner_block, required: true
+
+  def nav_link(assigns)
+end
