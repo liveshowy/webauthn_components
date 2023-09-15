@@ -100,11 +100,12 @@ defmodule Mix.Tasks.Wac.Install do
         end
 
         if opts[:web] do
-          Components.copy_templates(assigns)
           Controllers.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
           AppHtml.update_app_html(assigns)
           SessionHooks.copy_templates(assigns)
+          Components.copy_templates(assigns)
+
           Javascript.inject_hooks()
         end
 
