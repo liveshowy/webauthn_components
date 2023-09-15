@@ -117,7 +117,7 @@ defmodule Mix.Tasks.Wac.Install do
         success_message =
           """
 
-          ✅ Successfully scaffolded WebauthnComponents for #{assigns[:app_pascal_case]}
+          ✅ Successfully scaffolded WebauthnComponents for #{inspect(assigns[:app_pascal_case])}
 
           📚 Resources
 
