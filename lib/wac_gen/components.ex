@@ -21,9 +21,11 @@ defmodule Wac.Gen.Components do
     template_dir = Path.expand(@template_path, __DIR__)
     source = Path.join([template_dir, file_name])
     target = Path.join(["lib", web_snake_case, "components", file_name])
-    Mix.Generator.copy_template(source, target, assigns)
 
-    unless String.contains?(file_name, ".heex") do
+    if String.contains?(file_name, ".heex") do
+      Mix.Generator.copy_file(source, target)
+    else
+      Mix.Generator.copy_template(source, target, assigns)
       Code.format_file!(target)
     end
   end
