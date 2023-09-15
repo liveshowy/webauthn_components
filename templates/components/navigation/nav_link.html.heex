@@ -1,3 +1,9 @@
-<.link {@rest}>
+<.link
+  class={[
+    "px-4 py-2 font-bold hover:bg-gray-200 hover:text-black focus:outline-none focus:bg-black focus:text-white border-b-4 border-transparent hover:border-black transition",
+    @class
+  ]}
+  {@rest}
+>
   <%= render_slot(@inner_block) %>
 </.link>

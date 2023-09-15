@@ -13,7 +13,8 @@ defmodule <%= @web_pascal_case %>.NavigationComponents do
 
   def navbar(assigns)
 
-  attr :rest, :global, include: ~w(href navigate patch method class)
+  attr :class, :any, default: nil
+  attr :rest, :global, include: ~w(href navigate patch method)
   slot :inner_block, required: true
 
   def nav_link(assigns)
