@@ -32,6 +32,8 @@ defmodule Mix.Tasks.Wac.Install do
   alias Wac.Gen.Tests
   alias Wac.Gen.Fixtures
   alias Wac.Gen.Javascript
+  alias Wac.Gen.Components
+  alias Wac.Gen.AppHtml
 
   @version Mix.Project.config()[:version]
   @shortdoc "Generates a user schema."
@@ -98,9 +100,11 @@ defmodule Mix.Tasks.Wac.Install do
         end
 
         if opts[:web] do
+          Components.copy_templates(assigns)
           Controllers.copy_templates(assigns)
-          SessionHooks.copy_templates(assigns)
           LiveViews.copy_templates(assigns)
+          AppHtml.update_app_html(assigns)
+          SessionHooks.copy_templates(assigns)
           Javascript.inject_hooks()
         end
 
