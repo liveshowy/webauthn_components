@@ -68,7 +68,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
         where:
           token.value == ^raw_value and
             token.type == ^type and
-            token.inserted_at < ^expiration_timestamp,
+            token.inserted_at > ^expiration_timestamp,
         order_by: [desc: token.inserted_at],
         limit: 1
       )
