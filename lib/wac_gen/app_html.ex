@@ -19,7 +19,7 @@ defmodule Wac.Gen.AppHtml do
     web_pascal_case = Keyword.fetch!(assigns, :web_pascal_case)
 
     """
-    <#{inspect(web_pascal_case)}NavigationComponents.navbar current_user={@current_user} />
+    <#{inspect(web_pascal_case)}.NavigationComponents.navbar current_user={@current_user} />
     """
   end
 end
