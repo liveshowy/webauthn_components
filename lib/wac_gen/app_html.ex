@@ -27,7 +27,7 @@ defmodule Wac.Gen.AppHtml do
 
   def update_root_html(assigns) do
     web_snake_case = Keyword.fetch!(assigns, :web_snake_case)
-    file_path = Path.join(["lib", web_snake_case, "components", "layouts", "app.html.heex"])
+    file_path = Path.join(["lib", web_snake_case, "controllers", "page_html", "home.html.heex"])
     home_link = home_link(assigns)
     injected_string = "#{@flash_string}\n#{home_link}"
 
