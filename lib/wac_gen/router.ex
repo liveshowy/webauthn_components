@@ -1,24 +1,7 @@
-defmodule Wac.Gen.RouterError do
-  defexception [:message]
-
-  @impl true
-  def exception(message) do
-    formatted_message =
-      """
-      🫣 #{message}
-
-      🙏 Please review the WebauthnComponents issue tracker and open a new issue if necessary.
-      👉 https://github.com/liveshowy/webauthn_components/issues
-      👇 For debugging, please include this error and the stacktrace below:
-      """
-
-    %__MODULE__{message: formatted_message}
-  end
-end
-
 defmodule Wac.Gen.Router do
   @moduledoc false
   alias Sourceror.Zipper
+  alias Wac.Gen.GeneratorError
 
   @format_opts [
     locals_without_parens: [
@@ -66,7 +49,7 @@ defmodule Wac.Gen.Router do
   end
 
   defp insert_aliases(nil, _assigns) do
-    raise Wac.Gen.RouterError, "Unable to find aliases"
+    raise GeneratorError, "Unable to find aliases"
   end
 
   defp insert_plugs(%Zipper{} = zipper) do
@@ -77,7 +60,7 @@ defmodule Wac.Gen.Router do
   end
 
   defp insert_plugs(nil) do
-    raise Wac.Gen.RouterError, "Unable to find the browser pipeline"
+    raise GeneratorError, "Unable to find the browser pipeline"
   end
 
   defp insert_routes(%Zipper{} = zipper, assigns) do
@@ -92,7 +75,7 @@ defmodule Wac.Gen.Router do
   end
 
   defp insert_routes(nil, _assigns) do
-    raise Wac.Gen.RouterError, "Unable to find the first router scope"
+    raise GeneratorError, "Unable to find the first router scope"
   end
 
   defp find_aliases({:use, _meta, [{_, _, _}, {:__block__, _, [:router]} | _]}), do: true
