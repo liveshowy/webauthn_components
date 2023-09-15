@@ -1,3 +1,5 @@
 <.link {@rest}>
-  <%= render_slot(@inner_block) %>
+  <%= quote do
+    render_slot(@inner_block)
+  end %>
 </.link>
