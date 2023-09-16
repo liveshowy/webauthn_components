@@ -12,7 +12,11 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   ## Assigns
 
+  - `@app`: (**Required**) The name of the app where the user will be registered.
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
+  - `@attestation`: (Options) The type of attestation to use when generating the `PublicKeyCredential` Defaults to `:direct`.
+    - The `Wax` package used by `WebauthnComponents` accepts `"none"` or `"direct"` ([Wax docs](https://hexdocs.pm/wax_/Wax.html)).
+    - See the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/create#publickey_object_structure) for more information.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
   - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign Up".
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
@@ -57,13 +61,14 @@ defmodule WebauthnComponents.RegistrationComponent do
       :ok,
       socket
       |> assign(:challenge, fn -> nil end)
-      |> assign_new(:id, fn -> "registration-component" end)
+      |> assign_new(:attestation, fn -> :direct end)
       |> assign_new(:class, fn -> "" end)
-      |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
-      |> assign_new(:require_resident_key, fn -> true end)
       |> assign_new(:display_text, fn -> "Sign Up" end)
+      |> assign_new(:id, fn -> "registration-component" end)
+      |> assign_new(:require_resident_key, fn -> true end)
       |> assign_new(:show_icon?, fn -> true end)
+      |> assign_new(:webauthn_user, fn -> nil end)
     }
   end
 
@@ -116,6 +121,7 @@ defmodule WebauthnComponents.RegistrationComponent do
 
     %{
       app: app_name,
+      attestation: attestation,
       id: id,
       require_resident_key: require_resident_key,
       webauthn_user: webauthn_user
@@ -124,8 +130,6 @@ defmodule WebauthnComponents.RegistrationComponent do
     if not is_struct(webauthn_user, WebauthnUser) do
       raise "user must be a WebauthnComponents.WebauthnUser struct."
     end
-
-    attestation = "none"
 
     challenge =
       Wax.new_registration_challenge(
