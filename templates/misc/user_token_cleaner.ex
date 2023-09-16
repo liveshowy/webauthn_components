@@ -94,7 +94,7 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
     new_state =
       state
       |> Keyword.put(:interval_minutes, int)
-      |> Keyword.put(:timer_ref, :timer_ref)
+      |> Keyword.put(:timer_ref, timer_ref)
 
     {:noreply, new_state}
   end
