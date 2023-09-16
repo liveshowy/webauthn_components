@@ -2,8 +2,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @moduledoc """
   Functions for managing users.
   """
-alias Credo.Code.Token
-
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
   alias <%= inspect @app_pascal_case %>.Identity.User
