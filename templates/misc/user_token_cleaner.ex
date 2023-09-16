@@ -47,14 +47,14 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
   ```
   """
   use GenServer
-  import Ecto.Query
-  alias <%= @app_pascal_case %>.Identity
+  alias <%= inspect @app_pascal_case %>.Identity
+  require Logger
 
   defguard is_pos_integer(int) when is_integer(int) and int > 0
 
-  @spec start_link(opts :: Keyword.t()) :: GenServer.on_start()
-  def start_link(opts) do
-    GenServer.start_link(__MODULE__, opts, name: __MODULE__)
+  @spec start_link(args :: Keyword.t()) :: GenServer.on_start()
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
   @doc """
@@ -74,42 +74,35 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
   """
   @spec set_interval_minutes(int :: pos_integer()) :: Keyword.t()
   def set_interval_minutes(int) when is_pos_integer(int) do
-    GenServer.call(__MODULE__, {:update_interval_minutes, int})
+    GenServer.cast(__MODULE__, {:update_interval_minutes, int})
   end
 
   @doc false
-  def init(opts) do
-    interval_minutes = opts[:interval_minutes] || 10
-    GenServer.cast(__MODULE__, :delete_expired_tokens)
+  def init(args) do
+    interval_minutes = args[:interval_minutes] || 10
+    Process.send_after(self(), :delete_expired_tokens, calculate_interval_milliseconds(interval_minutes))
     {:ok, timer_ref: nil, interval_minutes: interval_minutes}
   end
 
   @doc false
-  def handle_call({:update_interval_minutes, int}, _from, state) when is_pos_integer(int) do
-    {:noreply, [interval_minutes: int | state]}
+  def handle_cast({:update_interval_minutes, int}, state) when is_pos_integer(int) do
+    timer_ref =
+      int
+      |> calculate_interval_milliseconds()
+      |> :timer.apply_interval(GenServer, :cast, [__MODULE__, :delete_expired_tokens])
+
+    new_state =
+      state
+      |> Keyword.put(:interval_minutes, int)
+      |> Keyword.put(:timer_ref, :timer_ref)
+
+    {:noreply, new_state}
   end
 
   @doc false
-  def handle_cast(:delete_expired_tokens = msg, _from, state) do
-    timer_ref = state[:time_ref]
-    if timer_ref, do: Process.cancel_timer(timer_ref)
-
-    case Identity.delete_all_expired_tokens() do
-      {count, _results} ->
-        Logger.info(deleted_user_token_count: count)
-
-      invalid_result ->
-        Logger.error(invalid_user_token_delete_result: invalid_result)
-    end
-
-    interval_milliseconds = calculate_interval_milliseconds(state[:interval_minutes])
-    timer_ref = Process.send_after(self(), msg, interval_milliseconds)
-    {:ok, timer_ref: timer_ref}
-  end
-
-  @doc false
-  def handle_info(:delete_expired_tokens = msg, state) do
-    GenServer.cast(__MODULE__, msg)
+  def handle_cast(:delete_expired_tokens, state) do
+    {count, _results} = Identity.delete_all_expired_tokens()
+    Logger.info(expired_tokens_deleted: count)
     {:noreply, state}
   end
 
