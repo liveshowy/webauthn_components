@@ -2,6 +2,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @moduledoc """
   Functions for managing users.
   """
+alias Credo.Code.Token
 
   alias Ecto.Changeset
   alias <%= inspect @app_pascal_case %>.Repo
@@ -50,17 +51,20 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
     end
   end
 
+  defp get_expiration_timestamp do
+    {expiration, unit} = @token_expiration
+
+    NaiveDateTime.utc_now()
+      |> NaiveDateTime.add(-expiration, unit)
+  end
+
   @doc """
   Retrieves a `User` by querying a valid token.
   """
   @spec get_by_token(raw_value :: binary(), type :: atom()) ::
           {:ok, User.t()} | {:error, :not_found}
   def get_by_token(raw_value, type \\ :session) when is_binary(raw_value) do
-    {expiration, unit} = @token_expiration
-
-    expiration_timestamp =
-      NaiveDateTime.utc_now()
-      |> NaiveDateTime.add(-expiration, unit)
+    expiration_timestamp = get_expiration_timestamp()
 
     query =
       from(user in User,
@@ -80,6 +84,14 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
       nil ->
         {:error, :not_found}
     end
+  end
+
+  def delete_all_expired_tokens do
+    expiration_timestamp = get_expiration_timestamp()
+
+    UserToken
+    |> where([t], t.inserted_at <= ^expiration_timestamp)
+    |> Repo.delete_all()
   end
 
   @doc """

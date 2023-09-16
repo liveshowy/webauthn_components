@@ -34,6 +34,7 @@ defmodule Mix.Tasks.Wac.Install do
   alias Wac.Gen.Javascript
   alias Wac.Gen.Components
   alias Wac.Gen.AppHtml
+  alias Wac.Gen.Misc
 
   @version Mix.Project.config()[:version]
   @shortdoc "Generates a user schema."
@@ -87,6 +88,7 @@ defmodule Mix.Tasks.Wac.Install do
 
         if opts[:contexts] do
           Contexts.copy_templates(assigns)
+          Misc.copy_templates(assigns)
         end
 
         if opts[:schemas] do
