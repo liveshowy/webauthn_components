@@ -36,7 +36,6 @@ defmodule Wac.Gen.Misc do
       |> Sourceror.parse_string!()
       |> Zipper.zip()
       |> insert_cleaner_child(assigns)
-      |> IO.inspect(label: :zip_with_new_child)
       |> Zipper.root()
       |> Sourceror.to_string()
 
