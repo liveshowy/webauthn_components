@@ -84,6 +84,18 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
     end
   end
 
+  @doc """
+  Deletes a single `UserToken`.
+  """
+  @spec delete_token(token :: UserToken.t()) :: {:ok, UserToken.t()} | {:error, Changeset.t()}
+  def delete_token(%UserToken{} = token) do
+    Repo.delete(token)
+  end
+
+  @doc """
+  Deletes all `UserToken`s which have expired.
+  """
+  @spec delete_all_expired_tokens :: {pos_integer(), term()}
   def delete_all_expired_tokens do
     expiration_timestamp = get_expiration_timestamp()
 
