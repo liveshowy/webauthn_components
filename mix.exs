@@ -75,7 +75,7 @@ defmodule WebauthnComponents.MixProject do
   end
 
   defp description do
-    "Passwordless authentication for LiveView applications."
+    "Passkey authentication for Phoenix LiveView applications."
   end
 
   defp package do
