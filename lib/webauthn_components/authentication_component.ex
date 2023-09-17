@@ -113,9 +113,12 @@ defmodule WebauthnComponents.AuthenticationComponent do
         send(self(), {:authentication_successful, auth_data})
         {:ok, assign(socket, assigns)}
 
-      {:error, error} ->
-        message = Exception.message(error)
+      {:error, %{message: message}} ->
         send(self(), {:authentication_failure, message: message})
+        {:ok, assign(socket, assigns)}
+
+      {:error, error} ->
+        send(self(), {:authentication_failure, message: error})
         {:ok, assign(socket, assigns)}
     end
   end
