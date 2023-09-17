@@ -84,41 +84,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     user_attrs = %{email: form[:email].value, keys: [params[:key]]}
 
     with {:ok, %User{id: user_id}} <- Identity.create(user_attrs),
-        {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}) do
-        encoded_token = Base.encode64(token_value, padding: false)
-        token_attrs = %{"value" => encoded_token}
-
-        {
-          :noreply,
-          socket
-          |> assign(:token_form, to_form(token_attrs, as: "token"))
-        }
-    else
-      {:error, changeset} ->
-        Logger.error(registration_error: {__MODULE__, changeset.changes, changeset.errors})
-
-        {
-          :noreply,
-          socket
-          |> assign(:form, to_form(changeset))
-        }
-
-      {:error, req_exception} ->
-        Logger.error(session_error: {__MODULE__, req_exception})
-
-        {
-          :noreply,
-          socket
-          |> assign(:show_registration?, false)
-          |> assign(:token_form, nil)
-          |> put_flash(:error, "Failed to create session. Please use the authentication button below to sign in.")
-        }
-    end
-  end
-
-  def handle_info({:find_credential, [key_id: key_id]}, socket) do
-    with {:ok, user} <- Identity.get_by_key_id(key_id),
-         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user.id}) do
+         {:ok, %UserToken{value: token_value}} <- Identity.create_token(%{user_id: user_id}) do
       encoded_token = Base.encode64(token_value, padding: false)
       token_attrs = %{"value" => encoded_token}
 
@@ -128,8 +94,54 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
         |> assign(:token_form, to_form(token_attrs, as: "token"))
       }
     else
-      {:error, error} ->
-        Logger.warning(authentication_error: {__MODULE__, error})
+      {:error, changeset} ->
+        Logger.error(registration_error: {__MODULE__, changeset.changes, changeset.errors})
+
+        {
+          :noreply,
+          socket
+          |> assign(:form, to_form(changeset))
+        }
+    end
+  end
+
+  def handle_info({:find_credential, [key_id: key_id]}, socket) do
+    case Identity.get_by_key_id(key_id) do
+      {:ok, user} ->
+        send_update(AuthenticationComponent, id: "authentication-component", user_keys: user.keys)
+
+        {
+          :noreply,
+          socket
+          |> assign(:user, user)
+        }
+
+      {:error, :not_found} ->
+        {
+          :noreply,
+          socket
+          |> put_flash(:error, "Failed to sign in")
+          |> assign(:token_form, nil)
+        }
+    end
+  end
+
+  def handle_info({:authentication_successful, _auth_data}, socket) do
+    %{user: user} = socket.assigns
+
+    case Identity.create_token(%{user_id: user.id}) do
+      {:ok, %UserToken{value: token_value}} ->
+        encoded_token = Base.encode64(token_value, padding: false)
+        token_attrs = %{"value" => encoded_token}
+
+        {
+          :noreply,
+          socket
+          |> assign(:token_form, to_form(token_attrs, as: "token"))
+        }
+
+      {:error, changeset} ->
+        Logger.warning(authentication_error: {__MODULE__, changeset})
 
         {
           :noreply,
@@ -138,6 +150,17 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
           |> assign(:token_form, nil)
         }
     end
+  end
+
+  def handle_info({:authentication_failure, message: message}, socket) do
+    Logger.error(authentication_error: {__MODULE__, message})
+
+    {
+      :noreply,
+      socket
+      |> put_flash(:error, "Failed to sign in")
+      |> assign(:token_form, nil)
+    }
   end
 
   def handle_info(message, socket) do

@@ -112,6 +112,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
     query =
       from(user in User,
         join: key in assoc(user, :keys),
+        preload: [:keys],
         where: key.key_id == ^key_id
       )
 

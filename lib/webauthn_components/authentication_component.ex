@@ -86,26 +86,21 @@ defmodule WebauthnComponents.AuthenticationComponent do
     """
   end
 
-  def update(%{user_key: user_key} = assigns, socket) do
+  def update(%{user_keys: user_keys} = assigns, socket) do
     %{challenge: challenge, attestation: attestation} = socket.assigns
 
     %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
+      raw_id: raw_id,
       signature: signature
     } = attestation
 
-    %{
-      key_id: key_id,
-      public_key: public_key,
-      user: user
-    } = user_key
-
-    credentials = [{key_id, public_key}]
+    credentials = Enum.map(user_keys, &{&1.key_id, &1.public_key})
 
     wax_response =
       Wax.authenticate(
-        key_id,
+        raw_id,
         authenticator_data,
         signature,
         client_data_array,
@@ -114,8 +109,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
       )
 
     case wax_response do
-      {:ok, _authenticator_data} ->
-        send(self(), {:authentication_successful, user: user})
+      {:ok, auth_data} ->
+        send(self(), {:authentication_successful, auth_data})
         {:ok, assign(socket, assigns)}
 
       {:error, error} ->
