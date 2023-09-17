@@ -1,7 +1,7 @@
 defmodule <%= inspect @app_pascal_case %>.IdentityTest do
   @moduledoc false
   use <%= inspect @app_pascal_case %>.DataCase, async: true
-  alias <%= inspect @app_pascal_case %>.UserFixtures
+  alias <%= inspect @app_pascal_case %>.IdentityFixtures
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
   alias <%= inspect @app_pascal_case %>.Identity.UserKey
@@ -11,7 +11,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
   describe "list/1" do
     setup do
       users =
-      Stream.repeatedly(fn -> UserFixtures.user_fixture() end)
+      Stream.repeatedly(fn -> IdentityFixtures.user_fixture() end)
       |> Enum.take(10)
 
       %{users: users}
@@ -60,7 +60,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
     end
 
     test "returns error with existing email" do
-      attrs = UserFixtures.valid_user_attrs()
+      attrs = IdentityFixtures.valid_user_attrs()
       {:ok, _user} = Identity.create(attrs)
       {:error, changeset} = Identity.create(attrs)
       assert %Ecto.Changeset{valid?: false, errors: errors} = changeset
@@ -68,7 +68,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
     end
 
     test "returns success with valid params" do
-      attrs = UserFixtures.valid_user_attrs()
+      attrs = IdentityFixtures.valid_user_attrs()
       assert {:ok, user} = Identity.create(attrs)
       assert %User{} = user
       assert user.email == attrs.email
@@ -77,7 +77,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
 
   describe "get/2" do
     setup do
-      %{user: UserFixtures.user_fixture()}
+      %{user: IdentityFixtures.user_fixture()}
     end
 
     test "returns error with invalid id" do
@@ -104,7 +104,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
 
   describe "update/2" do
     setup do
-      %{user: UserFixtures.user_fixture()}
+      %{user: IdentityFixtures.user_fixture()}
     end
 
     test "returns error with invalid params", %{user: user} do
@@ -114,7 +114,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
     end
 
     test "returns success with valid params", %{user: user} do
-      attrs = UserFixtures.valid_user_attrs()
+      attrs = IdentityFixtures.valid_user_attrs()
       assert {:ok, updated_user} = Identity.update(user, attrs)
       assert updated_user.id == user.id
       assert updated_user.email == attrs.email
@@ -123,7 +123,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
 
   describe "delete/1" do
     setup do
-      %{user: UserFixtures.user_fixture()}
+      %{user: IdentityFixtures.user_fixture()}
     end
 
     test "returns error with invalid user" do
