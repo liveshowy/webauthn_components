@@ -23,7 +23,7 @@ sequenceDiagram
 
 ### Registration
 
-A user wants to create a **new** account.
+A user wants to create a **new** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
 
 ```mermaid
 sequenceDiagram
@@ -40,13 +40,13 @@ sequenceDiagram
    RegistrationComponent->>ParentLiveView: `{:registration_successful, ...}`
 ```
 
-Once the parent LiveView receives the `{:registration_successful, ...}` message, it must persist the user, the user's new key.
+Once the parent LiveView receives the `{:registration_successful, ...}` message, it must persist the `%User{}` and `%UserKey{}`. The `wac.install` generator casts the new user key as an association in the user params, so both are created at once.
 
-To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to a form with for persistence in the client's `sessionStorage`.
+To keep the user signed in, the LiveView may [create a session token](#token-management).
 
 ### Authentication
 
-A user wants to sign into an **existing** account.
+A user wants to sign into an **existing** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
 
 ```mermaid
 sequenceDiagram
