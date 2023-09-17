@@ -27,11 +27,13 @@ defmodule <%= inspect @web_pascal_case %>.Session do
         conn
         |> put_session(:user_token, value)
         |> put_session(:user_id, user_id)
+        |> put_flash(:info, "Welcome back!")
         |> redirect(to: ~p"/")
 
       {:error, _} ->
         conn
         |> clear_session()
+        |> put_flash(:error, "Please sign in.")
         |> redirect(to: ~p"/sign-in")
     end
   end
@@ -43,6 +45,7 @@ defmodule <%= inspect @web_pascal_case %>.Session do
 
     conn
     |> clear_session()
+    |> put_flash(:info, "Successfully signed out.")
     |> redirect(to: ~p"/")
   end
 end
