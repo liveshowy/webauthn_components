@@ -31,8 +31,6 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
       # Token/Session Form
       # This form is only rendered when registration or authentication is successful.
       refute has_element?(view, "form#token-form[action='/session'][method='post'].hidden")
-      # assert has_element?(view, "form#token-form input[type='text'][name='value']")
-      # assert has_element?(view, "form#token-form button[type='submit']")
     end
   end
 
