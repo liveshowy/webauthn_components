@@ -1,6 +1,14 @@
 defmodule <%= inspect @app_pascal_case %>.Identity.User do
   @moduledoc """
   Schema representing a user of the application.
+
+  ## Considerations
+
+  - Ecto.ULID is used to prevent user enumeration attacks while maintaining sortability.
+    - Spec: https://github.com/ulid/spec
+    - Context: https://www.honeybadger.io/blog/uuids-and-ulids/
+    - UUIDv7 may provide the same functionality, but it is not fully supported as of 09/2023.
+  - Email confirmation is not implemented.
   """
   use Ecto.Schema
   import Ecto.Changeset
@@ -13,11 +21,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity.User do
           inserted_at: NaiveDateTime.t(),
           updated_at: NaiveDateTime.t()
         }
-
-  # Ecto.ULID is used to prevent user enumeration attacks while maintaining sortability.
-  # UUIDv7 may provide the same functionality, but it is not fully supported as of 09/2023.
-  # Spec: https://github.com/ulid/spec
-  # Context: https://www.honeybadger.io/blog/uuids-and-ulids/
 
   @primary_key {:id, Ecto.ULID, autogenerate: true}
   @foreign_key_type Ecto.ULID

@@ -1,6 +1,12 @@
 defmodule <%= inspect @app_pascal_case %>.Identity.UserKey do
   @moduledoc """
-  Schema representing a `User`'s Webauthn key.
+  Schema representing a `User`'s Passkey / Webauthn credential.
+
+  ## Considerations
+
+  - A user may have multiple keys.
+  - Each key must have a unique label.
+  - `:last_used_at` is set when the key is created and updated, and this value cannot be cast through the changesets.
   """
   use Ecto.Schema
   import Ecto.Changeset

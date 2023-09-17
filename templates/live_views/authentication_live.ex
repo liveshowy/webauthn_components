@@ -1,6 +1,8 @@
 defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   @moduledoc """
   LiveView for registering new users and authenticating existing users.
+
+  See `WebauthnComponents` for details on Passkey authentication.
   """
   use <%= inspect @web_pascal_case %>, :live_view
   require Logger

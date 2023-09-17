@@ -1,13 +1,32 @@
 defmodule <%= inspect @web_pascal_case %>.SessionHooks.AssignUser do
   @moduledoc """
-  Session hook for setting the `@current_user` assign.
+  Session hook for setting the `@current_user` assign on the socket.
 
   If a **valid** `user_id` or `user_token` is set in the session, the user will be assigned, otherwise `@current_user` will be `nil`.
+
+  ## Example
+
+  ```
+  # router.ex
+
+  alias MyApp.SessionHooks.AssignUser
+
+  ...
+
+  live_session :default, on_mount: [AssignUser] do
+    scope "/", MyAppWeb do
+      pipe_through :browser
+
+      live "/sign-in", AuthenticationLive
+    end
+  end
+  ```
   """
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
   import Phoenix.Component
 
+  @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t())
   def on_mount(:default, _params, _session, %{assigns: %{current_user: %User{}}} = socket) do
     {:cont, socket}
   end

@@ -1,6 +1,11 @@
 defmodule <%= inspect @app_pascal_case %>.Identity.UserToken do
   @moduledoc """
   Schema representing a token generated for a `User`.
+
+  ## Considerations
+
+  - NaiveDateTime is used by default, and this may result in token validation errors in systems distributed across multiple regions.
+  - Email confirmation, invite codes, and other tokens may be implemented by updating the `:type` values and writing additional code in the `Identity` context.
   """
   use Ecto.Schema
   import Ecto.Changeset
