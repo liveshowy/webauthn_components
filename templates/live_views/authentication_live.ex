@@ -148,6 +148,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
   defp build_form(attrs \\ %{}) do
     %User{}
     |> User.changeset(attrs)
+    |> Map.put(:action, :insert)
     |> to_form()
   end
 
