@@ -11,8 +11,6 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - If the user has only one passkey registered to the application's origin URL, they will be prompted to confirm acceptance via biometric ID (touch, face, etc.), OS password, or an OS PIN.
   - If multiple accounts are registered to the device for the origin URL, the user may select an account to use for the current session.
 
-  See [USAGE.md](./USAGE.md) for example code.
-
   ## Cross-Device Authentication
 
   When a user attempts to authenticate on a device where their Passkey is **not** stored, they may scan a QR code to use a cloud-sync'd Passkey.

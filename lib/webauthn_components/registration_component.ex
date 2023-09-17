@@ -8,8 +8,6 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   Existing users may also register additional keys for backup, survivorship, sharing, or other purposes. Your application may set limits on how many keys are associated with an account based on business concerns.
 
-  See [USAGE.md](./USAGE.md) for example code.
-
   ## Assigns
 
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.

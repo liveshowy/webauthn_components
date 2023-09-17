@@ -6,8 +6,6 @@ defmodule WebauthnComponents.SupportComponent do
 
   An application may also use `SupportComponent` to steer users away from traditional authentication to the more secure Passkey authentication method. For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
 
-  See [USAGE.md](./USAGE.md) for example code.
-
   ## Assigns
 
   - `@id` (Optional) An HTML element ID.
