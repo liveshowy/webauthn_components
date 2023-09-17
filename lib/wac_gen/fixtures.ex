@@ -4,9 +4,7 @@ defmodule Wac.Gen.Fixtures do
   @template_path "../../templates/fixtures"
 
   @template_files %{
-    users: "user_fixtures.ex"
-    # user_keys: "user_keys_test.exs",
-    # user_tokens: "user_tokens_test.exs"
+    identity: "identity_fixtures.ex"
   }
 
   @templates Map.keys(@template_files)

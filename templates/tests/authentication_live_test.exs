@@ -2,6 +2,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
   @moduledoc false
   use <%= inspect @web_pascal_case %>.ConnCase, async: true
   import Phoenix.LiveViewTest
+  alias <%= inspect @app_pascal_case %>.IdentityFixtures
 
   describe "mount & render" do
     test "includes expected elements", %{conn: conn} do
@@ -31,9 +32,34 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
   end
 
   describe "handle_event: update-form" do
+    test "results in updated form", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/sign-in")
+      attrs = %{email: IdentityFixtures.unique_email()}
+
+      assert view
+             |> element("form[phx-change='update-form']")
+             |> render_change(attrs)
+
+      assert has_element?(view, "input[type='email'][name='email'][value='#{attrs.email}']")
+    end
   end
 
   describe "handle_info: passkeys_supported" do
+    test "renders flash when not supported", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/sign-in")
+      Process.send(view.pid, {:passkeys_supported, false}, [])
+
+      assert view
+             |> has_element?("#flash", "Passkeys are not supported in this browser.")
+    end
+
+    test "does not render flash when supported", %{conn: conn} do
+      {:ok, view, _html} = live(conn, ~p"/sign-in")
+      Process.send(view.pid, {:passkeys_supported, true}, [])
+
+      refute view
+             |> has_element?("#flash", "Passkeys are not supported in this browser.")
+    end
   end
 
   describe "handle_info: registration_successful" do
