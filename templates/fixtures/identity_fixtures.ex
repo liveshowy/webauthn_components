@@ -83,6 +83,19 @@ defmodule <%= inspect @app_pascal_case %>.IdentityFixtures do
     Wax.new_authentication_challenge(attrs)
   end
 
+  def attestation(attrs \\ []) do
+    Enum.into(
+      attrs,
+      %{
+        "authenticatorData64" => encoded_id(),
+        "clientDataArray" => [],
+        "rawId64" => encoded_id(),
+        "signature64" => encoded_id(),
+        "type" => "resident"
+      }
+    )
+  end
+
   def cose_key do
     %{
       -3 =>
