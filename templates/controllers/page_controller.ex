@@ -11,12 +11,7 @@ defmodule PasskeysWeb.PageController do
       |> assign(:current_user, user)
       |> render(:home, layout: false)
     else
-      nil ->
-        conn
-        |> assign(:current_user, nil)
-        |> render(:home, layout: false)
-
-      {:error, :not_found} ->
+      _no_user ->
         conn
         |> assign(:current_user, nil)
         |> render(:home, layout: false)
