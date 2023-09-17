@@ -31,7 +31,7 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.RequireUser do
   import Phoenix.LiveView
   use <%= inspect @web_pascal_case %>, :verified_routes
 
-  @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t())
+  @spec on_mount(atom(), map(), map(), Socket.t()) :: {:cont, Socket.t()} | {:halt, Socket.t()}
   def on_mount(:default, _params, _session, %{assigns: %{current_user: %User{}}} = socket) do
     {:cont, socket}
   end

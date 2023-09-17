@@ -24,9 +24,10 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.AssignUser do
   """
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
+  alias Phoenix.LiveView.Socket
   import Phoenix.Component
 
-  @spec on_mount(atom(), map(), map(), Phoenix.LiveView.Socket.t())
+  @spec on_mount(atom(), map(), map(), Socket.t()) :: {:cont, Socket.t()} | {:halt, Socket.t()}
   def on_mount(:default, _params, _session, %{assigns: %{current_user: %User{}}} = socket) do
     {:cont, socket}
   end
