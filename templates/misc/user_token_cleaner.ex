@@ -64,7 +64,7 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
   """
   @spec delete_expired_tokens :: :ok
   def delete_expired_tokens do
-    GenServer.cast(__MODULE__, :delete_expired_tokens)
+    Process.send(__MODULE__, :delete_expired_tokens, [])
   end
 
   @doc """
@@ -72,24 +72,28 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
 
   The new interval will be applied to the next timer set by the cleanup process.
   """
-  @spec set_interval_minutes(int :: pos_integer()) :: Keyword.t()
+  @spec set_interval_minutes(int :: pos_integer()) :: :ok
   def set_interval_minutes(int) when is_pos_integer(int) do
-    GenServer.cast(__MODULE__, {:update_interval_minutes, int})
+    Process.send(__MODULE__, {:update_interval_minutes, int}, [])
   end
 
   @doc false
   def init(args) do
-    interval_minutes = args[:interval_minutes] || 10
-    Process.send_after(self(), :delete_expired_tokens, calculate_interval_milliseconds(interval_minutes))
-    {:ok, timer_ref: nil, interval_minutes: interval_minutes}
+    int = args[:interval_minutes] || 10
+    {:ok, timer_ref} = set_timer(int)
+    {:ok, [interval_minutes: int, timer_ref: timer_ref]}
+  end
+
+  defp set_timer(int) when is_pos_integer(int) do
+    int
+    |> :timer.minutes()
+    |> :timer.apply_interval(Process, :send, [__MODULE__, :delete_expired_tokens, []])
   end
 
   @doc false
-  def handle_cast({:update_interval_minutes, int}, state) when is_pos_integer(int) do
-    timer_ref =
-      int
-      |> calculate_interval_milliseconds()
-      |> :timer.apply_interval(GenServer, :cast, [__MODULE__, :delete_expired_tokens])
+  def handle_info({:update_interval_minutes, int}, state) when is_pos_integer(int) do
+    if ref = state[:timer_ref], do: :timer.cancel(ref)
+    {:ok, timer_ref} = set_timer(int)
 
     new_state =
       state
@@ -100,14 +104,9 @@ defmodule <%= @app_pascal_case %>.UserTokenCleaner do
   end
 
   @doc false
-  def handle_cast(:delete_expired_tokens, state) do
+  def handle_info(:delete_expired_tokens, state) do
     {count, _results} = Identity.delete_all_expired_tokens()
     Logger.info(expired_tokens_deleted: count)
     {:noreply, state}
-  end
-
-  @spec calculate_interval_milliseconds(int :: pos_integer()) :: pos_integer()
-  defp calculate_interval_milliseconds(int) when is_pos_integer(int) do
-    int * 60 * 1_000
   end
 end
