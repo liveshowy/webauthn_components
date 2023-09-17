@@ -2,6 +2,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
   @moduledoc false
   use <%= inspect @web_pascal_case %>.ConnCase, async: true
   import Phoenix.LiveViewTest
+  import ExUnit.CaptureLog
   alias <%= inspect @app_pascal_case %>.Identity
   alias <%= inspect @app_pascal_case %>.Identity.User
   alias <%= inspect @app_pascal_case %>.IdentityFixtures
@@ -72,9 +73,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
     test "results in a new user token", %{conn: conn} do
       {:ok, view, _html} = live(conn, route())
       email = IdentityFixtures.unique_email()
-
       assert render_change(view, "update-form", %{email: email})
-
       key = IdentityFixtures.user_key_attrs()
 
       msg = {:registration_successful, key: key}
@@ -92,11 +91,46 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
   end
 
   describe "handle_info: find_credentials" do
+    test "logs error on invalid attestation", %{conn: conn} do
+      {:ok, view, _html} = live(conn, route())
+      key = IdentityFixtures.user_key_attrs()
+
+      user_attrs = %{
+        email: IdentityFixtures.unique_email(),
+        keys: [key]
+      }
+
+      {:ok, _user} = Identity.create(user_attrs)
+
+      assert view
+             |> element("button#authentication-component")
+             |> render_click()
+
+      render(view)
+
+      raw_id_64 = Base.encode64(key.key_id, padding: false)
+      attestation = IdentityFixtures.attestation(%{"rawId64" => raw_id_64})
+
+      assert view
+             |> element("button#authentication-component")
+             |> render_hook("authentication-attestation", attestation)
+
+      render(view)
+      refute has_element?(view, "#flash", "Failed to sign in")
+
+      msg = {:find_credential, key_id: key.key_id}
+
+      {_result, log} =
+        with_log(fn ->
+          send(view.pid, msg)
+          render(view)
+        end)
+
+      assert log =~ "Invalid authenticator data"
+    end
   end
 
-  describe "handle_info: authentication_successful" do
-  end
-
-  describe "handle_info: authentication_failure" do
-  end
+  # TODO
+  # describe "handle_info: authentication_successful" do
+  # end
 end
