@@ -1,10 +1,10 @@
 # WebAuthn Flows
 
 - [WebAuthn Flows](#webauthn-flows)
-    - [Support Detection](#support-detection)
-    - [Registration](#registration)
-    - [Authentication](#authentication)
-    - [Token Management](#token-management)
+  - [Support Detection](#support-detection)
+  - [Registration](#registration)
+  - [Authentication](#authentication)
+  - [Token Management](#token-management)
 
 
 `WebauthnComponents` contains a few modular components which may be combined to detect passkey support, register new keys, authenticate keys for existing users, and manage session tokens in the client.
@@ -13,7 +13,7 @@ See module documentation for each component for more detailed descriptions.
 
 > 🧯 The following charts focus on the success path, where no error has ocurred.
 
-### Support Detection
+## Support Detection
 
 ```mermaid
 sequenceDiagram
@@ -30,7 +30,7 @@ sequenceDiagram
    ParentLiveView->>AuthenticationComponent: `@disabled = !@passkeys_supported`
 ```
 
-### Registration
+## Registration
 
 A user wants to create a **new** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
 
@@ -53,7 +53,7 @@ Once the parent LiveView receives the `{:registration_successful, ...}` message,
 
 To keep the user signed in, the LiveView may [create a session token](#token-management).
 
-### Authentication
+## Authentication
 
 A user wants to sign into an **existing** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
 
@@ -77,7 +77,7 @@ sequenceDiagram
 
 Once the parent LiveView receives the `{:find_credential, ...}` message, it must lookup the user via the user's existing key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
 
-### Token Management
+## Token Management
 
 A user has successfully registered or authenticated.
 
