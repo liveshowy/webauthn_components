@@ -1,5 +1,12 @@
 # WebAuthn Flows
 
+- [WebAuthn Flows](#webauthn-flows)
+    - [Support Detection](#support-detection)
+    - [Registration](#registration)
+    - [Authentication](#authentication)
+    - [Token Management](#token-management)
+
+
 `WebauthnComponents` contains a few modular components which may be combined to detect passkey support, register new keys, authenticate keys for existing users, and manage session tokens in the client.
 
 See module documentation for each component for more detailed descriptions.
