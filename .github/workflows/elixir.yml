@@ -33,7 +33,10 @@ jobs:
         with:
           path: deps
           key: ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
-          restore-keys: ${{ runner.os }}-${{ matrix.elixir }}-mix-
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
+            ${{ runner.os }}-${{ matrix.elixir }}-mix-
+            ${{ runner.os }}-
 
       - name: Install dependencies
         run: mix deps.get
@@ -41,7 +44,7 @@ jobs:
       - name: Compilation Cache
         uses: actions/cache@v3
         with:
-          path: _build/test
+          path: _build
           key: ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
           restore-keys: |
             ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}

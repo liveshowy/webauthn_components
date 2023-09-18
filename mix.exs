@@ -2,8 +2,9 @@ defmodule WebauthnComponents.MixProject do
   use Mix.Project
 
   # Don't forget to change the version in `package.json`
+  @name "WebauthnComponents"
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.5.3"
+  @version "0.6.0"
 
   def project do
     [
@@ -13,9 +14,10 @@ defmodule WebauthnComponents.MixProject do
       docs: docs(),
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
-      name: "WebauthnComponents",
+      name: @name,
       package: package(),
       start_permanent: Mix.env() == :prod,
+      source_url: @source_url,
       version: @version
     ]
   end
@@ -34,16 +36,18 @@ defmodule WebauthnComponents.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:ex_doc, "~> 0.30", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:ecto_ulid, "~> 0.3"},
       {:ecto, "~> 3.10"},
+      {:ex_doc, "~> 0.30", only: [:dev], runtime: false},
       {:floki, "~> 0.34.2", only: [:test]},
       {:jason, "~> 1.0"},
       {:live_isolated_component, "~> 0.6.4", only: [:test]},
-      {:phoenix, "~> 1.6"},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 0.17"},
+      {:phoenix, "~> 1.6"},
+      {:sourceror, "~> 0.13"},
       {:uuid, "~> 1.1"},
-      {:ecto_ulid, "~> 0.3"},
       {:wax_, "~> 0.6.1"}
     ]
   end
@@ -51,21 +55,27 @@ defmodule WebauthnComponents.MixProject do
   defp docs do
     [
       main: "readme",
-      name: "WebauthnComponents",
+      name: @name,
       formatters: ["html"],
-      source_ref: "v#{@version}",
-      canonical: "http://hexdocs.pm/webauthn_components",
-      nest_modules_by_prefix: [WebauthnComponents],
+      canonical: "https://hexdocs.pm/webauthn_components",
+      nest_modules_by_prefix: [
+        WebauthnComponents
+      ],
+      groups_for_modules: [
+        Components: ~r/Component$/,
+        Support: [
+          WebauthnComponents.CoseKey,
+          WebauthnComponents.WebauthnUser
+        ]
+      ],
       source_url: @source_url,
       before_closing_body_tag: &before_closing_body_tag/1,
-      extras: ["README.md", "USAGE.md"]
+      extras: ["README.md", "webauthn_flows.md"]
     ]
   end
 
   defp description do
-    """
-    Passwordless authentication for LiveView applications.
-    """
+    "Passkey authentication for Phoenix LiveView applications."
   end
 
   defp package do

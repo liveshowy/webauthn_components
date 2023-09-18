@@ -11,8 +11,6 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - If the user has only one passkey registered to the application's origin URL, they will be prompted to confirm acceptance via biometric ID (touch, face, etc.), OS password, or an OS PIN.
   - If multiple accounts are registered to the device for the origin URL, the user may select an account to use for the current session.
 
-  See [USAGE.md](./USAGE.md) for example code.
-
   ## Cross-Device Authentication
 
   When a user attempts to authenticate on a device where their Passkey is **not** stored, they may scan a QR code to use a cloud-sync'd Passkey.
@@ -26,6 +24,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
   ## Assigns
 
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to request an existing credential in the client.
+  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign In".
+  - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
@@ -59,6 +59,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:id, fn -> "authentication-component" end)
       |> assign_new(:class, fn -> "" end)
       |> assign_new(:disabled, fn -> nil end)
+      |> assign_new(:display_text, fn -> "Sign In" end)
+      |> assign_new(:show_icon?, fn -> true end)
     }
   end
 
@@ -75,33 +77,28 @@ defmodule WebauthnComponents.AuthenticationComponent do
         title="Use an existing account"
         disabled={@disabled}
       >
-        <span class="w-4 opacity-70"><.icon_key /></span>
-        <span>Authenticate</span>
+        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
+        <span><%= @display_text %></span>
       </.button>
     </span>
     """
   end
 
-  def update(%{user_key: user_key} = assigns, socket) do
+  def update(%{user_keys: user_keys} = assigns, socket) do
     %{challenge: challenge, attestation: attestation} = socket.assigns
 
     %{
       authenticator_data: authenticator_data,
       client_data_array: client_data_array,
+      raw_id: raw_id,
       signature: signature
     } = attestation
 
-    %{
-      key_id: key_id,
-      public_key: public_key,
-      user: user
-    } = user_key
-
-    credentials = [{key_id, public_key}]
+    credentials = Enum.map(user_keys, &{&1.key_id, &1.public_key})
 
     wax_response =
       Wax.authenticate(
-        key_id,
+        raw_id,
         authenticator_data,
         signature,
         client_data_array,
@@ -110,13 +107,16 @@ defmodule WebauthnComponents.AuthenticationComponent do
       )
 
     case wax_response do
-      {:ok, _authenticator_data} ->
-        send(self(), {:authentication_successful, user: user})
+      {:ok, auth_data} ->
+        send(self(), {:authentication_successful, auth_data})
+        {:ok, assign(socket, assigns)}
+
+      {:error, %{message: message}} ->
+        send(self(), {:authentication_failure, message: message})
         {:ok, assign(socket, assigns)}
 
       {:error, error} ->
-        message = Exception.message(error)
-        send(self(), {:authentication_failure, message: message})
+        send(self(), {:authentication_failure, message: error})
         {:ok, assign(socket, assigns)}
     end
   end

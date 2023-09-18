@@ -1,11 +1,19 @@
-defmodule <%= inspect @app_pascal_case %>.Users.User do
+defmodule <%= inspect @app_pascal_case %>.Identity.User do
   @moduledoc """
   Schema representing a user of the application.
+
+  ## Considerations
+
+  - Ecto.ULID is used to prevent user enumeration attacks while maintaining sortability.
+    - Spec: https://github.com/ulid/spec
+    - Context: https://www.honeybadger.io/blog/uuids-and-ulids/
+    - UUIDv7 may provide the same functionality, but it is not fully supported as of 09/2023.
+  - Email confirmation is not implemented.
   """
   use Ecto.Schema
   import Ecto.Changeset
-  alias <%= inspect @app_pascal_case %>.UserKeys.UserKey
-  alias <%= inspect @app_pascal_case %>.UserTokens.UserToken
+  alias <%= inspect @app_pascal_case %>.Identity.UserKey
+  alias <%= inspect @app_pascal_case %>.Identity.UserToken
 
   @type t :: %__MODULE__{
           id: binary(),

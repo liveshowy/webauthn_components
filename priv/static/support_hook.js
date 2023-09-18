@@ -1,4 +1,4 @@
-const SupportHook = {
+export const SupportHook = {
   mounted() {
     console.info(`SupportHook mounted`);
 
@@ -11,5 +11,3 @@ const SupportHook = {
     this.pushEventTo(this.el, "passkeys-supported", { supported });
   },
 };
-
-module.exports = { SupportHook };

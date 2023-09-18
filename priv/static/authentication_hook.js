@@ -1,6 +1,6 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
 
-const AuthenticationHook = {
+export const AuthenticationHook = {
   mounted() {
     console.info(`AuthenticationHook mounted`);
 
@@ -49,5 +49,3 @@ const AuthenticationHook = {
     }
   },
 };
-
-module.exports = { AuthenticationHook };

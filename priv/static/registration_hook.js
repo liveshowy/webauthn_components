@@ -1,6 +1,6 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
 
-const RegistrationHook = {
+export const RegistrationHook = {
   mounted() {
     console.info(`RegistrationHook mounted`);
 
@@ -63,5 +63,3 @@ const RegistrationHook = {
     }
   },
 };
-
-module.exports = { RegistrationHook };

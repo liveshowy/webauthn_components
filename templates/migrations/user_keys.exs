@@ -8,7 +8,7 @@ defmodule <%= inspect @app_pascal_case %>.Repo.Migrations.CreateUserKeys do
       add :label, :string, null: false
       add :key_id, :binary, null: false
       add :public_key, :binary, null: false
-      add :last_used_at, :utc_datetime, null: false
+      add :last_used_at, :utc_datetime, null: false, default: fragment("now()")
 
       timestamps()
     end
