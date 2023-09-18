@@ -126,7 +126,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
           render(view)
         end)
 
-      assert log =~ "Invalid authenticator data"
+      assert log =~ "authentication_error"
     end
   end
 
