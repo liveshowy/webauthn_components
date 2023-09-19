@@ -1,9 +1,11 @@
 ---
-name: Bug report
+name: Bug Report
 about: Create a report to help us improve
 title: '[BUG] - '
-labels: 'bug'
-assignees: '@type1fool'
+labels: ['bug', 'triage']
+projects: ['liveshowy/projects/1']
+assignees:
+  - type1fool
 
 ---
 

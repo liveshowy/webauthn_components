@@ -1,9 +1,11 @@
 ---
 name: Feature request
 about: Suggest an idea for this project
-title: ''
-labels: 'enhancement'
-assignees: '@type1fool'
+title: '[REQUEST] - '
+labels: ['enhancement', 'triage']
+projects: ['liveshowy/projects/1']
+assignees:
+  - type1fool
 
 ---
 
