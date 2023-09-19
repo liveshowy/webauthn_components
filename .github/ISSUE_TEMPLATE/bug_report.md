@@ -3,7 +3,7 @@ name: Bug Report
 about: Create a report to help us improve
 title: '[BUG] - '
 labels: ['bug', 'triage']
-projects: ['liveshowy/projects/3']
+projects: ['liveshowy/3']
 assignees:
   - type1fool
 

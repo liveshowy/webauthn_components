@@ -3,7 +3,7 @@ name: Feature request
 about: Suggest an idea for this project
 title: '[REQUEST] - '
 labels: ['enhancement', 'triage']
-projects: ['liveshowy/projects/3']
+projects: ['liveshowy/3']
 assignees:
   - type1fool
 
