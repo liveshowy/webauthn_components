@@ -48,7 +48,7 @@ defmodule Wac.Gen.Misc do
     |> Zipper.insert_right(token_cleaner_child(assigns))
   end
 
-  defp find_repo_child({:__aliases__, _meta, [:Passkeys, :Repo]}), do: true
+  defp find_repo_child({:__aliases__, _meta, [_, :Repo]}), do: true
   defp find_repo_child(_), do: false
 
   defp token_cleaner_child(assigns) do
