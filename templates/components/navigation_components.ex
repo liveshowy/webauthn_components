@@ -1,13 +1,13 @@
-defmodule <%= @web_pascal_case %>.NavigationComponents do
+defmodule <%= inspect @web_pascal_case %>.NavigationComponents do
   @moduledoc """
   Components for navigating the application.
   """
   use Phoenix.Component
-  use <%= @web_pascal_case %>, :verified_routes
+  use <%= inspect @web_pascal_case %>, :verified_routes
 
   embed_templates "/navigation/*"
 
-  alias <%= @app_pascal_case %>.Identity.User
+  alias <%= inspect @app_pascal_case %>.Identity.User
 
   attr :current_user, User, required: true
 

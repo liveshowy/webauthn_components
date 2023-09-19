@@ -1,8 +1,8 @@
-defmodule PasskeysWeb.PageController do
+defmodule <%= inspect @web_pascal_case %>.PageController do
   alias Hex.API.User
-  alias <%= @app_pascal_case %>.Identity
-  alias <%= @app_pascal_case %>.Identity.User
-  use <%= @web_pascal_case %>, :controller
+  alias <%= inspect @app_pascal_case %>.Identity
+  alias <%= inspect @app_pascal_case %>.Identity.User
+  use <%= inspect @web_pascal_case %>, :controller
 
   def home(conn, _params) do
     with user_id when is_binary(user_id) <- get_session(conn, "user_id"),

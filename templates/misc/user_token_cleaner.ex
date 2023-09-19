@@ -1,4 +1,4 @@
-defmodule <%= @app_pascal_case %>.UserTokenCleaner do
+defmodule <%= inspect @app_pascal_case %>.UserTokenCleaner do
   @moduledoc """
   Periodically deletes all expired user tokens in the repo.
 
