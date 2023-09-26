@@ -128,7 +128,7 @@ defmodule WebauthnComponents.RegistrationComponent do
     challenge =
       Wax.new_registration_challenge(
         attestation: attestation,
-        origin: host_uri.host,
+        origin: URI.to_string(host_uri),
         rp_id: :auto,
         trusted_attestation_types: [:none, :basic]
       )
