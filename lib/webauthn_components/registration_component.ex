@@ -110,7 +110,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def handle_event("register", _params, socket) do
-    %{assigns: assigns, endpoint: endpoint} = socket
+    %{assigns: assigns, host_uri: host_uri} = socket
 
     %{
       app: app_name,
@@ -128,7 +128,7 @@ defmodule WebauthnComponents.RegistrationComponent do
     challenge =
       Wax.new_registration_challenge(
         attestation: attestation,
-        origin: endpoint.url,
+        origin: host_uri.host,
         rp_id: :auto,
         trusted_attestation_types: [:none, :basic]
       )
