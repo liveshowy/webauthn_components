@@ -29,6 +29,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
+  - `@relying_party` (Optional) URL to override the default RP value based on the origin. For example, the default may be `www.example.com`, and passing `example.com` would allow the credential to be used across subdomains, ie `mail.example.com`, `forum.example.com`, and so on.
+    - If set, the same value must be passed to the `RegistrationComponent`.
 
   ## Events
 
@@ -61,6 +63,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:disabled, fn -> nil end)
       |> assign_new(:display_text, fn -> "Sign In" end)
       |> assign_new(:show_icon?, fn -> true end)
+      |> assign_new(:relying_party, fn -> nil end)
     }
   end
 
@@ -126,13 +129,21 @@ defmodule WebauthnComponents.AuthenticationComponent do
   end
 
   def handle_event("authenticate", _params, socket) do
-    %{assigns: assigns, endpoint: endpoint} = socket
-    %{id: id} = assigns
+    %{assigns: assigns, endpoint: endpoint, host_uri: host_uri} = socket
+    %{id: id, relying_party: relying_party} = assigns
+
+    origin =
+      case host_uri do
+        %URI{} -> URI.to_string(host_uri)
+        _ -> endpoint.url
+      end
+
+    rp_id = relying_party || :auto
 
     challenge =
       Wax.new_authentication_challenge(
-        origin: endpoint.url,
-        rp_id: :auto,
+        origin: origin,
+        rp_id: rp_id,
         user_verification: "preferred"
       )
 
