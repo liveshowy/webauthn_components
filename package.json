@@ -1,6 +1,6 @@
 {
   "name": "webauthn_components",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "main": "./priv/static/main.js",
   "repository": {},
   "files": [
