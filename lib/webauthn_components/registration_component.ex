@@ -18,8 +18,6 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@require_resident_key` (Optional) Set to `false` to allow non-passkey credentials. Defaults to `true`.
-  - `@relying_party` (Optional) URL to override the default RP value based on the origin. For example, the default may be `www.example.com`, and passing `example.com` would allow the credential to be used across subdomains, ie `mail.example.com`, `forum.example.com`, and so on.
-    - If set, the same value must be passed to the `AuthenticationComponent`.
 
   ## Events
 
@@ -113,14 +111,13 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def handle_event("register", _params, socket) do
-    %{assigns: assigns, endpoint: endpoint, host_uri: host_uri} = socket
+    %{assigns: assigns, endpoint: endpoint} = socket
 
     %{
       app: app_name,
       id: id,
       require_resident_key: require_resident_key,
-      webauthn_user: webauthn_user,
-      relying_party: relying_party
+      webauthn_user: webauthn_user
     } = assigns
 
     if not is_struct(webauthn_user, WebauthnUser) do
@@ -129,19 +126,11 @@ defmodule WebauthnComponents.RegistrationComponent do
 
     attestation = "none"
 
-    origin =
-      case host_uri do
-        %URI{} -> URI.to_string(host_uri)
-        _ -> endpoint.url
-      end
-
-    rp_id = relying_party || :auto
-
     challenge =
       Wax.new_registration_challenge(
         attestation: attestation,
-        origin: origin,
-        rp_id: rp_id,
+        origin: endpoint.url,
+        rp_id: :auto,
         trusted_attestation_types: [:none, :basic]
       )
 
