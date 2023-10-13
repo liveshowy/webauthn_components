@@ -16,7 +16,7 @@
     >
       <p>Create a <strong>new</strong> account:</p>
 
-      <.input type="email" field={form[:email]} label="Email" phx-debounce="250" />
+      <.input type="email" field={form[:email]} label="Email" phx-debounce="250" autocomplete="username webauthn" />
       <.live_component
         disabled={@form.source.valid? == false}
         module={RegistrationComponent}

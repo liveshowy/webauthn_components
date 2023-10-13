@@ -65,15 +65,6 @@ export const AuthenticationHook = {
       const signature64 = arrayBufferToBase64(signature);
       const userHandle64 = arrayBufferToBase64(userHandle);
 
-      console.log(JSON.stringify({
-        rawId64,
-        type,
-        clientDataArray,
-        authenticatorData64,
-        signature64,
-        userHandle64,
-      }))
-
       context.pushEventTo(context.el, "authentication-attestation", {
         rawId64,
         type,

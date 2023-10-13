@@ -2,7 +2,7 @@ export function browserSupportsPasskeyAutofill() {
   const globalPublicKeyCredential = window.PublicKeyCredential;
 
   if (globalPublicKeyCredential.isConditionalMediationAvailable === undefined) {
-    return new Promise((resolve) => resolve(false));
+    return Promise.resolve(false);
   }
 
   return globalPublicKeyCredential.isConditionalMediationAvailable();
