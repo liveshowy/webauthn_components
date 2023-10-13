@@ -126,9 +126,16 @@ defmodule WebauthnComponents.AuthenticationComponent do
     {:ok, assign(socket, assigns)}
   end
 
-  def handle_event("authenticate", _params, socket) do
+  def handle_event("authenticate", params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
     %{id: id} = assigns
+
+    supports_passkey_autofill = Map.has_key?(params, "supports_passkey_autofill")
+
+    event =
+      if supports_passkey_autofill,
+        do: "authentication-challenge-with-conditional-ui",
+        else: "authentication-challenge"
 
     challenge =
       Wax.new_authentication_challenge(
@@ -149,7 +156,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       :noreply,
       socket
       |> assign(:challenge, challenge)
-      |> push_event("authentication-challenge", challenge_data)
+      |> push_event(event, challenge_data)
     }
   end
 
