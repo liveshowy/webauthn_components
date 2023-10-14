@@ -28,6 +28,7 @@ defmodule <%= inspect @web_pascal_case %>.SessionHooks.RequireUser do
   ```
   """
   alias <%= inspect @app_pascal_case %>.Identity.User
+  alias Phoenix.LiveView.Socket
   import Phoenix.LiveView
   use <%= inspect @web_pascal_case %>, :verified_routes
 
