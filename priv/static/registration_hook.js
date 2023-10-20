@@ -1,5 +1,5 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
-import { AbortControllerService } from "./abort_controller"
+import { AbortControllerService } from "./abort_controller";
 
 export const RegistrationHook = {
   mounted() {
@@ -60,6 +60,9 @@ export const RegistrationHook = {
         type,
       });
     } catch (error) {
+      if (error.toString().includes("NotAllowedError:")) {
+        AbortControllerService.cancelCeremony();
+      }
       console.error(error);
       handleError(error, context);
     }

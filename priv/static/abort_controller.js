@@ -7,9 +7,9 @@ class BaseAbortControllerService {
     // Abort any existing calls to navigator.credentials.create() or navigator.credentials.get()
     if (this.controller) {
       const abortError = new Error(
-        'Cancelling existing WebAuthn API call for new one',
+        "Cancelling existing WebAuthn API call for new one"
       );
-      abortError.name = 'AbortError';
+      abortError.name = "AbortError";
       this.controller.abort(abortError);
     }
 
@@ -17,6 +17,21 @@ class BaseAbortControllerService {
 
     this.controller = newController;
     return newController.signal;
+  }
+
+  /**
+   * Manually cancel any active WebAuthn registration or authentication attempt.
+   */
+  cancelCeremony() {
+    if (this.controller) {
+      const abortError = new Error(
+        "Manually cancelling existing WebAuthn API call"
+      );
+      abortError.name = "AbortError";
+      this.controller.abort(abortError);
+
+      this.controller = undefined;
+    }
   }
 }
 

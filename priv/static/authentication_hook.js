@@ -1,40 +1,42 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
-import { browserSupportsPasskeyAutofill } from "./browser_supports_passkey_autofill"
-import { AbortControllerService } from "./abort_controller"
+import { browserSupportsPasskeyAutofill } from "./browser_supports_passkey_autofill";
+import { AbortControllerService } from "./abort_controller";
 
 export const AuthenticationHook = {
   mounted() {
     console.info(`AuthenticationHook mounted`);
 
-    this.checkConditionalUIAvailable(this)
+    this.checkConditionalUIAvailable(this);
 
     this.handleEvent("authentication-challenge", (event) =>
-      this.handlePasskeyAuthentication(event, this, 'optional')
+      this.handlePasskeyAuthentication(event, this, "optional")
     );
-  
+
     this.handleEvent("authentication-challenge-with-conditional-ui", (event) =>
-      this.handlePasskeyAuthentication(event, this, 'conditional')
+      this.handlePasskeyAuthentication(event, this, "conditional")
     );
   },
 
   async checkConditionalUIAvailable(context) {
     if (!(await browserSupportsPasskeyAutofill())) {
-      throw Error('Browser does not support WebAuthn autofill');
+      throw Error("Browser does not support WebAuthn autofill");
     }
 
     // Check for an <input> with "webauthn" in its `autocomplete` attribute
     const eligibleInputs = document.querySelectorAll(
-      'input[autocomplete$=\'webauthn\']',
+      "input[autocomplete$='webauthn']"
     );
 
     // WebAuthn autofill requires at least one valid input
     if (eligibleInputs.length < 1) {
       throw Error(
-        'No <input> with "webauthn" as the only or last value in its `autocomplete` attribute was detected',
+        'No <input> with "webauthn" as the only or last value in its `autocomplete` attribute was detected'
       );
     }
 
-    context.pushEventTo(context.el, "authenticate", {"supports_passkey_autofill": true})
+    context.pushEventTo(context.el, "authenticate", {
+      supports_passkey_autofill: true,
+    });
   },
 
   async handlePasskeyAuthentication(event, context, mediation) {
@@ -54,7 +56,7 @@ export const AuthenticationHook = {
       const credential = await navigator.credentials.get({
         publicKey,
         signal: AbortControllerService.createNewAbortSignal(),
-        mediation: mediation
+        mediation: mediation,
       });
       const { rawId, response, type } = credential;
       const { clientDataJSON, authenticatorData, signature, userHandle } =
@@ -74,6 +76,9 @@ export const AuthenticationHook = {
         userHandle64,
       });
     } catch (error) {
+      if (error.toString().includes("NotAllowedError:")) {
+        AbortControllerService.cancelCeremony();
+      }
       console.error(error);
       handleError(error, context);
     }
