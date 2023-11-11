@@ -11,8 +11,14 @@ defmodule Wac.Gen.Migrations do
 
   @templates Map.keys(@template_files)
 
+  @template_order ~w(
+    users
+    user_keys
+    user_tokens
+    )
+
   def copy_templates(assigns) do
-    for template <- @templates do
+    for template <- @template_order do
       copy_template(template, assigns)
       # Pause to ensure unique timestamped files
       Process.sleep(1_000)
