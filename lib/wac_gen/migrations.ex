@@ -3,13 +3,13 @@ defmodule Wac.Gen.Migrations do
 
   @template_path "../../templates/migrations"
 
-  @template_files %{
+  @template_files [
     users: "users.exs",
     user_keys: "user_keys.exs",
     user_tokens: "user_tokens.exs"
-  }
+  ]
 
-  @templates Map.keys(@template_files)
+  @templates Keyword.keys(@template_files)
 
   def copy_templates(assigns) do
     for template <- @templates do
