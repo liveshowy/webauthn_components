@@ -33,9 +33,10 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert clicked_element =~ "<button"
       assert clicked_element =~ "phx-click=\"register\""
 
-      # TODO 1/10/2023
-      # Assert event was pushed to client
-      # Not supported by Phoenix.LiveViewTest or LiveIsolatedComponent
+      assert_push_event(view, "registration-challenge", %{
+        id: "registration-component",
+        user: ^webauthn_user
+      })
     end
   end
 
