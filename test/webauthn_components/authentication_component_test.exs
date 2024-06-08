@@ -19,10 +19,14 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
   end
 
   describe "handle_event/3 - authenticate" do
-    test "sends authentication challenge to client", %{element: element} do
+    test "sends authentication challenge to client", %{element: element, view: view} do
       clicked_element = render_click(element)
       assert clicked_element =~ "<button"
       assert clicked_element =~ "phx-click=\"authenticate\""
+
+      assert_push_event(view, "authentication-challenge", %{
+        id: "authentication-component"
+      })
     end
   end
 
