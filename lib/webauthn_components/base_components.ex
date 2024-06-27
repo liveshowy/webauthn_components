@@ -13,7 +13,7 @@ defmodule WebauthnComponents.BaseComponents do
   @doc false
   def button(assigns) do
     ~H"""
-    <button id={@id} type={@type} {@rest}>
+    <button id={@id} type={@type} {@rest} {if @disabled, do: %{disabled: true}, else: %{}}>
       <%= render_slot(@inner_block) %>
     </button>
     """
