@@ -15,7 +15,7 @@ defmodule <%= inspect @web_pascal_case %>.Session do
     else
       _error ->
         conn
-        |> clear_session()
+        |> renew_session()
     end
   end
 
@@ -32,7 +32,7 @@ defmodule <%= inspect @web_pascal_case %>.Session do
 
       {:error, _} ->
         conn
-        |> clear_session()
+        |> renew_session()
         |> put_flash(:error, "Please sign in.")
         |> redirect(to: ~p"/sign-in")
     end
@@ -44,8 +44,29 @@ defmodule <%= inspect @web_pascal_case %>.Session do
     |> Identity.delete_all_user_sessions()
 
     conn
-    |> clear_session()
+    |> renew_session()
     |> put_flash(:info, "Successfully signed out.")
     |> redirect(to: ~p"/")
+  end
+
+  # This function renews the session ID and erases the whole
+  # session to avoid fixation attacks. If there is any data
+  # in the session you may want to preserve after log in/log out,
+  # you must explicitly fetch the session data before clearing
+  # and then immediately set it after clearing, for example:
+  #
+  #     defp renew_session(conn) do
+  #       preferred_locale = get_session(conn, :preferred_locale)
+  #
+  #       conn
+  #       |> configure_session(renew: true)
+  #       |> clear_session()
+  #       |> put_session(:preferred_locale, preferred_locale)
+  #     end
+  #
+  defp renew_session(conn) do
+    conn
+    |> configure_session(renew: true)
+    |> clear_session()
   end
 end
