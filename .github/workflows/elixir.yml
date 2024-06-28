@@ -20,7 +20,7 @@ jobs:
     concurrency: production
     strategy:
       matrix:
-        elixir: ["elixir:1.16.3-otp-26"]
+        elixir: ["elixir:latest"]
 
     steps:
       - uses: actions/checkout@v3
