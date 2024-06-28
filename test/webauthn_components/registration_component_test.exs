@@ -27,6 +27,13 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
       assert has_element?(view, "##{assigns.id}[disabled]")
     end
+
+    test "is not `disabled` by default", setup_attrs do
+      %{default_assigns: assigns} = setup_attrs
+      {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
+      assert has_element?(view, "##{assigns.id}")
+      refute has_element?(view, "##{assigns.id}[disabled]")
+    end
   end
 
   describe "handle_event/3 - register" do
