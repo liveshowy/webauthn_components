@@ -133,7 +133,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       challenge: Base.encode64(challenge.bytes, padding: false),
       excludeCredentials: [],
       id: id,
-      resident_key: resident_key,
+      residentKey: resident_key,
       rp: %{
         id: challenge.rp_id,
         name: app_name
