@@ -16,7 +16,7 @@ export const RegistrationHook = {
         attestation,
         challenge,
         excludeCredentials,
-        requireResidentKey,
+        residentKey,
         rp,
         timeout,
         user,
@@ -29,7 +29,7 @@ export const RegistrationHook = {
         attestation,
         authenticatorSelection: {
           authenticatorAttachment: "platform",
-          requireResidentKey: requireResidentKey,
+          residentKey: residentKey,
         },
         challenge: challengeArray.buffer,
         excludeCredentials,
