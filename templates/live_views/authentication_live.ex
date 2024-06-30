@@ -165,6 +165,13 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
     }
   end
 
+  def handle_info({:error, %{"message" => message, "name" => "NoUserVerifyingPlatformAuthenticatorAvailable"}}, socket) do
+    socket
+    |> assign(:token_form, nil)
+    |> put_toast(:error, message)
+    |> then(&{:noreply, &1})
+  end
+
   def handle_info(message, socket) do
     Logger.warning(unhandled_message: {__MODULE__, message})
     {:noreply, socket}

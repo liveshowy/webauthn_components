@@ -18,6 +18,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
+  - `@check_user_verifying_platform_authenticator_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`.
 
   ## Events
 
@@ -60,6 +61,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:resident_key, fn -> :required end)
+      |> assign_new(:check_user_verifying_platform_authenticator_available, fn -> false end)
       |> assign_new(:display_text, fn -> "Sign Up" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
@@ -99,6 +101,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         phx-hook="RegistrationHook"
         phx-target={@myself}
         phx-click="register"
+        data-check_user_verifying_platform_authenticator_available={if @check_user_verifying_platform_authenticator_available, do: "true"}
         class={@class}
         title="Create a new account"
         disabled={@disabled}
