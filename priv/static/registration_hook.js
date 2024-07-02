@@ -5,7 +5,7 @@ export const RegistrationHook = {
   mounted() {
     console.info(`RegistrationHook mounted`);
 
-    if (this.el.dataset.check_user_verifying_platform_authenticator_available) {
+    if (this.el.dataset.check_uvpa_available) {
       this.checkUserVerifyingPlatformAuthenticatorAvailable(this)
     }
 

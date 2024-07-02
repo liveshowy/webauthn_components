@@ -18,7 +18,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
-  - `@check_user_verifying_platform_authenticator_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
+  - `@check_uvpa_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
 
   ## Events
 
@@ -51,7 +51,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   The User Verifying Platform Authenticator (UVPA) is a special type of authenticator that requires user verification.
   This is typically a biometric or PIN-based authenticator that is built into the platform, such as Touch ID or Windows Hello.
 
-  When `@check_user_verifying_platform_authenticator_available` is set to `true`, the component will check if the user has a UVPA available before allowing registration.
+  When `@check_uvpa_available` is set to `true`, the component will check if the user has a UVPA available before allowing registration.
   If the user does not have a UVPA available, the component will disable the registration button and display a message indicating that the user must set up a UVPA before continuing.
 
   Example use case:
@@ -73,7 +73,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:resident_key, fn -> :required end)
-      |> assign_new(:check_user_verifying_platform_authenticator_available, fn -> false end)
+      |> assign_new(:check_uvpa_available, fn -> false end)
       |> assign_new(:display_text, fn -> "Sign Up" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
@@ -113,7 +113,9 @@ defmodule WebauthnComponents.RegistrationComponent do
         phx-hook="RegistrationHook"
         phx-target={@myself}
         phx-click="register"
-        data-check_user_verifying_platform_authenticator_available={if @check_user_verifying_platform_authenticator_available, do: "true"}
+        data-check_uvpa_available={
+          if @check_uvpa_available, do: "true"
+        }
         class={@class}
         title="Create a new account"
         disabled={@disabled}
