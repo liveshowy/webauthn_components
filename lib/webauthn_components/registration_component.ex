@@ -18,7 +18,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
-  - `@check_user_verifying_platform_authenticator_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`.
+  - `@check_user_verifying_platform_authenticator_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
 
   ## Events
 
@@ -45,6 +45,18 @@ defmodule WebauthnComponents.RegistrationComponent do
     - `payload` contains the `message`, `name`, and `stack` returned by the browser upon timeout or other client-side errors.
 
   Errors should be displayed to the user via [`Phoenix.LiveView.put_flash/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#put_flash/3). However, some errors may be too technical or cryptic to be useful to users, so the parent LiveView may paraphrase the message for clarity.
+
+  ## User Verifying Platform Authenticator
+
+  The User Verifying Platform Authenticator (UVPA) is a special type of authenticator that requires user verification.
+  This is typically a biometric or PIN-based authenticator that is built into the platform, such as Touch ID or Windows Hello.
+
+  When `@check_user_verifying_platform_authenticator_available` is set to `true`, the component will check if the user has a UVPA available before allowing registration.
+  If the user does not have a UVPA available, the component will disable the registration button and display a message indicating that the user must set up a UVPA before continuing.
+
+  Example use case:
+  The first/primary credential on a sensitive account may be required to come from a platform authenticator.
+  Then, secondary credentials could be created from external devices.
   """
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
