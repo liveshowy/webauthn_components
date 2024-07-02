@@ -17,7 +17,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
-  - `@require_resident_key` (Optional) Set to `false` to allow non-passkey credentials. Defaults to `true`.
+  - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
 
   ## Events
 
@@ -59,7 +59,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:class, fn -> "" end)
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
-      |> assign_new(:require_resident_key, fn -> true end)
+      |> assign_new(:resident_key, fn -> :required end)
       |> assign_new(:display_text, fn -> "Sign Up" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
@@ -112,13 +112,7 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   def handle_event("register", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
-
-    %{
-      app: app_name,
-      id: id,
-      require_resident_key: require_resident_key,
-      webauthn_user: webauthn_user
-    } = assigns
+    %{app: app_name, id: id, resident_key: resident_key, webauthn_user: webauthn_user} = assigns
 
     if not is_struct(webauthn_user, WebauthnUser) do
       raise "user must be a WebauthnComponents.WebauthnUser struct."
@@ -139,7 +133,8 @@ defmodule WebauthnComponents.RegistrationComponent do
       challenge: Base.encode64(challenge.bytes, padding: false),
       excludeCredentials: [],
       id: id,
-      require_resident_key: require_resident_key,
+      residentKey: resident_key,
+      requireResidentKey: resident_key == :required,
       rp: %{
         id: challenge.rp_id,
         name: app_name
