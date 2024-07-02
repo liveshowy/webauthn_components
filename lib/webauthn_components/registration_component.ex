@@ -113,9 +113,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         phx-hook="RegistrationHook"
         phx-target={@myself}
         phx-click="register"
-        data-check_uvpa_available={
-          if @check_uvpa_available, do: "true"
-        }
+        data-check_uvpa_available={if @check_uvpa_available, do: "true"}
         class={@class}
         title="Create a new account"
         disabled={@disabled}
