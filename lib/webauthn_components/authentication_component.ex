@@ -139,7 +139,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
     challenge =
       Wax.new_authentication_challenge(
-        origin: endpoint.url,
+        origin: endpoint.url(),
         rp_id: :auto,
         user_verification: "preferred"
       )
