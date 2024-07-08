@@ -95,7 +95,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Deletes all `UserToken`s which have expired.
   """
-  @spec delete_all_expired_tokens :: {pos_integer(), term()}
+  @spec delete_all_expired_tokens :: {non_neg_integer(), term()}
   def delete_all_expired_tokens do
     expiration_timestamp = get_expiration_timestamp()
 
