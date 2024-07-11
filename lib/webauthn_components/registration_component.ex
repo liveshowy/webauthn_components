@@ -19,6 +19,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@id` (Optional) An HTML element ID.
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
   - `@check_uvpa_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
+  - `@uvpa_error_message` (Optional) The message displayed when the user does not have a UVPA available. Defaults to "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
 
   ## Events
 
@@ -74,6 +75,9 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:resident_key, fn -> :required end)
       |> assign_new(:check_uvpa_available, fn -> false end)
+      |> assign_new(:uvpa_error_message, fn ->
+        "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
+      end)
       |> assign_new(:display_text, fn -> "Sign Up" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
@@ -114,6 +118,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         phx-target={@myself}
         phx-click="register"
         data-check_uvpa_available={if @check_uvpa_available, do: "true"}
+        data-uvpa_error_message={@uvpa_error_message}
         class={@class}
         title="Create a new account"
         disabled={@disabled}

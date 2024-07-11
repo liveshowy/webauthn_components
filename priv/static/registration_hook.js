@@ -6,16 +6,16 @@ export const RegistrationHook = {
     console.info(`RegistrationHook mounted`);
 
     if (this.el.dataset.check_uvpa_available) {
-      this.checkUserVerifyingPlatformAuthenticatorAvailable(this)
+      this.checkUserVerifyingPlatformAuthenticatorAvailable(this, {errorMessage: this.el.dataset.uvpa_error_message})
     }
 
     this.handleEvent("registration-challenge", (event) =>
       this.handleRegistration(event, this)
     );
   },
-  async checkUserVerifyingPlatformAuthenticatorAvailable(context) {
+  async checkUserVerifyingPlatformAuthenticatorAvailable(context, {errorMessage}) {
     if (!(await window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable())) {
-      const error = new Error("Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator.")
+      const error = new Error(errorMessage)
       error.name = "NoUserVerifyingPlatformAuthenticatorAvailable"
       handleError(error, context);
       throw error;
