@@ -5,9 +5,21 @@ export const RegistrationHook = {
   mounted() {
     console.info(`RegistrationHook mounted`);
 
+    if (this.el.dataset.check_uvpa_available) {
+      this.checkUserVerifyingPlatformAuthenticatorAvailable(this, {errorMessage: this.el.dataset.uvpa_error_message})
+    }
+
     this.handleEvent("registration-challenge", (event) =>
       this.handleRegistration(event, this)
     );
+  },
+  async checkUserVerifyingPlatformAuthenticatorAvailable(context, {errorMessage}) {
+    if (!(await window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable())) {
+      const error = new Error(errorMessage)
+      error.name = "NoUserVerifyingPlatformAuthenticatorAvailable"
+      handleError(error, context);
+      throw error;
+    }
   },
 
   async handleRegistration(event, context) {
