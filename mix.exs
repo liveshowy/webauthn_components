@@ -4,7 +4,7 @@ defmodule WebauthnComponents.MixProject do
   # Don't forget to change the version in `package.json`
   @name "WebauthnComponents"
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.7.2"
+  @version "0.7.3"
 
   def project do
     [
@@ -40,13 +40,14 @@ defmodule WebauthnComponents.MixProject do
       {:ecto_ulid, "~> 0.3"},
       {:ecto, "~> 3.10"},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
-      {:floki, "~> 0.34.2", only: [:test]},
+      {:floki, "~> 0.36", only: [:test]},
       {:jason, "~> 1.0"},
-      {:live_isolated_component, "~> 0.6.4", only: [:test]},
+      {:live_isolated_component, "~> 0.8", only: [:test]},
       {:phoenix_ecto, "~> 4.4"},
-      {:phoenix_live_view, "~> 0.17"},
+      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
+      {:phoenix_live_view, "~> 0.20"},
       {:phoenix, "~> 1.6"},
-      {:sourceror, "~> 0.13"},
+      {:sourceror, "~> 1.4"},
       {:uuid, "~> 1.1"},
       {:wax_, "~> 0.6.1"}
     ]
