@@ -5,7 +5,9 @@ defmodule Wac.Gen.LiveViews do
 
   @template_files %{
     authentication: "authentication_live.ex",
-    authentication_html: "authentication_live.html.heex"
+    authentication_html: "authentication_live.html.heex",
+    registration: "registration_live.ex",
+    registration_html: "registration_live.html.heex"
   }
 
   @templates Map.keys(@template_files)

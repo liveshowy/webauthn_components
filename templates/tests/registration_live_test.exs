@@ -1,4 +1,4 @@
-defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
+defmodule <%= inspect @web_pascal_case %>.RegistrationLiveTest do
   @moduledoc false
   use <%= inspect @web_pascal_case %>.ConnCase, async: true
   import Phoenix.LiveViewTest
@@ -8,7 +8,7 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
   alias <%= inspect @app_pascal_case %>.IdentityFixtures
   alias <%= inspect @app_pascal_case %>.Repo
 
-  defp route, do: ~p"/sign-in"
+  defp route, do: ~p"/sign-up"
 
   describe "mount & render" do
     test "includes expected elements", %{conn: conn} do
@@ -20,12 +20,14 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
       # Passkey Form
       assert has_element?(view, "form[phx-change='update-form'][phx-submit]")
 
-      # Authentication
-      assert has_element?(view, "#authentication-component")
-      assert has_element?(view, "[phx-hook='AuthenticationHook'][phx-click='authenticate']")
+      # Registration
+      assert has_element?(view, "form fieldset#fieldset-registration")
+      assert has_element?(view, "#registration-component")
+      assert has_element?(view, "form input[type='email'][name='email']")
+      assert has_element?(view, "[phx-hook='RegistrationHook'][phx-click='register']")
 
       # Token/Session Form
-      # This form is only rendered when authentication is successful.
+      # This form is only rendered when registration is successful.
       refute has_element?(view, "form#token-form[action='/session'][method='post'].hidden")
     end
   end
@@ -61,47 +63,27 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLiveTest do
     end
   end
 
-  describe "handle_info: find_credentials" do
-    test "logs error on invalid attestation", %{conn: conn} do
+  # Since some events are handled internally by the RegistrationComponent,
+  # we need to mock the messages sent from the component to the LiveView.
+
+  describe "handle_info: registration_successful" do
+    test "results in a new user token", %{conn: conn} do
       {:ok, view, _html} = live(conn, route())
+      email = IdentityFixtures.unique_email()
+      assert render_change(view, "update-form", %{email: email})
       key = IdentityFixtures.user_key_attrs()
 
-      user_attrs = %{
-        email: IdentityFixtures.unique_email(),
-        keys: [key]
-      }
-
-      {:ok, _user} = Identity.create(user_attrs)
-
-      assert view
-             |> element("button#authentication-component")
-             |> render_click()
-
+      msg = {:registration_successful, key: key}
+      send(view.pid, msg)
       render(view)
 
-      raw_id_64 = Base.encode64(key.key_id, padding: false)
-      attestation = IdentityFixtures.attestation(%{"rawId64" => raw_id_64})
+      assert {:ok, %User{} = user} = Identity.get_by_key_id(key.key_id)
+      %User{tokens: [token | _other_tokens]} = Repo.preload(user, [:tokens])
+      token_value = Base.encode64(token.value, padding: false)
 
-      assert view
-             |> element("button#authentication-component")
-             |> render_hook("authentication-attestation", attestation)
-
-      render(view)
-      refute has_element?(view, "#flash", "Failed to sign in")
-
-      msg = {:find_credential, key_id: key.key_id}
-
-      {_result, log} =
-        with_log(fn ->
-          send(view.pid, msg)
-          render(view)
-        end)
-
-      assert log =~ "authentication_error"
+      token_form_selector = "form#token-form[method='post'][action='/session']"
+      assert has_element?(view, token_form_selector)
+      assert has_element?(view, "form#token-form input[name='value'][value='#{token_value}']")
     end
   end
-
-  # TODO
-  # describe "handle_info: authentication_successful" do
-  # end
 end
