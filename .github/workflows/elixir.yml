@@ -16,39 +16,40 @@ jobs:
   build:
     name: Build & Test
     runs-on: ubuntu-latest
-    container: ${{ matrix.elixir }}
     concurrency: production
-    strategy:
-      matrix:
-        elixir: ["elixir:latest"]
 
     steps:
       - uses: actions/checkout@v3
+      - uses: erlef/setup-beam@v1
+        with:
+          version-file: .tool-versions
       - run: elixir --version
       - run: mix local.hex --force
       - run: mix local.rebar --force
 
       - name: Hex Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
+          save-always: true
           path: deps
-          key: ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
+          key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.elixir }}-mix-${{ hashFiles('**/mix.lock') }}
-            ${{ runner.os }}-${{ matrix.elixir }}-mix-
+            ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
+            ${{ runner.os }}-mix-
             ${{ runner.os }}-
 
       - name: Install dependencies
         run: mix deps.get
 
       - name: Compilation Cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
+          save-always: true
           path: _build
-          key: ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
+          key: ${{ runner.os }}-compiled-${{ hashfiles('./mix.lock') }}
           restore-keys: |
-            ${{ runner.os }}-${{ matrix.elixir }}-compiled-${{ hashfiles('./mix.lock') }}
-            ${{ runner.os }}-${{ matrix.elixir }}-compiled-
+            ${{ runner.os }}-compiled-${{ hashfiles('./mix.lock') }}
+            ${{ runner.os }}-compiled-
             ${{ runner.os }}-
 
       - name: Compile
