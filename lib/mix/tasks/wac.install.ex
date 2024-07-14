@@ -74,13 +74,13 @@ defmodule Mix.Tasks.Wac.Install do
     case OptionParser.parse(args, strict: @switches) do
       {flags, _args, []} ->
         opts = Keyword.merge(@default_opts, flags)
-        dirname = File.cwd!() |> Path.basename()
-        dirname_camelized = Macro.camelize(dirname)
-        web_dirname = dirname <> "_web"
+        app_name = Mix.Project.config() |> Keyword.fetch!(:app) |> to_string()
+        dirname_camelized = Macro.camelize(app_name)
+        web_dirname = app_name <> "_web"
         web_dirname_camelized = Macro.camelize(web_dirname)
 
         assigns = [
-          app_snake_case: dirname,
+          app_snake_case: app_name,
           app_pascal_case: Module.concat([dirname_camelized]),
           web_snake_case: web_dirname,
           web_pascal_case: Module.concat([web_dirname_camelized])
