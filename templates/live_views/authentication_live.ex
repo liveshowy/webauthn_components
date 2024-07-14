@@ -45,7 +45,6 @@ defmodule <%= inspect @web_pascal_case %>.AuthenticationLive do
         :noreply,
         socket
         |> put_flash(:error, "Passkeys are not supported in this browser.")
-        |> assign(:form, nil)
       }
     end
   end
