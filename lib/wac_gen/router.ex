@@ -134,6 +134,7 @@ defmodule Wac.Gen.Router do
       scope "/", #{inspect(web_pascal_case)} do
         pipe_through :browser
 
+        live "/sign-up", RegistrationLive
         live "/sign-in", AuthenticationLive
       end
     end

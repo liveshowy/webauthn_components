@@ -4,6 +4,7 @@
   <span class="flex-grow" />
 
   <%!-- Unauthenticated Routes --%>
+  <.nav_link :if={!@current_user} navigate={~p"/sign-up"}>Sign Up</.nav_link>
   <.nav_link :if={!@current_user} navigate={~p"/sign-in"}>Sign In</.nav_link>
 
   <%!-- Authenticated Routes --%>
