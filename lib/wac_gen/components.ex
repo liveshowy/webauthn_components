@@ -6,7 +6,10 @@ defmodule Wac.Gen.Components do
   @template_files %{
     navigation_components: "navigation_components.ex",
     navbar: "navigation/navbar.html.heex",
-    nav_link: "navigation/nav_link.html.heex"
+    nav_link: "navigation/nav_link.html.heex",
+    passkey_components: "passkey_components.ex",
+    guidance: "passkeys/guidance.html.heex",
+    token_form: "passkeys/token_form.html.heex"
   }
 
   @templates Map.keys(@template_files)

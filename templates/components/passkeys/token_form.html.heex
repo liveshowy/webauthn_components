@@ -1,0 +1,20 @@
+<%!--
+    - The form is only rendered when a token has been created by the registration or authentication component.
+    - The form is present in the markup, but hidden from view.
+    - When the form is mounted, JS is used to click the submit button.
+    - This is a bit hacky, but it works.
+  --%>
+
+<.simple_form
+  :let={f}
+  :if={@form}
+  for={@form}
+  method="post"
+  id="token-form"
+  action={~p"/session"}
+  phx-mounted={JS.dispatch("click", to: "#token-form button[type='submit']")}
+  class="hidden"
+>
+  <.input type="text" field={f[:value]} label="Value" />
+  <.button type="submit">Go</.button>
+</.simple_form>

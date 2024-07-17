@@ -1,110 +1,28 @@
-<section class="mx-auto w-96">
+<section class="mx-auto w-96 space-y-6">
   <.live_component module={SupportComponent} id="support-component" />
-
-  <.simple_form
-    :let={form}
-    :if={@form}
-    for={@form}
-    phx-change="update-form"
-    phx-submit={JS.dispatch("click", to: "#registration-component")}
-    class="grid gap-8"
+  <div
+    :if={@show_authentication?}
+    id="authentication"
+    class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg p-6 rounded-lg"
   >
-    <fieldset
-      :if={@show_registration?}
-      id="fieldset-registration"
-      class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg p-6 rounded-lg"
-    >
-      <p>Create a <strong>new</strong> account:</p>
+    <p>Sign into an <strong>existing</strong> account:</p>
 
-      <.input type="email" field={form[:email]} label="Email" phx-debounce="250" autocomplete="username webauthn" />
-      <.live_component
-        disabled={@form.source.valid? == false}
-        module={RegistrationComponent}
-        id="registration-component"
-        app={<%= inspect @app_pascal_case %>}
-        check_uvpa_available={false}
-        class={[
-          "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
-          "ring ring-transparent focus:ring-gray-400 focus:outline-none",
-          "flex gap-2 items-center justify-center px-4 py-2 w-full",
-          "disabled:cursor-not-allowed disabled:opacity-25"
-        ]}
-      />
-    </fieldset>
+    <.live_component
+      disabled={false}
+      module={AuthenticationComponent}
+      id="authentication-component"
+      class={[
+        "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
+        "ring ring-transparent focus:ring-gray-400 focus:outline-none",
+        "flex gap-2 items-center justify-center px-4 py-2 w-full",
+        "disabled:cursor-not-allowed disabled:opacity-25"
+      ]}
+    />
 
-    <fieldset
-      :if={@show_authentication?}
-      id="fieldset-authentication"
-      class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg p-6 rounded-lg"
-    >
-      <p>Sign into an existing account:</p>
+    <.link navigate={~p"/sign-up"} class="underline">Create a new account</.link>
+  </div>
 
-      <.live_component
-        disabled={false}
-        module={AuthenticationComponent}
-        id="authentication-component"
-        class={[
-          "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
-          "ring ring-transparent focus:ring-gray-400 focus:outline-none",
-          "flex gap-2 items-center justify-center px-4 py-2 w-full",
-          "disabled:cursor-not-allowed disabled:opacity-25"
-        ]}
-      />
-    </fieldset>
+  <%= "<#{inspect(@web_pascal_case)}.PasskeyComponents.guidance />" %>
 
-    <details class="grid gap-4 bg-gray-50 ring-1 ring-gray-200 shadow-lg rounded-lg group">
-      <summary class={[
-        "px-4 py-2 cursor-pointer transition select-none",
-        "bg-gray-50 hover:bg-gray-100 font-semibold",
-        "rounted-t-lg rounded-b-lg group-open:rounded-b-none",
-        "group-open:border-b-2 group-open:border-gray-300"
-      ]}>
-        Where's the password?
-      </summary>
-
-      <div class="py-4 px-8 text-justify grid gap-2">
-        <p>
-          This application uses a new technology that replaces passwords and temporary codes.
-        </p>
-
-        <p>
-          <a href="https://fidoalliance.org/passkeys/" class="font-bold" target="_blank">
-            Passkeys
-          </a>
-          are a more secure way to sign into applications. They use advanced technology embraced by security experts, while improving ease-of-use.
-        </p>
-
-        <p>
-          Read more about Passkeys at the <a
-            href="https://fidoalliance.org/passkeys/#faq"
-            class="font-bold"
-            target="_blank"
-          >
-            FIDO Alliance
-          </a>.
-        </p>
-      </div>
-    </details>
-  </.simple_form>
-
-  <%!--
-    - The form is only rendered when a token has been created by the registration or authentication component.
-    - The form is present in the markup, but hidden from view.
-    - When the form is mounted, JS is used to click the submit button.
-    - This is a bit hacky, but it works.
-  --%>
-
-  <.simple_form
-    :let={f}
-    :if={@token_form}
-    for={@token_form}
-    method="post"
-    id="token-form"
-    action={~p"/session"}
-    phx-mounted={JS.dispatch("click", to: "#token-form button[type='submit']")}
-    class="hidden"
-  >
-    <.input type="text" field={f[:value]} label="Value" />
-    <.button type="submit">Go</.button>
-  </.simple_form>
+  <%= "<#{inspect(@web_pascal_case)}.PasskeyComponents.token_form form={@token_form} />" %>
 </section>
