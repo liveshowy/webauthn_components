@@ -79,7 +79,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
         class={@class}
         title="Use an existing account"
         disabled={@disabled}
-        data-skip-conditional-ui-check={@skip_conditional_ui_check}
+        data-skip-conditional-ui-check={if @skip_conditional_ui_check, do: "true"}
       >
         <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
         <span><%= @display_text %></span>
