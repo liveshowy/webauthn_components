@@ -6,7 +6,9 @@ export const AuthenticationHook = {
   mounted() {
     console.info(`AuthenticationHook mounted`);
 
-    this.checkConditionalUIAvailable(this);
+    if (!this.el.dataset.skipConditionalUiCheck) {
+      this.checkConditionalUIAvailable(this);
+    }
 
     this.handleEvent("authentication-challenge", (event) =>
       this.handlePasskeyAuthentication(event, this, "optional")
