@@ -170,7 +170,6 @@ While this example refers to Apple's Passkey implementation, the process on othe
 While WebAuthn provides an API for improved authentication security, there are a few limitations to consider before adopting this component.
 
 - As of 2023, Passkeys are not universally supported.
-- Microsoft is testing Passkeys in Windows as of 6/29/2023 ([article](https://www.windowscentral.com/software-apps/browsing/microsoft-marches-toward-a-passwordless-future-with-passkey-features-on-windows-11)).
 - Cloud-synced credentials are only accessible to devices authenticated to the cloud account.
   - For example, a credential saved to iCloud Keychain will not be synced automatically to Android's credential manager.
   - 1Password has released Passkey support out of beta as of 9/2023.
