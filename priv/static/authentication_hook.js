@@ -41,8 +41,14 @@ export const AuthenticationHook = {
 
   async handlePasskeyAuthentication(event, context, mediation) {
     try {
-      const { challenge, timeout, rpId, allowCredentials, userVerification } =
+      const { challenge, timeout, rpId, allowCredentialsIDs, userVerification } =
         event;
+
+      // allowCredentialsIDs is an array of already base64 encoded IDs
+      allowCredentials = new Array();
+      for (const id of allowCredentialsIDs) {
+        allowCredentials.push({ id: base64ToArray(id), type: 'public-key' });
+      };
 
       const challengeArray = base64ToArray(challenge);
 
@@ -53,6 +59,9 @@ export const AuthenticationHook = {
         timeout,
         userVerification,
       };
+
+      console.log(publicKey);
+
       const credential = await navigator.credentials.get({
         publicKey,
         signal: AbortControllerService.createNewAbortSignal(),

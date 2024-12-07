@@ -1,6 +1,6 @@
 defmodule WebauthnComponents.RegistrationComponent do
   @moduledoc """
-  A LiveComponent for registering a new Passkey via the WebAuthn API.
+  A LiveComponent for registering a new Passkey via the WebAuthn API!
 
   > Registration = Sign Up
 
@@ -123,8 +123,8 @@ defmodule WebauthnComponents.RegistrationComponent do
         title="Create a new account"
         disabled={@disabled}
       >
-        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span><%= @display_text %></span>
+        <span :if={@show_icon?} class="aspect-square w-4 opacity-70"><.icon_key /></span>
+        <span>{@display_text}</span>
       </.button>
     </span>
     """

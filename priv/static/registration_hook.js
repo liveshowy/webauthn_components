@@ -6,14 +6,14 @@ export const RegistrationHook = {
     console.info(`RegistrationHook mounted`);
 
     if (this.el.dataset.check_uvpa_available) {
-      this.checkUserVerifyingPlatformAuthenticatorAvailable(this, {errorMessage: this.el.dataset.uvpa_error_message})
+      this.checkUserVerifyingPlatformAuthenticatorAvailable(this, { errorMessage: this.el.dataset.uvpa_error_message })
     }
 
     this.handleEvent("registration-challenge", (event) =>
       this.handleRegistration(event, this)
     );
   },
-  async checkUserVerifyingPlatformAuthenticatorAvailable(context, {errorMessage}) {
+  async checkUserVerifyingPlatformAuthenticatorAvailable(context, { errorMessage }) {
     if (!(await window.PublicKeyCredential?.isUserVerifyingPlatformAuthenticatorAvailable())) {
       const error = new Error(errorMessage)
       error.name = "NoUserVerifyingPlatformAuthenticatorAvailable"
@@ -41,7 +41,8 @@ export const RegistrationHook = {
       const publicKey = {
         attestation,
         authenticatorSelection: {
-          authenticatorAttachment: "platform",
+          // authenticatorAttachment: "platform",
+          authenticatorAttachment: "all",
           residentKey: residentKey,
           requireResidentKey: requireResidentKey,
         },
