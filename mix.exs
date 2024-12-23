@@ -45,7 +45,7 @@ defmodule WebauthnComponents.MixProject do
       {:live_isolated_component, "~> 0.8", only: [:test]},
       {:phoenix_ecto, "~> 4.4"},
       # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
-      {:phoenix_live_view, "~> 0.20"},
+      {:phoenix_live_view, ">= 0.20.0"},
       {:phoenix, "~> 1.6"},
       {:sourceror, "~> 1.4"},
       {:uuid, "~> 1.1"},
