@@ -29,10 +29,11 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
+  - `@skip_conditional_ui_check` (Optional) Set to `true` to skip the conditional UI check for Passkey autofill. Defaults to `false`.
 
   If the authenticator is not supporting resident keys you have to provide a list of `%WebauthnCredentials{}` either by using:
   - `@user` (Optional) A user identifier like e-mail or user name as a string
-  - `@retrieve_credentials_function` (Optional) A function of the type `@spec retrieve_credentials_for(binary) :: [%WebauthnCredential{}]` which is supposed to get the IDs and the public keys for a given user 
+  - `@retrieve_credentials_function` (Optional) A function of the type `@spec retrieve_credentials_for(binary) :: [%WebauthnCredential{}]` which is supposed to get the IDs and the public keys for a given user
 
   or
 
@@ -73,6 +74,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:allow_credentials, fn -> [] end)
       |> assign_new(:user, fn -> nil end)
       |> assign_new(:retrieve_credentials_function, fn -> nil end)
+      |> assign_new(:skip_conditional_ui_check, fn -> false end)
     }
   end
 
@@ -88,6 +90,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
         class={@class}
         title="Use an existing account"
         disabled={@disabled}
+        data-skip-conditional-ui-check={if @skip_conditional_ui_check, do: "true"}
       >
         <span :if={@show_icon?} class="aspect-square w-4 opacity-70"><.icon_key /></span>
         <span>{@display_text}</span>
