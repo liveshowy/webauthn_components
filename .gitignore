@@ -28,3 +28,6 @@ webauthn_components-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Lexical's working directory
+/.lexical/

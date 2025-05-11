@@ -23,13 +23,21 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   ## Assigns
 
-  - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to request an existing credential in the client.
+  - `@challenge` (Internal) A `Wax.Challenge` struct created by the component, used to request an existing credential in the client.
   - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign In".
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@skip_conditional_ui_check` (Optional) Set to `true` to skip the conditional UI check for Passkey autofill. Defaults to `false`.
+
+  If the authenticator is not supporting resident keys you have to provide a list of `%WebauthnCredentials{}` either by using:
+  - `@user` (Optional) A user identifier like e-mail or user name as a string
+  - `@retrieve_credentials_function` (Optional) A function of the type `@spec retrieve_credentials_for(binary) :: [%WebauthnCredential{}]` which is supposed to get the IDs and the public keys for a given user
+
+  or
+
+  - `@allow_credentials` (Optional) A list of `%WebauthnCredentials{}`
 
   ## Events
 
@@ -63,6 +71,9 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:display_text, fn -> "Sign In" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
+      |> assign_new(:allow_credentials, fn -> [] end)
+      |> assign_new(:user, fn -> nil end)
+      |> assign_new(:retrieve_credentials_function, fn -> nil end)
       |> assign_new(:skip_conditional_ui_check, fn -> false end)
     }
   end
@@ -81,8 +92,8 @@ defmodule WebauthnComponents.AuthenticationComponent do
         disabled={@disabled}
         data-skip-conditional-ui-check={if @skip_conditional_ui_check, do: "true"}
       >
-        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span><%= @display_text %></span>
+        <span :if={@show_icon?} class="aspect-square w-4 opacity-70"><.icon_key /></span>
+        <span>{@display_text}</span>
       </.button>
 
       <input type="hidden" autocomplete="webauthn" />
@@ -133,7 +144,13 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   def handle_event("authenticate", params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
-    %{id: id} = assigns
+
+    %{
+      id: id,
+      allow_credentials: allow_credentials,
+      retrieve_credentials_function: retrieve_credentials_function,
+      user: user
+    } = assigns
 
     supports_passkey_autofill = Map.has_key?(params, "supports_passkey_autofill")
 
@@ -142,18 +159,35 @@ defmodule WebauthnComponents.AuthenticationComponent do
         do: "authentication-challenge-with-conditional-ui",
         else: "authentication-challenge"
 
+    # If both, a function and a user are supplied, call that function to retrieve the credentials for
+    # the given user
+    # Otherwise: use the allow_credential list which might be preset instead
+    credentials =
+      if is_nil(retrieve_credentials_function) and is_nil(user) do
+        allow_credentials
+      else
+        retrieve_credentials_function.(user)
+      end
+
     challenge =
       Wax.new_authentication_challenge(
+        # WAX_ expects a list of maps, we have been using structs to do the xfer: So convert back
+        allow_credentials:
+          for credential <- credentials do
+            {credential.id, credential.public_key}
+          end,
         origin: endpoint.url(),
         rp_id: :auto,
         user_verification: "preferred"
       )
 
+    allow_credentials_ids = Enum.map(credentials, &Base.encode64(&1.id))
+
     challenge_data = %{
       challenge: Base.encode64(challenge.bytes, padding: false),
       id: id,
       rpId: challenge.rp_id,
-      allowCredentials: challenge.allow_credentials,
+      allowCredentialsIDs: allow_credentials_ids,
       userVerification: challenge.user_verification
     }
 
