@@ -48,7 +48,6 @@ defmodule WebauthnComponents.MixProject do
       {:phoenix_live_view, ">= 0.20.0"},
       {:phoenix, "~> 1.6"},
       {:sourceror, "~> 1.4"},
-      {:uuid, "~> 1.1"},
       {:wax_, "~> 0.6.1"}
     ]
   end
