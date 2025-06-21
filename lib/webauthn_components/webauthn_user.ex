@@ -23,12 +23,11 @@ defmodule WebauthnComponents.WebauthnUser do
 
   defimpl JSON.Encoder, for: __MODULE__ do
     def encode(struct, encoder) do
-      map =
-        struct
-        |> Map.from_struct()
-        |> Map.put(:displayName, struct.display_name)
-        |> Map.delete(:display_name)
-        |> JSON.encode!(encoder)
+      struct
+      |> Map.from_struct()
+      |> Map.put(:displayName, struct.display_name)
+      |> Map.delete(:display_name)
+      |> JSON.encode!(encoder)
     end
   end
 end
