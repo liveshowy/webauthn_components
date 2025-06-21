@@ -41,7 +41,7 @@ defmodule WebauthnComponents.MixProject do
       {:ecto, "~> 3.10"},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:floki, "~> 0.36", only: [:test]},
-      {:igniter, "~> 0.6", only: [:dev, :test]},
+      {:igniter, "~> 0.6", only: [:dev, :test], optional: true},
       {:jason, "~> 1.0"},
       {:live_isolated_component, "~> 0.8", only: [:test]},
       {:phoenix_ecto, "~> 4.4"},
