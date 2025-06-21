@@ -5,7 +5,8 @@ defmodule Wac.Gen.Tests do
 
   @template_files %{
     identity: "identity_test.exs",
-    authentication_live: "authentication_live_test.exs"
+    authentication_live: "authentication_live_test.exs",
+    registration_live: "registration_live_test.exs"
   }
 
   @templates Map.keys(@template_files)
@@ -24,7 +25,8 @@ defmodule Wac.Gen.Tests do
     Code.format_file!(target)
   end
 
-  def copy_template(:authentication_live = template, assigns) when is_list(assigns) do
+  def copy_template(template, assigns)
+      when template in [:authentication_live, :registration_live] do
     web_snake_case = Keyword.fetch!(assigns, :web_snake_case)
     file_name = @template_files[template]
     template_dir = Path.expand(@template_path, __DIR__)

@@ -12,5 +12,8 @@
     "priv/static/token_hook.js",
     "priv/static/registration_hook.js",
     "priv/static/authentication_hook.js"
-  ]
+  ],
+  "devDependencies": {
+    "prettier": "3.5.3"
+  }
 }
