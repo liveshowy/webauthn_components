@@ -7,3 +7,7 @@ config :webauthn_components, TestEndpoint,
   secret_key_base: "m4lmm6l5OUJaDLJwNW63wzAUEw74WTvTH82FU8UBUig8UF4dK1OoOqbILAImU2E3",
   server: false,
   live_view: [signing_salt: "ZSDZGW0RqaKYeQE1y87NKQ7L+1Ho3gqV"]
+
+if config_env() == :test do
+  config :logger, level: :warning
+end
