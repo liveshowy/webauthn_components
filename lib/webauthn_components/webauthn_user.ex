@@ -13,13 +13,21 @@ defmodule WebauthnComponents.WebauthnUser do
 
   defimpl Jason.Encoder, for: __MODULE__ do
     def encode(struct, opts) do
-      map =
-        struct
-        |> Map.from_struct()
-        |> Map.put(:displayName, struct.display_name)
-        |> Map.delete(:display_name)
+      struct
+      |> Map.from_struct()
+      |> Map.put(:displayName, struct.display_name)
+      |> Map.delete(:display_name)
+      |> Jason.Encode.map(opts)
+    end
+  end
 
-      Jason.Encode.map(map, opts)
+  defimpl JSON.Encoder, for: __MODULE__ do
+    def encode(struct, encoder) do
+      struct
+      |> Map.from_struct()
+      |> Map.put(:displayName, struct.display_name)
+      |> Map.delete(:display_name)
+      |> JSON.encode!(encoder)
     end
   end
 end
