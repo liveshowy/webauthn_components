@@ -54,13 +54,13 @@ export const AuthenticationHook = {
         timeout,
         userVerification,
       };
-      const credential = await navigator.credentials.get({
+      const credential = (await navigator.credentials.get({
         publicKey,
         mediation: mediation,
-      });
+      })) as PublicKeyCredential;
       const { rawId, response, type } = credential;
       const { clientDataJSON, authenticatorData, signature, userHandle } =
-        response;
+        response as AuthenticatorAssertionResponse;
       const rawId64 = arrayBufferToBase64(rawId);
       const clientDataArray = Array.from(new Uint8Array(clientDataJSON));
       const authenticatorData64 = arrayBufferToBase64(authenticatorData);
