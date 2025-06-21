@@ -1,6 +1,5 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
 import { browserSupportsPasskeyAutofill } from "./browser_supports_passkey_autofill";
-import { AbortControllerService } from "./abort_controller";
 
 export const AuthenticationHook = {
   mounted() {
@@ -55,14 +54,13 @@ export const AuthenticationHook = {
         timeout,
         userVerification,
       };
-      const credential = await navigator.credentials.get({
+      const credential = (await navigator.credentials.get({
         publicKey,
-        signal: AbortControllerService.createNewAbortSignal(),
         mediation: mediation,
-      });
+      })) as PublicKeyCredential;
       const { rawId, response, type } = credential;
       const { clientDataJSON, authenticatorData, signature, userHandle } =
-        response;
+        response as AuthenticatorAssertionResponse;
       const rawId64 = arrayBufferToBase64(rawId);
       const clientDataArray = Array.from(new Uint8Array(clientDataJSON));
       const authenticatorData64 = arrayBufferToBase64(authenticatorData);
@@ -78,9 +76,6 @@ export const AuthenticationHook = {
         userHandle64,
       });
     } catch (error) {
-      if (error.toString().includes("NotAllowedError:")) {
-        AbortControllerService.cancelCeremony();
-      }
       console.error(error);
       handleError(error, context);
     }

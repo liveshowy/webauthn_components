@@ -1,5 +1,4 @@
 import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
-import { AbortControllerService } from "./abort_controller";
 
 export const RegistrationHook = {
   mounted() {
@@ -45,7 +44,7 @@ export const RegistrationHook = {
 
       user.id = base64ToArray(user.id).buffer;
 
-      const publicKey = {
+      const publicKey: PublicKeyCredentialCreationOptions = {
         attestation,
         authenticatorSelection: {
           authenticatorAttachment: "platform",
@@ -63,27 +62,25 @@ export const RegistrationHook = {
         user,
       };
 
-      const credential = await navigator.credentials.create({
+      const credential = (await navigator.credentials.create({
         publicKey,
-        signal: AbortControllerService.createNewAbortSignal(),
-      });
+      })) as PublicKeyCredential;
+      if (credential) {
+        const { rawId, response, type } = credential;
+        const { attestationObject, clientDataJSON } =
+          response as AuthenticatorAttestationResponse;
+        const attestation64 = arrayBufferToBase64(attestationObject);
+        const clientData = Array.from(new Uint8Array(clientDataJSON));
+        const rawId64 = arrayBufferToBase64(rawId);
 
-      const { rawId, response, type } = credential;
-      const { attestationObject, clientDataJSON } = response;
-      const attestation64 = arrayBufferToBase64(attestationObject);
-      const clientData = Array.from(new Uint8Array(clientDataJSON));
-      const rawId64 = arrayBufferToBase64(rawId);
-
-      context.pushEventTo(context.el, "registration-attestation", {
-        attestation64,
-        clientData,
-        rawId64,
-        type,
-      });
-    } catch (error) {
-      if (error.toString().includes("NotAllowedError:")) {
-        AbortControllerService.cancelCeremony();
+        context.pushEventTo(context.el, "registration-attestation", {
+          attestation64,
+          clientData,
+          rawId64,
+          type,
+        });
       }
+    } catch (error) {
       console.error(error);
       handleError(error, context);
     }
