@@ -26,6 +26,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity.UserKey do
   @primary_key {:id, Ecto.ULID, autogenerate: true}
   @foreign_key_type Ecto.ULID
   @derive {Jason.Encoder, only: [:key_id, :public_key, :label, :last_used_at]}
+  @derive {JSON.Encoder, only: [:key_id, :public_key, :label, :last_used_at]}
   schema "user_keys" do
     field :label, :string, default: "default"
     field :key_id, :binary
