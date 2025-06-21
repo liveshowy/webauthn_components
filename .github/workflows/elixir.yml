@@ -19,7 +19,8 @@ jobs:
     concurrency: production
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
       - uses: erlef/setup-beam@v1
         with:
           version-type: strict
@@ -31,7 +32,6 @@ jobs:
       - name: Hex Cache
         uses: actions/cache@v4
         with:
-          save-always: true
           path: deps
           key: ${{ runner.os }}-mix-${{ hashFiles('**/mix.lock') }}
           restore-keys: |
@@ -42,10 +42,12 @@ jobs:
       - name: Install dependencies
         run: mix deps.get
 
+      - name: Check JS formatting
+        run: yarn && yarn prettier priv/static --check
+
       - name: Compilation Cache
         uses: actions/cache@v4
         with:
-          save-always: true
           path: _build
           key: ${{ runner.os }}-compiled-${{ hashfiles('./mix.lock') }}
           restore-keys: |
