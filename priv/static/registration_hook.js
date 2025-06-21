@@ -48,7 +48,8 @@ export const RegistrationHook = {
       const publicKey = {
         attestation,
         authenticatorSelection: {
-          authenticatorAttachment: "platform",
+          // authenticatorAttachment: "platform",
+          authenticatorAttachment: "all",
           residentKey: residentKey,
           requireResidentKey: requireResidentKey,
         },
