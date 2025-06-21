@@ -12,7 +12,7 @@ defmodule WebauthnComponents.MixProject do
       deps: deps(),
       description: description(),
       docs: docs(),
-      elixir: "~> 1.13",
+      elixir: "~> 1.18",
       elixirc_paths: elixirc_paths(Mix.env()),
       name: @name,
       package: package(),
