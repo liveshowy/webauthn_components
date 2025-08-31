@@ -149,7 +149,7 @@ defmodule WebauthnComponents.RegistrationComponent do
           <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
             <.icon type={icon_type} />
           </span>
-          <span><%= display_text %><%= @timeout %></span>
+          <span><%= display_text %></span>
         </.button>
       </span>
     </div>
