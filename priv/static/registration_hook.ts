@@ -32,6 +32,7 @@ export const RegistrationHook = {
     try {
       const {
         attestation,
+        authenticatorAttachment,
         challenge,
         excludeCredentials,
         residentKey,
@@ -47,7 +48,7 @@ export const RegistrationHook = {
       const publicKey: PublicKeyCredentialCreationOptions = {
         attestation,
         authenticatorSelection: {
-          authenticatorAttachment: "platform",
+          authenticatorAttachment: authenticatorAttachment,
           residentKey: residentKey,
           requireResidentKey: requireResidentKey,
         },

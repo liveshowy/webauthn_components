@@ -113,10 +113,17 @@ defmodule WebauthnComponents.RegistrationComponent do
     ~H"""
     <span>
       <.button
-        id={@id}
+        :for={
+          %{authenticator_attachment: authenticator_attachment} <- [
+            %{authenticator_attachment: "platform"},
+            %{authenticator_attachment: "cross-platform"}
+          ]
+        }
+        id={"#{@id}-#{authenticator_attachment}"}
         phx-hook="RegistrationHook"
         phx-target={@myself}
         phx-click="register"
+        phx-value-authenticator-attachment={authenticator_attachment}
         data-check_uvpa_available={if @check_uvpa_available, do: "true"}
         data-uvpa_error_message={@uvpa_error_message}
         class={@class}
@@ -130,7 +137,8 @@ defmodule WebauthnComponents.RegistrationComponent do
     """
   end
 
-  def handle_event("register", _params, socket) do
+  def handle_event("register", params, socket) do
+    %{"authenticator-attachment" => authenticator_attachment} = params
     %{assigns: assigns, endpoint: endpoint} = socket
     %{app: app_name, id: id, resident_key: resident_key, webauthn_user: webauthn_user} = assigns
 
@@ -149,18 +157,19 @@ defmodule WebauthnComponents.RegistrationComponent do
       )
 
     challenge_data = %{
-      attestation: attestation,
-      challenge: Base.encode64(challenge.bytes, padding: false),
-      excludeCredentials: [],
-      id: id,
-      residentKey: resident_key,
-      requireResidentKey: resident_key == :required,
-      rp: %{
-        id: challenge.rp_id,
-        name: app_name
+      "attestation" => attestation,
+      "authenticatorAttachment" => authenticator_attachment,
+      "challenge" => Base.encode64(challenge.bytes, padding: false),
+      "excludeCredentials" => [],
+      "id" => id,
+      "residentKey" => resident_key,
+      "requireResidentKey" => resident_key == :required,
+      "rp" => %{
+        "id" => challenge.rp_id,
+        "name" => app_name
       },
-      timeout: 60_000,
-      user: webauthn_user
+      "timeout" => 60_000,
+      "user" => webauthn_user
     }
 
     {
