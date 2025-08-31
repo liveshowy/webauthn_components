@@ -10,13 +10,14 @@ defmodule WebauthnComponents.RegistrationComponentTest do
     assigns = %{app: @app, id: @id}
     {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
     live_assign(view, app: assigns.app, id: assigns.id)
-    element = element(view, "##{assigns.id}")
+    element = element(view, "##{assigns.id}-platform")
     %{view: view, element: element, default_assigns: assigns}
   end
 
   describe "render/1" do
     test "returns element with id and phx hook", %{view: view} do
-      assert has_element?(view, "##{@id}[phx-hook='RegistrationHook']")
+      assert has_element?(view, "##{@id}-platform[phx-hook='RegistrationHook']")
+      assert has_element?(view, "##{@id}-cross-platform[phx-hook='RegistrationHook']")
     end
   end
 
@@ -25,14 +26,17 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       %{default_assigns: default_assigns} = setup_attrs
       assigns = Map.merge(default_assigns, %{disabled: true})
       {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
-      assert has_element?(view, "##{assigns.id}[disabled]")
+      assert has_element?(view, "##{assigns.id}-platform[disabled]")
+      assert has_element?(view, "##{assigns.id}-cross-platform[disabled]")
     end
 
     test "is not `disabled` by default", setup_attrs do
       %{default_assigns: assigns} = setup_attrs
       {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
-      assert has_element?(view, "##{assigns.id}")
-      refute has_element?(view, "##{assigns.id}[disabled]")
+      assert has_element?(view, "##{assigns.id}-platform")
+      assert has_element?(view, "##{assigns.id}-cross-platform")
+      refute has_element?(view, "##{assigns.id}-platform[disabled]")
+      refute has_element?(view, "##{assigns.id}-cross-platform[disabled]")
     end
   end
 
@@ -50,8 +54,8 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert clicked_element =~ "phx-click=\"register\""
 
       assert_push_event(view, "registration-challenge", %{
-        id: "registration-component",
-        user: ^webauthn_user
+        "id" => "registration-component",
+        "user" => ^webauthn_user
       })
     end
   end
