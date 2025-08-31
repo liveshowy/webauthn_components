@@ -10,9 +10,11 @@ export const RegistrationHook = {
       });
     }
 
-    this.handleEvent("registration-challenge", (event) =>
-      this.handleRegistration(event, this)
-    );
+    this.handleEvent("registration-challenge", (event) => {
+      if (event.authenticatorAttachment == this.el.dataset.authenticatorAttachment) {
+        this.handleRegistration(event, this);
+      }
+    });
   },
   async checkUserVerifyingPlatformAuthenticatorAvailable(
     context,

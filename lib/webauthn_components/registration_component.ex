@@ -142,6 +142,7 @@ defmodule WebauthnComponents.RegistrationComponent do
           phx-value-authenticator-attachment={authenticator_attachment}
           data-check_uvpa_available={if @check_uvpa_available, do: "true"}
           data-uvpa_error_message={@uvpa_error_message}
+          data-authenticator-attachment={authenticator_attachment}
           class={@class}
           title="Create a new account"
           disabled={@disabled}

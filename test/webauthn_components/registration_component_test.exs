@@ -55,7 +55,8 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
       assert_push_event(view, "registration-challenge", %{
         "id" => "registration-component",
-        "user" => ^webauthn_user
+        "user" => ^webauthn_user,
+        "authenticatorAttachment" => "platform"
       })
     end
   end
