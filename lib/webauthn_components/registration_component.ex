@@ -18,6 +18,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
+  - `@timeout` (Optional) The timeout in milliseconds for the registration operation. Defaults to `60_000` (60 seconds).
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
   - `@check_uvpa_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
   - `@uvpa_error_message` (Optional) The message displayed when the user does not have a UVPA available. Defaults to "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
@@ -72,6 +73,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "registration-component" end)
       |> assign_new(:class, fn -> "" end)
+      |> assign_new(:timeout, fn -> 60_000 end)
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:resident_key, fn -> :required end)
@@ -147,7 +149,7 @@ defmodule WebauthnComponents.RegistrationComponent do
           <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
             <.icon type={icon_type} />
           </span>
-          <span><%= display_text %></span>
+          <span><%= display_text %><%= @timeout %></span>
         </.button>
       </span>
     </div>
@@ -157,7 +159,14 @@ defmodule WebauthnComponents.RegistrationComponent do
   def handle_event("register", params, socket) do
     %{"authenticator-attachment" => authenticator_attachment} = params
     %{assigns: assigns, endpoint: endpoint} = socket
-    %{app: app_name, id: id, resident_key: resident_key, webauthn_user: webauthn_user} = assigns
+
+    %{
+      app: app_name,
+      id: id,
+      resident_key: resident_key,
+      webauthn_user: webauthn_user,
+      timeout: timeout
+    } = assigns
 
     if not is_struct(webauthn_user, WebauthnUser) do
       raise "user must be a WebauthnComponents.WebauthnUser struct."
@@ -185,7 +194,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         "id" => challenge.rp_id,
         "name" => app_name
       },
-      "timeout" => 60_000,
+      "timeout" => timeout,
       "user" => webauthn_user
     }
 
