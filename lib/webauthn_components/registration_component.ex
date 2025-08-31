@@ -113,29 +113,44 @@ defmodule WebauthnComponents.RegistrationComponent do
     end
 
     ~H"""
-    <span>
-      <.button
-        :for={
-          %{authenticator_attachment: authenticator_attachment, display_text: display_text} <- [
-            %{authenticator_attachment: "platform", display_text: @platform_display_text},
-            %{authenticator_attachment: "cross-platform", display_text: @cross_platform_display_text}
-          ]
-        }
-        id={"#{@id}-#{authenticator_attachment}"}
-        phx-hook="RegistrationHook"
-        phx-target={@myself}
-        phx-click="register"
-        phx-value-authenticator-attachment={authenticator_attachment}
-        data-check_uvpa_available={if @check_uvpa_available, do: "true"}
-        data-uvpa_error_message={@uvpa_error_message}
-        class={@class}
-        title="Create a new account"
-        disabled={@disabled}
-      >
-        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span><%= display_text %></span>
-      </.button>
-    </span>
+    <div class="flex flex-col space-y-4">
+      <span :for={
+        %{
+          authenticator_attachment: authenticator_attachment,
+          display_text: display_text,
+          icon_type: icon_type
+        } <- [
+          %{
+            authenticator_attachment: "platform",
+            display_text: @platform_display_text,
+            icon_type: :key
+          },
+          %{
+            authenticator_attachment: "cross-platform",
+            display_text: @cross_platform_display_text,
+            icon_type: :usb
+          }
+        ]
+      }>
+        <.button
+          id={"#{@id}-#{authenticator_attachment}"}
+          phx-hook="RegistrationHook"
+          phx-target={@myself}
+          phx-click="register"
+          phx-value-authenticator-attachment={authenticator_attachment}
+          data-check_uvpa_available={if @check_uvpa_available, do: "true"}
+          data-uvpa_error_message={@uvpa_error_message}
+          class={@class}
+          title="Create a new account"
+          disabled={@disabled}
+        >
+          <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
+            <.icon type={icon_type} />
+          </span>
+          <span><%= display_text %></span>
+        </.button>
+      </span>
+    </div>
     """
   end
 
