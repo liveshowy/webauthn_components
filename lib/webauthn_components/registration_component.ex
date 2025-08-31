@@ -12,7 +12,8 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
-  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign Up".
+  - `@platform_display_text` (Optional) The text displayed inside the "platform" button. Defaults to "Sign Up".
+  - `@cross_platform_display_text` (Optional) The text displayed inside the "cross-platform" button. Defaults to "Sign Up With Connected Device".
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
@@ -78,7 +79,8 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:uvpa_error_message, fn ->
         "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
       end)
-      |> assign_new(:display_text, fn -> "Sign Up" end)
+      |> assign_new(:platform_display_text, fn -> "Sign Up" end)
+      |> assign_new(:cross_platform_display_text, fn -> "Sign Up With Connected Device" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
     }
@@ -114,9 +116,9 @@ defmodule WebauthnComponents.RegistrationComponent do
     <span>
       <.button
         :for={
-          %{authenticator_attachment: authenticator_attachment} <- [
-            %{authenticator_attachment: "platform"},
-            %{authenticator_attachment: "cross-platform"}
+          %{authenticator_attachment: authenticator_attachment, display_text: display_text} <- [
+            %{authenticator_attachment: "platform", display_text: @platform_display_text},
+            %{authenticator_attachment: "cross-platform", display_text: @cross_platform_display_text}
           ]
         }
         id={"#{@id}-#{authenticator_attachment}"}
@@ -131,7 +133,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         disabled={@disabled}
       >
         <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span><%= @display_text %></span>
+        <span><%= display_text %></span>
       </.button>
     </span>
     """
