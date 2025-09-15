@@ -16,12 +16,31 @@
     >
       <p>Create a <strong>new</strong> account:</p>
 
-      <.input type="email" field={form[:email]} label="Email" phx-debounce="250" autocomplete="username webauthn" />
+      <.input
+        type="email"
+        field={form[:email]}
+        label="Email"
+        phx-debounce="250"
+        autocomplete="username webauthn"
+      />
       <.live_component
+        :for={
+          {authenticator_attachment, display_text} <- [
+            platform: dpgettext("registration", "buttons", "Register using a passkey"),
+            cross_platform:
+              dpgettext(
+                "registration",
+                "buttons",
+                "Register using a passkey with an external device (e.g. phone, security key, etc.)"
+              )
+          ]
+        }
+        authenticator_attachment={authenticator_attachment}
+        display_text={display_text}
+        id={"registration-component-#{authenticator_attachment}"}
         disabled={@form.source.valid? == false}
         module={RegistrationComponent}
-        id="registration-component"
-        app={<%= inspect @app_pascal_case %>}
+        app={inspect(@app_pascal_case)}
         check_uvpa_available={false}
         class={[
           "bg-gray-200 hover:bg-gray-300 hover:text-black rounded transition",
@@ -30,7 +49,6 @@
           "disabled:cursor-not-allowed disabled:opacity-25"
         ]}
       />
-
 
       <.link navigate={~p"/sign-in"} class="underline">Sign into an existing account</.link>
     </fieldset>

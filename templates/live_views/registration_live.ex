@@ -52,7 +52,12 @@ defmodule <%= inspect @web_pascal_case %>.RegistrationLive do
       |> Map.put(:name, email)
       |> Map.put(:display_name, email)
 
-    send_update(RegistrationComponent, id: "registration-component", webauthn_user: webauthn_user)
+    for authenticator_attachment <- [:platform, :cross_platform] do
+      send_update(RegistrationComponent,
+        id: "registration-component-#{authenticator_attachment}",
+        webauthn_user: webauthn_user
+      )
+    end
 
     {
       :noreply,
