@@ -1,9 +1,6 @@
 defmodule Wac.Gen.Javascript do
   @moduledoc false
 
-  @import_regex Regex.compile!("(import {\s?LiveSocket\s?} from \"phoenix_live_view\";?)")
-  @socket_regex Regex.compile!("(params: {\s?_csrf_token: csrfToken\s?})")
-
   @import_hooks """
   import {
     SupportHook,
@@ -22,9 +19,14 @@ defmodule Wac.Gen.Javascript do
     updated_contents =
       javascript_path
       |> File.read!()
-      |> String.replace(@import_regex, "\\1\n#{@import_hooks}")
-      |> String.replace(@socket_regex, "\\1,\n#{@socket_hooks}")
+      |> String.replace(import_regex(), "\\1\n#{@import_hooks}")
+      |> String.replace(socket_regex(), "\\1,\n#{@socket_hooks}")
 
     File.write!(javascript_path, updated_contents)
   end
+
+  defp import_regex,
+    do: Regex.compile!("(import {\s?LiveSocket\s?} from \"phoenix_live_view\";?)")
+
+  defp socket_regex, do: Regex.compile!("(params: {\s?_csrf_token: csrfToken\s?})")
 end
