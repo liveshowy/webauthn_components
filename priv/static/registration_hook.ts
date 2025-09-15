@@ -11,9 +11,7 @@ export const RegistrationHook = {
     }
 
     this.handleEvent("registration-challenge", (event) => {
-      if (
-        event.authenticatorAttachment == this.el.dataset.authenticatorAttachment
-      ) {
+      if (event.id == this.el.id) {
         this.handleRegistration(event, this);
       }
     });

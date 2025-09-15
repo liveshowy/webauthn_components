@@ -12,8 +12,9 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
-  - `@platform_display_text` (Optional) The text displayed inside the "platform" button. Defaults to "Sign Up".
-  - `@cross_platform_display_text` (Optional) The text displayed inside the "cross-platform" button. Defaults to "Sign Up With Connected Device".
+  - `@app`: (**Required**) The name of your application or service. This is displayed to the user during registration.
+  - `@authenticator_attachment` (Optional) The type of authenticator to use. Either `:platform` or `:cross_platform`. Defaults to `:platform`.
+  - `@display_text` (Optional) The text displayed inside the "platform" button. Defaults to "Sign Up" if authenticator attachment is `:platform`, or "Sign Up With Connected Device" if `:cross_platform`.
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
@@ -81,8 +82,6 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:uvpa_error_message, fn ->
         "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
       end)
-      |> assign_new(:platform_display_text, fn -> "Sign Up" end)
-      |> assign_new(:cross_platform_display_text, fn -> "Sign Up With Connected Device" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
     }
@@ -102,11 +101,26 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def update(assigns, socket) do
-    {
-      :ok,
-      socket
-      |> assign(assigns)
-    }
+    socket
+    |> assign(assigns)
+    |> assign_new(:authenticator_attachment, fn -> :platform end)
+    |> then(fn socket ->
+      assign_new(socket, :display_text, fn ->
+        case socket.assigns.authenticator_attachment do
+          :platform -> "Sign Up"
+          :cross_platform -> "Sign Up With Connected Device"
+        end
+      end)
+    end)
+    |> then(fn socket ->
+      assign_new(socket, :icon_type, fn ->
+        case socket.assigns.authenticator_attachment do
+          :platform -> :key
+          :cross_platform -> :usb
+        end
+      end)
+    end)
+    |> then(&{:ok, &1})
   end
 
   def render(assigns) do
@@ -116,53 +130,34 @@ defmodule WebauthnComponents.RegistrationComponent do
 
     ~H"""
     <div class="flex flex-col space-y-4">
-      <span :for={
-        %{
-          authenticator_attachment: authenticator_attachment,
-          display_text: display_text,
-          icon_type: icon_type
-        } <- [
-          %{
-            authenticator_attachment: "platform",
-            display_text: @platform_display_text,
-            icon_type: :key
-          },
-          %{
-            authenticator_attachment: "cross-platform",
-            display_text: @cross_platform_display_text,
-            icon_type: :usb
-          }
-        ]
-      }>
+      <span>
         <.button
-          id={"#{@id}-#{authenticator_attachment}"}
+          id={@id}
           phx-hook="RegistrationHook"
           phx-target={@myself}
           phx-click="register"
-          phx-value-authenticator-attachment={authenticator_attachment}
           data-check_uvpa_available={if @check_uvpa_available, do: "true"}
           data-uvpa_error_message={@uvpa_error_message}
-          data-authenticator-attachment={authenticator_attachment}
           class={@class}
           title="Create a new account"
           disabled={@disabled}
         >
           <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
-            <.icon type={icon_type} />
+            <.icon type={@icon_type} />
           </span>
-          <span><%= display_text %></span>
+          <span><%= @display_text %></span>
         </.button>
       </span>
     </div>
     """
   end
 
-  def handle_event("register", params, socket) do
-    %{"authenticator-attachment" => authenticator_attachment} = params
+  def handle_event("register", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
 
     %{
       app: app_name,
+      authenticator_attachment: authenticator_attachment,
       id: id,
       resident_key: resident_key,
       webauthn_user: webauthn_user,
@@ -183,9 +178,15 @@ defmodule WebauthnComponents.RegistrationComponent do
         trusted_attestation_types: [:none, :basic]
       )
 
+    authenticator_attachment_string =
+      case authenticator_attachment do
+        :platform -> "platform"
+        :cross_platform -> "cross-platform"
+      end
+
     challenge_data = %{
       "attestation" => attestation,
-      "authenticatorAttachment" => authenticator_attachment,
+      "authenticatorAttachment" => authenticator_attachment_string,
       "challenge" => Base.encode64(challenge.bytes, padding: false),
       "excludeCredentials" => [],
       "id" => id,
