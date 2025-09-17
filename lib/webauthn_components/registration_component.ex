@@ -124,7 +124,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       data-check_uvpa_available={if @check_uvpa_available, do: "true"}
       data-uvpa_error_message={@uvpa_error_message}
       class={@class}
-      title="Create a new account"
+      title={@display_text}
       disabled={@disabled}
     >
       <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
