@@ -64,7 +64,6 @@ defmodule WebauthnComponents.RegistrationComponent do
   """
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
-  import WebauthnComponents.BaseComponents
   alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
