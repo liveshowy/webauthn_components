@@ -107,7 +107,7 @@ defmodule WebauthnComponents.RegistrationComponent do
     |> then(fn socket ->
       assign_new(socket, :display_text, fn ->
         case socket.assigns.authenticator_attachment do
-          :platform -> "Sign Up"
+          :platform -> "Sign Up With Passkey"
           :cross_platform -> "Sign Up With Connected Device"
         end
       end)
