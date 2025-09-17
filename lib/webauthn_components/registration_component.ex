@@ -103,27 +103,7 @@ defmodule WebauthnComponents.RegistrationComponent do
     socket
     |> assign(assigns)
     |> assign_new(:authenticator_attachment, fn -> :platform end)
-    |> then(fn socket ->
-      assign_new(socket, :display_text, fn ->
-        case socket.assigns.authenticator_attachment do
-          :platform -> "Sign Up With Passkey"
-          :cross_platform -> "Sign Up With Connected Device"
-        end
-      end)
-    end)
-    |> then(fn socket ->
-      assign_new(socket, :icon_type, fn ->
-        case socket.assigns.authenticator_attachment do
-          :platform -> :key
-          :cross_platform -> :usb
-        end
-      end)
-    end)
-    |> then(fn socket ->
-      assign_new(socket, :id, fn ->
-        "registration-component-#{socket.assigns.authenticator_attachment}"
-      end)
-    end)
+    |> assign_authenticator_attachment_dependant_assigns()
     |> then(&{:ok, &1})
   end
 
@@ -245,4 +225,28 @@ defmodule WebauthnComponents.RegistrationComponent do
     send(self(), {:invalid_event, event, payload})
     {:noreply, socket}
   end
+
+  defp assign_authenticator_attachment_dependant_assigns(socket) do
+    %{authenticator_attachment: authenticator_attachment} = socket.assigns
+
+    socket
+    |> assign_new(:id, fn -> default_id(authenticator_attachment) end)
+    |> assign_new(:display_text, fn -> default_display_text(authenticator_attachment) end)
+    |> assign_new(:icon_type, fn -> default_icon_type(authenticator_attachment) end)
+  end
+
+  defp default_id(authenticator_attachment) do
+    "registration-component-#{authenticator_attachment}"
+  end
+
+  defp default_display_text(:platform) do
+    "Sign Up With Passkey"
+  end
+
+  defp default_display_text(:cross_platform) do
+    "Sign Up With Connected Device"
+  end
+
+  defp default_icon_type(:platform), do: :key
+  defp default_icon_type(:cross_platform), do: :usb
 end
