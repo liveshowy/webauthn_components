@@ -15,7 +15,6 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@app`: (**Required**) The name of your application or service. This is displayed to the user during registration.
   - `@authenticator_attachment` (Optional) The type of authenticator to use. Either `:platform` or `:cross_platform`. Defaults to `:platform`.
   - `@display_text` (Optional) The text displayed inside the "platform" button. Defaults to "Sign Up" if authenticator attachment is `:platform`, or "Sign Up With Connected Device" if `:cross_platform`.
-  - `@display_text_class` (Optional) CSS classes for the display text span element.
   - `@icon_type` (Optional) The icon displayed inside the button. Either `:key` or `:usb`. Defaults to `:key` if authenticator attachment is `:platform`, or `:usb` if `:cross_platform`.
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
@@ -84,7 +83,6 @@ defmodule WebauthnComponents.RegistrationComponent do
       end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
-      |> assign_new(:display_text_class, fn -> nil end)
     }
   end
 
@@ -130,7 +128,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
         <.icon type={@icon_type} />
       </span>
-      <span class={@display_text_class}><%= @display_text %></span>
+      <span><%= @display_text %></span>
     </button>
     """
   end
