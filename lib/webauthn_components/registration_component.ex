@@ -72,7 +72,6 @@ defmodule WebauthnComponents.RegistrationComponent do
       :ok,
       socket
       |> assign(:challenge, fn -> nil end)
-      |> assign_new(:id, fn -> "registration-component" end)
       |> assign_new(:class, fn -> "" end)
       |> assign_new(:timeout, fn -> 60_000 end)
       |> assign_new(:webauthn_user, fn -> nil end)
@@ -118,6 +117,11 @@ defmodule WebauthnComponents.RegistrationComponent do
           :platform -> :key
           :cross_platform -> :usb
         end
+      end)
+    end)
+    |> then(fn socket ->
+      assign_new(socket, :id, fn ->
+        "registration-component-#{socket.assigns.authenticator_attachment}"
       end)
     end)
     |> then(&{:ok, &1})
