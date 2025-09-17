@@ -113,8 +113,9 @@ defmodule WebauthnComponents.RegistrationComponent do
     end
 
     ~H"""
-    <.button
+    <button
       id={@id}
+      type="button"
       phx-hook="RegistrationHook"
       phx-target={@myself}
       phx-click="register"
@@ -128,7 +129,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         <.icon type={@icon_type} />
       </span>
       <span><%= @display_text %></span>
-    </.button>
+    </button>
     """
   end
 
