@@ -56,7 +56,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
     {
       :ok,
       socket
-      |> assign(:challenge, fn -> nil end)
+      |> assign_new(:challenge, fn -> nil end)
       |> assign_new(:id, fn -> "authentication-component" end)
       |> assign_new(:class, fn -> "" end)
       |> assign_new(:disabled, fn -> nil end)

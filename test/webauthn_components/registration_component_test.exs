@@ -50,8 +50,9 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert clicked_element =~ "phx-click=\"register\""
 
       assert_push_event(view, "registration-challenge", %{
-        id: "registration-component",
-        user: ^webauthn_user
+        "id" => "registration-component",
+        "user" => ^webauthn_user,
+        "authenticatorAttachment" => "platform"
       })
     end
   end
