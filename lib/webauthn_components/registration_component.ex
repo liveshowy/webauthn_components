@@ -65,6 +65,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   """
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
+  import WebauthnComponents.BaseComponents, only: [button: 1]
   alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
@@ -113,23 +114,24 @@ defmodule WebauthnComponents.RegistrationComponent do
     end
 
     ~H"""
-    <button
-      id={@id}
-      type="button"
-      phx-hook="RegistrationHook"
-      phx-target={@myself}
-      phx-click="register"
-      data-check_uvpa_available={if @check_uvpa_available, do: "true"}
-      data-uvpa_error_message={@uvpa_error_message}
-      class={@class}
-      title={@display_text}
-      disabled={@disabled}
-    >
-      <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
-        <.icon type={@icon_type} />
-      </span>
-      <span><%= @display_text %></span>
-    </button>
+    <span>
+      <.button
+        id={@id}
+        phx-hook="RegistrationHook"
+        phx-target={@myself}
+        phx-click="register"
+        data-check_uvpa_available={if @check_uvpa_available, do: "true"}
+        data-uvpa_error_message={@uvpa_error_message}
+        class={@class}
+        title={@display_text}
+        disabled={@disabled}
+      >
+        <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
+          <.icon type={@icon_type} />
+        </span>
+        <span><%= @display_text %></span>
+      </.button>
+    </span>
     """
   end
 
