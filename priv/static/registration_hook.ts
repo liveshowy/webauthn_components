@@ -10,9 +10,11 @@ export const RegistrationHook = {
       });
     }
 
-    this.handleEvent("registration-challenge", (event) =>
-      this.handleRegistration(event, this)
-    );
+    this.handleEvent("registration-challenge", (event) => {
+      if (event.id == this.el.id) {
+        this.handleRegistration(event, this);
+      }
+    });
   },
   async checkUserVerifyingPlatformAuthenticatorAvailable(
     context,
@@ -32,6 +34,7 @@ export const RegistrationHook = {
     try {
       const {
         attestation,
+        authenticatorAttachment,
         challenge,
         excludeCredentials,
         residentKey,
@@ -47,7 +50,7 @@ export const RegistrationHook = {
       const publicKey: PublicKeyCredentialCreationOptions = {
         attestation,
         authenticatorSelection: {
-          authenticatorAttachment: "platform",
+          authenticatorAttachment: authenticatorAttachment,
           residentKey: residentKey,
           requireResidentKey: requireResidentKey,
         },

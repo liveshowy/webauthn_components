@@ -12,11 +12,15 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
-  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign Up".
+  - `@app`: (**Required**) The name of your application or service. This is displayed to the user during registration.
+  - `@authenticator_attachment` (Optional) The type of authenticator to use. Either `:platform` or `:cross_platform`. Defaults to `:platform`.
+  - `@display_text` (Optional) The text displayed inside the "platform" button. Defaults to "Sign Up" if authenticator attachment is `:platform`, or "Sign Up With Connected Device" if `:cross_platform`.
+  - `@icon_type` (Optional) The icon displayed inside the button. Either `:key` or `:usb`. Defaults to `:key` if authenticator attachment is `:platform`, or `:usb` if `:cross_platform`.
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
   - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
+  - `@timeout` (Optional) The timeout in milliseconds for the registration operation. Defaults to `60_000` (60 seconds).
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
   - `@check_uvpa_available` (Optional) Set to `true` to check if the user has a platform authenticator available. Defaults to `false`. See the User Verifying Platform Authenticator section for more information.
   - `@uvpa_error_message` (Optional) The message displayed when the user does not have a UVPA available. Defaults to "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
@@ -61,7 +65,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   """
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
-  import WebauthnComponents.BaseComponents
+  import WebauthnComponents.BaseComponents, only: [button: 1]
   alias WebauthnComponents.WebauthnUser
 
   def mount(socket) do
@@ -69,8 +73,8 @@ defmodule WebauthnComponents.RegistrationComponent do
       :ok,
       socket
       |> assign(:challenge, fn -> nil end)
-      |> assign_new(:id, fn -> "registration-component" end)
       |> assign_new(:class, fn -> "" end)
+      |> assign_new(:timeout, fn -> 60_000 end)
       |> assign_new(:webauthn_user, fn -> nil end)
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:resident_key, fn -> :required end)
@@ -78,7 +82,6 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:uvpa_error_message, fn ->
         "Registration unavailable. Your device does not support passkeys. Please install a passkey authenticator."
       end)
-      |> assign_new(:display_text, fn -> "Sign Up" end)
       |> assign_new(:show_icon?, fn -> true end)
       |> assign_new(:relying_party, fn -> nil end)
     }
@@ -98,11 +101,11 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def update(assigns, socket) do
-    {
-      :ok,
-      socket
-      |> assign(assigns)
-    }
+    socket
+    |> assign(assigns)
+    |> assign_new(:authenticator_attachment, fn -> :platform end)
+    |> assign_authenticator_attachment_dependant_assigns()
+    |> then(&{:ok, &1})
   end
 
   def render(assigns) do
@@ -120,10 +123,12 @@ defmodule WebauthnComponents.RegistrationComponent do
         data-check_uvpa_available={if @check_uvpa_available, do: "true"}
         data-uvpa_error_message={@uvpa_error_message}
         class={@class}
-        title="Create a new account"
+        title={@display_text}
         disabled={@disabled}
       >
-        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
+        <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
+          <.icon type={@icon_type} />
+        </span>
         <span><%= @display_text %></span>
       </.button>
     </span>
@@ -132,7 +137,15 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   def handle_event("register", _params, socket) do
     %{assigns: assigns, endpoint: endpoint} = socket
-    %{app: app_name, id: id, resident_key: resident_key, webauthn_user: webauthn_user} = assigns
+
+    %{
+      app: app_name,
+      authenticator_attachment: authenticator_attachment,
+      id: id,
+      resident_key: resident_key,
+      webauthn_user: webauthn_user,
+      timeout: timeout
+    } = assigns
 
     if not is_struct(webauthn_user, WebauthnUser) do
       raise "user must be a WebauthnComponents.WebauthnUser struct."
@@ -148,19 +161,26 @@ defmodule WebauthnComponents.RegistrationComponent do
         trusted_attestation_types: [:none, :basic]
       )
 
+    authenticator_attachment_string =
+      case authenticator_attachment do
+        :platform -> "platform"
+        :cross_platform -> "cross-platform"
+      end
+
     challenge_data = %{
-      attestation: attestation,
-      challenge: Base.encode64(challenge.bytes, padding: false),
-      excludeCredentials: [],
-      id: id,
-      residentKey: resident_key,
-      requireResidentKey: resident_key == :required,
-      rp: %{
-        id: challenge.rp_id,
-        name: app_name
+      "attestation" => attestation,
+      "authenticatorAttachment" => authenticator_attachment_string,
+      "challenge" => Base.encode64(challenge.bytes, padding: false),
+      "excludeCredentials" => [],
+      "id" => id,
+      "residentKey" => resident_key,
+      "requireResidentKey" => resident_key == :required,
+      "rp" => %{
+        "id" => challenge.rp_id,
+        "name" => app_name
       },
-      timeout: 60_000,
-      user: webauthn_user
+      "timeout" => timeout,
+      "user" => webauthn_user
     }
 
     {
@@ -208,4 +228,28 @@ defmodule WebauthnComponents.RegistrationComponent do
     send(self(), {:invalid_event, event, payload})
     {:noreply, socket}
   end
+
+  defp assign_authenticator_attachment_dependant_assigns(socket) do
+    %{authenticator_attachment: authenticator_attachment} = socket.assigns
+
+    socket
+    |> assign_new(:id, fn -> default_id(authenticator_attachment) end)
+    |> assign_new(:display_text, fn -> default_display_text(authenticator_attachment) end)
+    |> assign_new(:icon_type, fn -> default_icon_type(authenticator_attachment) end)
+  end
+
+  defp default_id(authenticator_attachment) do
+    "registration-component-#{authenticator_attachment}"
+  end
+
+  defp default_display_text(:platform) do
+    "Sign Up With Passkey"
+  end
+
+  defp default_display_text(:cross_platform) do
+    "Sign Up With Connected Device"
+  end
+
+  defp default_icon_type(:platform), do: :key
+  defp default_icon_type(:cross_platform), do: :usb
 end
