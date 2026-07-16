@@ -1,0 +1,36 @@
+# Docker sandbox kit
+# https://docs.docker.com/ai/sandboxes/
+# https://docs.docker.com/ai/sandboxes/customize/kit-reference/
+schemaVersion: "1"
+kind: mixin
+name: wac
+displayName: "Opencode: WebAuthn Components"
+
+commands:
+  install:
+    - command: "apt-get update"
+      description: "Update package list"
+    - command: "apt-get install -y fzf git inotify-tools jq locales-all man tree unzip"
+      description: "Install packages"
+    - command: |
+        curl -fsSO https://elixir-lang.org/install.sh
+        sh install.sh elixir@1.20.2 otp@28.4
+        echo 'export PATH=/home/agent/.elixir-install/installs/otp/28.4/bin:$PATH' >> ~/.bashrc
+        echo 'export PATH=/home/agent/.elixir-install/installs/elixir/1.20.2-otp-28/bin:$PATH' >> ~/.bashrc
+      description: "Install Elixir and OTP"
+      user: 1000
+    - command: |
+        export PATH=/home/agent/.elixir-install/installs/otp/28.4/bin:$PATH
+        export PATH=/home/agent/.elixir-install/installs/elixir/1.20.2-otp-28/bin:$PATH
+        mix local.hex --force
+        mix local.rebar --force
+      description: "Install Hex and Rebar"
+      user: 1000
+
+environment:
+  variables:
+    LANG: "en_US.utf8"
+    LC_COLLATE: "en_US.utf8"
+    LC_CTYPE: "en_US.utf8"
+    PG_HOSTNAME: "host.docker.internal"
+    IS_SANDBOX: "1"
