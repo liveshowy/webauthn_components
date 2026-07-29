@@ -1,6 +1,3 @@
-==> phoenix_live_view
-Compiling 55 files (.ex)
-Generated phoenix_live_view app
 defmodule WebauthnComponents.MixProject do
   use Mix.Project
 
