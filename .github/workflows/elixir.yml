@@ -56,7 +56,7 @@ jobs:
             ${{ runner.os }}-
 
       - name: Compile
-        run: mix compile --warnings-as-errors
+        run: mix compile --warnings-as-errors --no-optional-deps
 
       - name: Run tests
         run: mix test --warnings-as-errors

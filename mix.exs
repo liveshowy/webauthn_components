@@ -1,3 +1,6 @@
+==> phoenix_live_view
+Compiling 55 files (.ex)
+Generated phoenix_live_view app
 defmodule WebauthnComponents.MixProject do
   use Mix.Project
 
@@ -35,13 +38,13 @@ defmodule WebauthnComponents.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false, optional: true},
       {:ecto, "~> 3.10"},
-      {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
-      {:floki, "~> 0.36", only: [:test]},
-      {:jason, "~> 1.0"},
-      {:lazy_html, ">= 0.1.0", only: :test},
-      {:live_isolated_component, "~> 0.10", only: [:test]},
+      {:ex_doc, "~> 0.34", only: [:dev], runtime: false, optional: true},
+      {:floki, "~> 0.36", only: [:test], optional: true},
+      {:jason, "~> 1.0", optional: true},
+      {:lazy_html, ">= 0.1.0", only: :test, optional: true},
+      {:live_isolated_component, "~> 0.10", only: [:test], optional: true},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 1.2", override: true},
       {:phoenix, "~> 1.6"},
