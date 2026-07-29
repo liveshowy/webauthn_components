@@ -5,29 +5,37 @@ defmodule WebauthnComponents.SupportComponentTest do
   @id "support-component"
 
   setup do
-    {:ok, view, html} = live_isolated_component(SupportComponent, %{id: @id})
-    element = element(view, "##{@id}")
-    %{view: view, html: html, element: element}
+    html =
+      SupportComponent
+      |> render_component(%{id: @id})
+      |> Floki.parse_fragment!()
+
+    %{html: html}
   end
 
   describe "render/1" do
-    test "returns element with id and phx hook", %{html: html} do
-      assert html =~ "id=\"#{@id}\""
-      assert html =~ "phx-hook=\"SupportHook\""
+    test "returns hidden element with id and phx hook", %{html: html} do
+      node = Floki.get_by_id(html, @id)
+      assert ["SupportHook"] = Floki.attribute(node, "phx-hook")
+      assert [_target] = Floki.attribute(node, "phx-target")
+      assert ["hidden"] = Floki.attribute(node, "class")
     end
   end
 
-  describe "handle_event/3 - passkeys-supported" do
-    test "accepts valid payload", %{element: element, view: view} do
-      assert render_hook(element, "passkeys-supported", %{"supported" => true})
-      assert_handle_info(view, {:passkeys_supported, true})
+  describe "handle_event/3" do
+    test "accepts passkeys-supported event", %{socket: socket} do
+      params = %{"supported" => true}
+      assert response = SupportComponent.handle_event("passkeys-supported", params, socket)
+      assert {:noreply, socket} = response
+      assert %Phoenix.LiveView.Socket{} = socket
+      assert_receive {:passkeys_supported, true}
     end
-  end
 
-  describe "handle_event/3 - fallback" do
-    test "sends invalid events to the parent view", %{element: element, view: view} do
-      assert render_hook(element, "invalid", %{"invalid_key" => "invalid value"})
-      assert_handle_info(view, {:invalid_event, "invalid", %{"invalid_key" => "invalid value"}})
+    test "sends invalid events to the parent view", %{socket: socket} do
+      event = "invalid-event"
+      params = %{"invalid_key" => "invalid value"}
+      assert {:noreply, _socket} = SupportComponent.handle_event(event, params, socket)
+      assert_receive {:invalid_event, ^event, ^params}
     end
   end
 end
