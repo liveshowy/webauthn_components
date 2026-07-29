@@ -13,7 +13,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Returns all `User` records with optional preloads.
   """
-  @spec list(preloads :: list()) :: [User.t()]
   def list(preloads \\ []) when is_list(preloads) do
     User
     |> Repo.all()
@@ -23,7 +22,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Inserts a new `User` into the repo.
   """
-  @spec create(attrs :: map()) :: {:ok, User.t()} | {:error, Changeset.t()}
   def create(attrs) do
     %User{}
     |> User.changeset(attrs)
@@ -33,7 +31,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Retrieves a `User` from the repo.
   """
-  @spec get(id :: binary(), preloads :: list()) :: {:ok, User.t()} | {:error, :not_found}
   def get(id, preloads \\ []) do
     result =
       User
@@ -59,8 +56,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Retrieves a `User` by querying a valid token.
   """
-  @spec get_by_token(raw_value :: binary(), type :: atom()) ::
-          {:ok, User.t()} | {:error, :not_found}
   def get_by_token(raw_value, type \\ :session) when is_binary(raw_value) do
     expiration_timestamp = get_expiration_timestamp()
 
@@ -87,7 +82,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Deletes a single `UserToken`.
   """
-  @spec delete_token(token :: UserToken.t()) :: {:ok, UserToken.t()} | {:error, Changeset.t()}
   def delete_token(%UserToken{} = token) do
     Repo.delete(token)
   end
@@ -95,7 +89,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Deletes all `UserToken`s which have expired.
   """
-  @spec delete_all_expired_tokens :: {non_neg_integer(), term()}
   def delete_all_expired_tokens do
     expiration_timestamp = get_expiration_timestamp()
 
@@ -107,7 +100,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Retrieves a `User` by querying an associated `:key_id`.
   """
-  @spec get_by_key_id(key_id :: binary()) :: {:ok, User.t()} | {:error, :not_found}
   def get_by_key_id(key_id) when is_binary(key_id) do
     query =
       from(user in User,
@@ -128,7 +120,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Modifies an existing `User` in the repo.
   """
-  @spec update(user :: User.t(), attrs :: map()) :: {:ok, User.t()} | {:error, Changeset.t()}
   def update(%User{} = user, attrs) do
     user
     |> User.changeset(attrs)
@@ -138,7 +129,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Removes an existing `User` from the repo.
   """
-  @spec delete(user :: User.t()) :: {:ok, User.t()} | {:error, Changeset.t()}
   def delete(%User{} = user) do
     Repo.delete(user)
   end
@@ -148,7 +138,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity do
   @doc """
   Inserts a new `UserToken` into the repo.
   """
-  @spec create_token(attrs :: map()) :: {:ok, UserToken.t()} | {:error, Changeset.t()}
   def create_token(attrs) do
     %UserToken{}
     |> UserToken.changeset(attrs)

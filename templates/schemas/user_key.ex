@@ -65,7 +65,6 @@ defmodule <%= inspect @app_pascal_case %>.Identity.UserKey do
     |> put_last_used_at()
   end
 
-  @spec put_last_used_at(changeset :: Ecto.Changeset.t()) :: Ecto.Changeset.t()
   defp put_last_used_at(changeset) do
     put_change(changeset, :last_used_at, NaiveDateTime.utc_now(:second))
   end

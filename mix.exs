@@ -36,7 +36,6 @@ defmodule WebauthnComponents.MixProject do
   defp deps do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
-      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:ecto_ulid, "~> 0.3"},
       {:ecto, "~> 3.10"},
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},

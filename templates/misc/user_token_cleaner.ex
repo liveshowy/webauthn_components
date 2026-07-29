@@ -52,7 +52,6 @@ defmodule <%= inspect @app_pascal_case %>.UserTokenCleaner do
 
   defguard is_pos_integer(int) when is_integer(int) and int > 0
 
-  @spec start_link(args :: Keyword.t()) :: GenServer.on_start()
   def start_link(args) do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
@@ -62,7 +61,6 @@ defmodule <%= inspect @app_pascal_case %>.UserTokenCleaner do
 
   All expired tokens will be deleted, and the cleanup timer will be reset. Tokens will be cleaned automatically at the next `:interval_minutes` set in the GenServer's state.
   """
-  @spec delete_expired_tokens :: :ok
   def delete_expired_tokens do
     Process.send(__MODULE__, :delete_expired_tokens, [])
   end
@@ -72,7 +70,6 @@ defmodule <%= inspect @app_pascal_case %>.UserTokenCleaner do
 
   The new interval will be applied to the next timer set by the cleanup process.
   """
-  @spec set_interval_minutes(int :: pos_integer()) :: :ok
   def set_interval_minutes(int) when is_pos_integer(int) do
     Process.send(__MODULE__, {:update_interval_minutes, int}, [])
   end
