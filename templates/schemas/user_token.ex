@@ -19,8 +19,8 @@ defmodule <%= inspect @app_pascal_case %>.Identity.UserToken do
           inserted_at: NaiveDateTime.t(),
         }
 
-  @primary_key {:id, Ecto.ULID, autogenerate: true}
-  @foreign_key_type Ecto.ULID
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @foreign_key_type Ecto.UUID
   schema "user_tokens" do
     field :type, Ecto.Enum, values: [:session], default: :session
     field :value, :binary

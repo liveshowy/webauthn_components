@@ -81,7 +81,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
     end
 
     test "returns error with invalid id" do
-      invalid_id = Ecto.ULID.generate()
+      invalid_id = Ecto.UUID.generate()
       assert {:error, :not_found} = Identity.get(invalid_id)
     end
 
@@ -127,7 +127,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityTest do
     end
 
     test "returns error with invalid user" do
-      invalid_id = Ecto.ULID.generate()
+      invalid_id = Ecto.UUID.generate()
       assert_raise Ecto.StaleEntryError, fn -> Identity.delete(%User{id: invalid_id}) end
     end
 

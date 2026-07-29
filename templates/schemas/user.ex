@@ -4,7 +4,7 @@ defmodule <%= inspect @app_pascal_case %>.Identity.User do
 
   ## Considerations
 
-  - Ecto.ULID is used to prevent user enumeration attacks while maintaining sortability.
+  - Ecto.UUID is used to prevent user enumeration attacks while maintaining sortability.
     - Spec: https://github.com/ulid/spec
     - Context: https://www.honeybadger.io/blog/uuids-and-ulids/
     - UUIDv7 may provide the same functionality, but it is not fully supported as of 09/2023.
@@ -22,8 +22,8 @@ defmodule <%= inspect @app_pascal_case %>.Identity.User do
           updated_at: NaiveDateTime.t()
         }
 
-  @primary_key {:id, Ecto.ULID, autogenerate: true}
-  @foreign_key_type Ecto.ULID
+  @primary_key {:id, Ecto.UUID, autogenerate: true}
+  @foreign_key_type Ecto.UUID
   schema "users" do
     field :email, :string
     has_many :keys, UserKey, preload_order: [desc: :last_used_at]
