@@ -42,13 +42,12 @@ defmodule WebauthnComponents.MixProject do
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:floki, "~> 0.36", only: [:test]},
       {:jason, "~> 1.0"},
-      {:live_isolated_component, "~> 0.8", only: [:test]},
+      {:live_isolated_component, "~> 0.10", only: [:test]},
       {:phoenix_ecto, "~> 4.4"},
-      # TODO bump on release to {:phoenix_live_view, "~> 1.0.0"},
-      {:phoenix_live_view, ">= 0.20.0"},
+      {:phoenix_live_view, "~> 1.2", override: true},
       {:phoenix, "~> 1.6"},
-      {:sourceror, "~> 1.4"},
-      {:wax_, "~> 0.6.1"}
+      {:sourceror, "~> 1.12"},
+      {:wax_, "~> 0.7"}
     ]
   end
 
