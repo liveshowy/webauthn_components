@@ -40,6 +40,7 @@ defmodule WebauthnComponents.MixProject do
       {:ex_doc, "~> 0.34", only: [:dev], runtime: false},
       {:floki, "~> 0.36", only: [:test]},
       {:jason, "~> 1.0"},
+      {:lazy_html, ">= 0.1.0", only: :test},
       {:live_isolated_component, "~> 0.10", only: [:test]},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 1.2", override: true},
