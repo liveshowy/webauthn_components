@@ -24,11 +24,24 @@ defmodule WebauthnComponents.SupportComponentTest do
 
   describe "handle_event/3" do
     test "accepts passkeys-supported event", %{socket: socket} do
-      params = %{"supported" => true}
-      assert response = SupportComponent.handle_event("passkeys-supported", params, socket)
+      params = %{
+        "conditionalCreate" => false,
+        "conditionalGet" => true,
+        "extension:credProps" => true,
+        "extension:prf" => true,
+        "hybridTransport" => true,
+        "passkeyPlatformAuthenticator" => true,
+        "relatedOrigins" => true,
+        "signalAllAcceptedCredentials" => false,
+        "signalCurrentUserDetails" => false,
+        "signalUnknownCredential" => false,
+        "userVerifyingPlatformAuthenticator" => true
+      }
+
+      assert response = SupportComponent.handle_event("client-capabilities", params, socket)
       assert {:noreply, socket} = response
       assert %Phoenix.LiveView.Socket{} = socket
-      assert_receive {:passkeys_supported, true}
+      assert_receive {:client_capabilities, ^params}
     end
 
     test "sends invalid events to the parent view", %{socket: socket} do

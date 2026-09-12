@@ -1,13 +1,8 @@
 export const SupportHook = {
-  mounted() {
+  async mounted() {
     console.info(`SupportHook mounted`);
-
-    const supported = "credentials" in navigator;
-
-    if (!supported) {
-      console.error(`WebAuthn not supported or enabled.`);
-    }
-
-    this.pushEventTo(this.el, "passkeys-supported", { supported });
+    const capabilities = await PublicKeyCredential.getClientCapabilities();
+    this.pushEventTo(this.el, "client-capabilities", capabilities);
+    return;
   },
 };
