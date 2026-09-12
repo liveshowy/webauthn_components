@@ -77,7 +77,7 @@ defmodule WebauthnComponents.MixProject do
 
   defp package do
     [
-      files: ~w(lib priv templates mix.exs README.md LICENSE package.json),
+      files: ~w(lib priv mix.exs README.md LICENSE package.json),
       licenses: ["MIT"],
       links: %{
         Github: @source_url
