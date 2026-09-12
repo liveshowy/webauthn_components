@@ -45,7 +45,6 @@ defmodule WebauthnComponents.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 1.2"},
       {:phoenix, "~> 1.6"},
-      {:sourceror, "~> 1.12"},
       {:wax_, "~> 0.7"}
     ]
   end
