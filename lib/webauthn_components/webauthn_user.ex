@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.WebauthnUser do
+defmodule WebauthnComponents.Credential do
   @moduledoc """
   Struct representing required fields used by the WebAuthn API.
   """

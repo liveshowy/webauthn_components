@@ -63,7 +63,7 @@ defmodule WebauthnComponents.MixProject do
         Components: ~r/Component$/,
         Support: [
           WebauthnComponents.CoseKey,
-          WebauthnComponents.WebauthnUser
+          WebauthnComponents.Credential
         ]
       ],
       source_url: @source_url,

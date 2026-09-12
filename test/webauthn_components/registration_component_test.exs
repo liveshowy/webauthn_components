@@ -1,7 +1,7 @@
 defmodule WebauthnComponents.RegistrationComponentTest do
   use ComponentCase, async: true
   alias WebauthnComponents.RegistrationComponent
-  alias WebauthnComponents.WebauthnUser
+  alias WebauthnComponents.Credential
 
   @app "Test App"
   @id "registration-component"
@@ -38,7 +38,7 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
   describe "handle_event/3 - register" do
     test "sends registration challenge to client", %{element: element, view: view} do
-      webauthn_user = %WebauthnUser{
+      webauthn_user = %Credential{
         id: :crypto.strong_rand_bytes(64),
         name: "testUser",
         display_name: "Test User"

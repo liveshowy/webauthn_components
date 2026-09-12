@@ -10,7 +10,7 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   ## Assigns
 
-  - `@user`: (**Required**) A `WebauthnComponents.WebauthnUser` struct.
+  - `@user`: (**Required**) A `WebauthnComponents.Credential` struct.
   - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to create a new credential request in the client.
   - `@app`: (**Required**) The name of your application or service. This is displayed to the user during registration.
   - `@authenticator_attachment` (Optional) The type of authenticator to use. Either `:platform` or `:cross_platform`. Defaults to `:platform`.
@@ -66,7 +66,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   use Phoenix.LiveComponent
   import WebauthnComponents.IconComponents
   import WebauthnComponents.BaseComponents, only: [button: 1]
-  alias WebauthnComponents.WebauthnUser
+  alias WebauthnComponents.Credential
 
   def mount(socket) do
     {
@@ -88,7 +88,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def update(%{webauthn_user: webauthn_user}, socket) do
-    if is_struct(webauthn_user, WebauthnUser) do
+    if is_struct(webauthn_user, Credential) do
       {
         :ok,
         socket
@@ -129,7 +129,7 @@ defmodule WebauthnComponents.RegistrationComponent do
         <span :if={@show_icon?} class="w-4 aspect-square opacity-70">
           <.icon type={@icon_type} />
         </span>
-        <span><%= @display_text %></span>
+        <span>{@display_text}</span>
       </.button>
     </span>
     """
@@ -147,8 +147,8 @@ defmodule WebauthnComponents.RegistrationComponent do
       timeout: timeout
     } = assigns
 
-    if not is_struct(webauthn_user, WebauthnUser) do
-      raise "user must be a WebauthnComponents.WebauthnUser struct."
+    if not is_struct(webauthn_user, Credential) do
+      raise "user must be a WebauthnComponents.Credential struct."
     end
 
     attestation = "none"

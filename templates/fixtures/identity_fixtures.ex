@@ -1,7 +1,7 @@
 defmodule <%= inspect @app_pascal_case %>.IdentityFixtures do
   @moduledoc false
   alias <%= inspect @app_pascal_case %>.Identity
-  alias WebauthnComponents.WebauthnUser
+  alias WebauthnComponents.Credential
 
   def random_integer, do: System.unique_integer([:positive, :monotonic])
   def unique_email, do: "user#{random_integer()}@example.com"
@@ -36,7 +36,7 @@ defmodule <%= inspect @app_pascal_case %>.IdentityFixtures do
 
     Enum.into(
       attrs,
-      %WebauthnUser{
+      %Credential{
         id: encoded_id(),
         name: email,
         display_name: email

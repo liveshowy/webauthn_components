@@ -13,7 +13,7 @@ defmodule <%= inspect @web_pascal_case %>.RegistrationLive do
 
   alias WebauthnComponents.SupportComponent
   alias WebauthnComponents.RegistrationComponent
-  alias WebauthnComponents.WebauthnUser
+  alias WebauthnComponents.Credential
 
   def mount(_params, _user_id, %{assigns: %{current_user: %User{}}} = socket) do
     {
@@ -24,7 +24,7 @@ defmodule <%= inspect @web_pascal_case %>.RegistrationLive do
   end
 
   def mount(_params, _session, socket) do
-    webauthn_user = %WebauthnUser{id: generate_encoded_id(), name: nil, display_name: nil}
+    webauthn_user = %Credential{id: generate_encoded_id(), name: nil, display_name: nil}
 
     if connected?(socket) do
       send_update(RegistrationComponent,
