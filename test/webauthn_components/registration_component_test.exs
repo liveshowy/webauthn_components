@@ -8,7 +8,7 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
   setup do
     assigns = %{app: @app, id: @id}
-    {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns)
+    {:ok, view, _html} = live_isolated_component(RegistrationComponent, assigns: assigns)
     live_assign(view, app: assigns.app, id: assigns.id)
     element = element(view, "##{assigns.id}")
     %{view: view, element: element, default_assigns: assigns}
