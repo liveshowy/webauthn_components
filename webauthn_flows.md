@@ -1,7 +1,7 @@
 # WebAuthn Flows
 
 - [WebAuthn Flows](#webauthn-flows)
-  - [Support Detection](#support-detection)
+  - [Client Capabilities](#client-capabilities)
   - [Registration](#registration)
   - [Authentication](#authentication)
   - [Token Management](#token-management)
@@ -13,21 +13,21 @@ See module documentation for each component for more detailed descriptions.
 
 > 🧯 The following charts focus on the success path, where no error has ocurred.
 
-## Support Detection
+## Client Capabilities
 
 ```mermaid
 sequenceDiagram
    autonumber
    participant Client
-   participant SupportComponent
+   participant ClientCapabilitiesComponent
    participant ParentLiveView
    participant RegistrationComponent
    participant AuthenticationComponent
 
-   Client->>SupportComponent: "passkeys-supported"
-   SupportComponent->>ParentLiveView: `{:passkeys_supported, boolean}`
-   ParentLiveView->>RegistrationComponent: `@disabled = !@passkeys_supported`
-   ParentLiveView->>AuthenticationComponent: `@disabled = !@passkeys_supported`
+   Client->>ClientCapabilitiesComponent: "client-capabilities"
+   ClientCapabilitiesComponent->>ParentLiveView: `{:client_capabilities, map}`
+   ParentLiveView->>RegistrationComponent: `@disabled = !@client_capabilities["passkeyPlatformAuthenticator"]`
+   ParentLiveView->>AuthenticationComponent: `@disabled = !@client_capabilities["passkeyPlatformAuthenticator"]`
 ```
 
 ## Registration

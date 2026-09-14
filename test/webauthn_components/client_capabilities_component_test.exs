@@ -1,12 +1,12 @@
-defmodule WebauthnComponents.SupportComponentTest do
+defmodule WebauthnComponents.ClientCapabilitiesComponentTest do
   use ComponentCase, async: true
-  alias WebauthnComponents.SupportComponent
+  alias WebauthnComponents.ClientCapabilitiesComponent
 
   @id "support-component"
 
   setup do
     html =
-      SupportComponent
+      ClientCapabilitiesComponent
       |> render_component(%{id: @id})
       |> Floki.parse_fragment!()
 
@@ -16,7 +16,7 @@ defmodule WebauthnComponents.SupportComponentTest do
   describe "render/1" do
     test "returns hidden element with id and phx hook", %{html: html} do
       node = Floki.get_by_id(html, @id)
-      assert ["SupportHook"] = Floki.attribute(node, "phx-hook")
+      assert ["ClientCapabilitiesHook"] = Floki.attribute(node, "phx-hook")
       assert [_target] = Floki.attribute(node, "phx-target")
       assert ["hidden"] = Floki.attribute(node, "class")
     end
@@ -38,7 +38,9 @@ defmodule WebauthnComponents.SupportComponentTest do
         "userVerifyingPlatformAuthenticator" => true
       }
 
-      assert response = SupportComponent.handle_event("client-capabilities", params, socket)
+      assert response =
+               ClientCapabilitiesComponent.handle_event("client-capabilities", params, socket)
+
       assert {:noreply, socket} = response
       assert %Phoenix.LiveView.Socket{} = socket
       assert_receive {:client_capabilities, ^params}
@@ -47,7 +49,7 @@ defmodule WebauthnComponents.SupportComponentTest do
     test "sends invalid events to the parent view", %{socket: socket} do
       event = "invalid-event"
       params = %{"invalid_key" => "invalid value"}
-      assert {:noreply, _socket} = SupportComponent.handle_event(event, params, socket)
+      assert {:noreply, _socket} = ClientCapabilitiesComponent.handle_event(event, params, socket)
       assert_receive {:invalid_event, ^event, ^params}
     end
   end

@@ -1,10 +1,10 @@
-defmodule WebauthnComponents.SupportComponent do
+defmodule WebauthnComponents.ClientCapabilitiesComponent do
   @moduledoc """
   A LiveComponent for detecting WebAuthn support.
 
   This component should be used in combination with `RegistrationComponent` and `AuthenticationComponent` to disable their buttons based on the client's capabilities.
 
-  An application may also use `SupportComponent` to steer users away from traditional authentication to the more secure Passkey authentication method. For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
+  An application may also use `ClientCapabilitiesComponent` to steer users away from traditional authentication to the more secure Passkey authentication method. For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
 
   ## Assigns
 
@@ -46,7 +46,7 @@ defmodule WebauthnComponents.SupportComponent do
 
   ## Usage
 
-  The following example demonstrates how to use the `SupportComponent` to conditionally allow passkey registration based on the client's capabilities.
+  The following example demonstrates how to use the `ClientCapabilitiesComponent` to conditionally allow passkey registration based on the client's capabilities.
 
   ```elixir
   defmodule MyAppWeb.AuthenticationLive do
@@ -67,7 +67,7 @@ defmodule WebauthnComponents.SupportComponent do
   In the render/1 function or Heex template, render the component(s):
 
   ```html
-  <WebauthnComponents.SupportComponent id="support-component" />
+  <WebauthnComponents.ClientCapabilitiesComponent id="support-component" />
     
   <WebauthnComponents.RegistrationComponent
     id="registration-component"
@@ -83,7 +83,7 @@ defmodule WebauthnComponents.SupportComponent do
 
   def render(assigns) do
     ~H"""
-    <span id={@id} phx-hook="SupportHook" phx-target={@myself} class="hidden"></span>
+    <span id={@id} phx-hook="ClientCapabilitiesHook" phx-target={@myself} class="hidden"></span>
     """
   end
 

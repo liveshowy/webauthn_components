@@ -18,7 +18,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@icon_type` (Optional) The icon displayed inside the button. Either `:key` or `:usb`. Defaults to `:key` if authenticator attachment is `:platform`, or `:usb` if `:cross_platform`.
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
-  - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
+  - `@disabled` (Optional) Set to `true` when the `ClientCapabilitiesHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@timeout` (Optional) The timeout in milliseconds for the registration operation. Defaults to `60_000` (60 seconds).
   - `@resident_key` (Optional) Set to `:preferred` or `:discouraged` to allow non-passkey credentials. Defaults to `:required`.
