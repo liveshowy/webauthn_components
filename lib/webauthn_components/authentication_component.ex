@@ -27,7 +27,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign In".
   - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
   - `@class` (Optional) CSS classes for overriding the default button style.
-  - `@disabled` (Optional) Set to `true` when the `SupportHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
+  - `@disabled` (Optional) Set to `true` when the `ClientCapabilitiesHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
   - `@id` (Optional) An HTML element ID.
   - `@skip_conditional_ui_check` (Optional) Set to `true` to skip the conditional UI check for Passkey autofill. Defaults to `false`.
 
@@ -82,7 +82,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
         data-skip-conditional-ui-check={if @skip_conditional_ui_check, do: "true"}
       >
         <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span><%= @display_text %></span>
+        <span>{@display_text}</span>
       </.button>
 
       <input type="hidden" autocomplete="webauthn" />

@@ -8,7 +8,7 @@
     "LICENSE",
     "package.json",
     "priv/static/utils.js",
-    "priv/static/support_hook.js",
+    "priv/static/client_capabilities_hook.js",
     "priv/static/token_hook.js",
     "priv/static/registration_hook.js",
     "priv/static/authentication_hook.js"
