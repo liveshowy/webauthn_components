@@ -61,6 +61,7 @@ defmodule WebauthnComponents.MixProject do
       ],
       groups_for_modules: [
         Components: ~r/Component$/,
+        Config: ~r/WebauthnComponents\.Config\./,
         Support: [
           WebauthnComponents.CoseKey,
           WebauthnComponents.Credential

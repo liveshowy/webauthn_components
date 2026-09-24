@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Schemas.AuthenticatorSelection do
+defmodule WebauthnComponents.Config.AuthenticatorSelection do
   @moduledoc """
   Struct used to constrain allowed authenticators used to create a new credential.
 
@@ -7,30 +7,16 @@ defmodule WebauthnComponents.Schemas.AuthenticatorSelection do
   ## Resources
 
   - https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions#authenticatorselection
-  - - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API#discoverable_and_non-discoverable_credentials
+  - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API#discoverable_and_non-discoverable_credentials
   """
-  use Ecto.Schema
-  import Ecto.Changeset
 
-  @primary_key false
-  embedded_schema do
-    field :authenticator_attachment, Ecto.Enum,
-      values: [:platform, :"cross-platform"],
-      default: nil
+  @type t :: %__MODULE__{
+          authenticator_attachment: :platform | :"cross-platform",
+          resident_key: :discouraged | :preferred | :required,
+          user_verification: :discouraged | :preferred | :required
+        }
 
-    field :resident_key, Ecto.Enum,
-      values: [:discouraged, :preferred, :required],
-      default: :required
-
-    field :user_verification, Ecto.Enum,
-      values: [:discouraged, :preferred, :required],
-      default: :preferred
-  end
-
-  def changeset(%__MODULE__{} = struct, params) do
-    struct
-    |> cast(params, [:authenticator_attachment, :resident_key, :user_verification])
-  end
+  defstruct [:authenticator_attachment, :resident_key, :user_verification]
 
   defimpl Jason.Encoder, for: __MODULE__ do
     def encode(struct, opts) do

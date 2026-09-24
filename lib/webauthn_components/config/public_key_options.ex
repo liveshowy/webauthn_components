@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Schemas.PublicKeyOptions do
+defmodule WebauthnComponents.Config.PublicKeyOptions do
   @moduledoc """
   Struct representing options for registering a new credential.
 
@@ -9,51 +9,46 @@ defmodule WebauthnComponents.Schemas.PublicKeyOptions do
   - https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
   - https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
   """
-  use Ecto.Schema
-  import Ecto.Changeset
-  alias WebauthnComponents.Schemas.AuthenticatorSelection
-  alias WebauthnComponents.Schemas.ExcludedCredential
-  alias WebauthnComponents.Schemas.PubKeyCredParams
-  alias WebauthnComponents.Schemas.User
-  alias WebauthnComponents.Schemas.RelyingParty
+  alias WebauthnComponents.Config.AuthenticatorSelection
+  alias WebauthnComponents.Config.ExcludedCredential
+  alias WebauthnComponents.Config.PubKeyCredParams
+  alias WebauthnComponents.Config.User
+  alias WebauthnComponents.Config.RelyingParty
 
-  @primary_key false
-  embedded_schema do
-    field :attestation, Ecto.Enum,
-      values: [:none, :direct, :enterprise, :indirect],
-      default: :none
+  @type t :: %__MODULE__{
+          attestation: :none | :direct | :enterprise | :indirect,
+          attestation_formats: [String.t()],
+          authenticator_selection: AuthenticatorSelection.t(),
+          challenge: binary(),
+          exclude_credentials: [ExcludedCredential.t()],
+          extensions: map(),
+          hints: [String.t()],
+          pub_key_cred_params: [PubKeyCredParams.t()],
+          rp: RelyingParty.t(),
+          timeout: pos_integer(),
+          user: User.t()
+        }
 
-    field :attestation_formats, {:array, :string}, default: []
-    embeds_one :authenticator_selection, AuthenticatorSelection
-    field :challenge, :binary, default: nil
-    embeds_many :exclude_credentials, ExcludedCredential
-    field :extensions, :map, default: %{}
-    field :hints, {:array, :string}, default: []
-    embeds_many :pub_key_cred_params, PubKeyCredParams
-    embeds_one :rp, RelyingParty
-    field :timeout, :integer, default: :timer.seconds(60)
-    embeds_one :user, User
-  end
+  @enforce_keys [
+    :challenge,
+    :pub_key_cred_params,
+    :rp,
+    :user
+  ]
 
-  def changeset(%__MODULE__{} = struct, params) do
-    casts = [
-      :attestation,
-      :attestation_formats,
-      :challenge,
-      :extensions,
-      :hints,
-      :timeout
-    ]
-
-    struct
-    |> cast(params, casts)
-    |> validate_required([:challenge])
-    |> cast_embed(:authenticator_selection, required: false)
-    |> cast_embed(:exclude_credentials, required: false)
-    |> cast_embed(:pub_key_cred_params, required: true)
-    |> cast_embed(:rp, required: true)
-    |> cast_embed(:user, required: true)
-  end
+  defstruct [
+    :attestation_formats,
+    :authenticator_selection,
+    :challenge,
+    :exclude_credentials,
+    :extensions,
+    :hints,
+    :pub_key_cred_params,
+    :rp,
+    :user,
+    attestation: :none,
+    timeout: :timer.seconds(60)
+  ]
 
   defimpl Jason.Encoder, for: __MODULE__ do
     def encode(struct, opts) do

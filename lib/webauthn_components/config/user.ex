@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Schemas.User do
+defmodule WebauthnComponents.Config.User do
   @moduledoc """
   Struct used to identify the user to be associated with a credential.
 
@@ -6,21 +6,15 @@ defmodule WebauthnComponents.Schemas.User do
 
   - https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions#user
   """
-  use Ecto.Schema
-  import Ecto.Changeset
 
-  @primary_key false
-  embedded_schema do
-    field :display_name, :string
-    field :id, :string
-    field :name, :string
-  end
+  @type t :: %__MODULE__{
+          display_name: String.t(),
+          id: String.t() | binary(),
+          name: String.t()
+        }
 
-  def changeset(%__MODULE__{} = struct, params) do
-    struct
-    |> cast(params, [:display_name, :id, :name])
-    |> validate_required([:display_name, :id, :name])
-  end
+  @enforce_keys [:id, :name, :display_name]
+  defstruct [:id, :name, :display_name]
 
   defimpl Jason.Encoder, for: __MODULE__ do
     def encode(struct, opts) do

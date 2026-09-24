@@ -1,36 +1,51 @@
 defmodule WebauthnComponents.SchemasTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
-  alias Ecto.Changeset
-  alias WebauthnComponents.Schemas.PublicKeyOptions
+  alias WebauthnComponents.Config.AuthenticatorSelection
+  alias WebauthnComponents.Config.ExcludedCredential
+  alias WebauthnComponents.Config.PubKeyCredParams
+  alias WebauthnComponents.Config.PublicKeyOptions
+  alias WebauthnComponents.Config.RelyingParty
+  alias WebauthnComponents.Config.User
 
   @attestation ~w(none direct enterprise indirect)
   @attestation_formats ~w(packed tpm android-key android-safetynet fido-u2f apple none)
   @hints ~w(security-key client-device hybrid)
 
-  property "valid params for PublicKeyOptions return a valid changeset" do
-    check all params <- public_key_options() do
-      changeset = PublicKeyOptions.changeset(%PublicKeyOptions{}, params)
-
-      assert %Changeset{valid?: true} = changeset
-      assert options = Changeset.apply_action!(changeset, :validate)
-      assert %PublicKeyOptions{} = options
+  describe "PublicKeyOptions" do
+    test "missing keys raise an error" do
+      assert_raise ArgumentError, fn -> struct!(PublicKeyOptions) end
     end
-  end
 
-  property "valid PublicKeyOptions can be encoded via JSON" do
-    check all params <- public_key_options() do
-      changeset = PublicKeyOptions.changeset(%PublicKeyOptions{}, params)
-      assert options = Changeset.apply_action!(changeset, :validate)
-      assert options |> JSON.encode!() |> JSON.decode!()
+    test "can be built with only required fields" do
+      options = %PublicKeyOptions{
+        challenge: :crypto.strong_rand_bytes(32),
+        rp: %RelyingParty{id: "example.com", name: "Example Org"},
+        user: %User{id: Ecto.UUID.generate(), name: "example_user", display_name: "Example User"},
+        pub_key_cred_params: %PubKeyCredParams{alg: -8}
+      }
+
+      assert is_integer(options.timeout)
+      assert options.timeout > 0
+      assert options.pub_key_cred_params.type == "public-key"
     end
-  end
 
-  property "valid PublicKeyOptions can be encoded via Jason" do
-    check all params <- public_key_options() do
-      changeset = PublicKeyOptions.changeset(%PublicKeyOptions{}, params)
-      assert options = Changeset.apply_action!(changeset, :validate)
-      assert options |> Jason.encode!() |> Jason.decode!()
+    property "a PublicKeyOptions struct can be built with random values" do
+      check all public_key_options <- public_key_options() do
+        assert %PublicKeyOptions{} = public_key_options
+      end
+    end
+
+    property "valid PublicKeyOptions can be encoded via JSON" do
+      check all public_key_options <- public_key_options() do
+        assert public_key_options |> JSON.encode!() |> JSON.decode!()
+      end
+    end
+
+    property "valid PublicKeyOptions can be encoded via Jason" do
+      check all public_key_options <- public_key_options() do
+        assert public_key_options |> Jason.encode!() |> Jason.decode!()
+      end
     end
   end
 
@@ -47,20 +62,20 @@ defmodule WebauthnComponents.SchemasTest do
             hints <- list_of(member_of(@hints)),
             pub_key_cred_params <- list_of(pub_key_cred_params(), min_length: 1),
             rp <- rp(),
-            timeout <- integer(),
+            timeout <- integer(0..60_000),
             user <- user() do
-      %{
-        "attestation" => attestation,
-        "attestation_formats" => attestation_formats,
-        "authenticator_selection" => authenticator_selection,
-        "challenge" => challenge,
-        "exclude_credentials" => exclude_credentials,
-        "extensions" => extensions,
-        "hints" => hints,
-        "pub_key_cred_params" => pub_key_cred_params,
-        "rp" => rp,
-        "timeout" => timeout,
-        "user" => user
+      %PublicKeyOptions{
+        attestation: attestation,
+        attestation_formats: attestation_formats,
+        authenticator_selection: authenticator_selection,
+        challenge: challenge,
+        exclude_credentials: exclude_credentials,
+        extensions: extensions,
+        hints: hints,
+        pub_key_cred_params: pub_key_cred_params,
+        rp: rp,
+        timeout: timeout,
+        user: user
       }
     end
   end
@@ -69,10 +84,10 @@ defmodule WebauthnComponents.SchemasTest do
     gen all authenticator_attachment <- member_of(~w(platform cross-platform)),
             resident_key <- member_of(~w(discouraged preferred required)),
             user_verification <- member_of(~w(discouraged preferred required)) do
-      %{
-        "authenticator_attachment" => authenticator_attachment,
-        "resident_key" => resident_key,
-        "user_verification" => user_verification
+      %AuthenticatorSelection{
+        authenticator_attachment: authenticator_attachment,
+        resident_key: resident_key,
+        user_verification: user_verification
       }
     end
   end
@@ -81,31 +96,21 @@ defmodule WebauthnComponents.SchemasTest do
     gen all id <- string(:alphanumeric, min_length: 4),
             transports <- list_of(member_of(~w(ble hybrid internal nfc usb))),
             type <- string(:alphanumeric, min_length: 4) do
-      %{
-        "id" => id,
-        "transports" => transports,
-        "type" => type
-      }
+      %ExcludedCredential{id: id, transports: transports, type: type}
     end
   end
 
   defp pub_key_cred_params do
     gen all alg <- integer(),
             type <- string(:alphanumeric, min_length: 4) do
-      %{
-        "alg" => alg,
-        "type" => type
-      }
+      %PubKeyCredParams{alg: alg, type: type}
     end
   end
 
   defp rp do
     gen all id <- string(:alphanumeric, min_length: 4),
             name <- string(:alphanumeric, min_length: 4) do
-      %{
-        "id" => id,
-        "name" => name
-      }
+      %RelyingParty{id: id, name: name}
     end
   end
 
@@ -113,11 +118,7 @@ defmodule WebauthnComponents.SchemasTest do
     gen all id <- string(:alphanumeric, min_length: 4),
             name <- string(:alphanumeric, min_length: 4),
             display_name <- string(:alphanumeric, min_length: 4) do
-      %{
-        "id" => id,
-        "name" => name,
-        "display_name" => display_name
-      }
+      %User{id: id, name: name, display_name: display_name}
     end
   end
 end
