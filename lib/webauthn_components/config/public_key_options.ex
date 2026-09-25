@@ -29,24 +29,27 @@ defmodule WebauthnComponents.Config.PublicKeyOptions do
           user: User.t()
         }
 
-  @enforce_keys [
-    :challenge,
-    :pub_key_cred_params,
-    :rp,
-    :user
-  ]
+  @enforce_keys [:rp, :user]
 
   defstruct [
-    :attestation_formats,
-    :authenticator_selection,
     :challenge,
-    :exclude_credentials,
-    :extensions,
-    :hints,
-    :pub_key_cred_params,
     :rp,
     :user,
     attestation: :none,
+    attestation_formats: [],
+    pub_key_cred_params: [
+      %PubKeyCredParams{alg: -8},
+      %PubKeyCredParams{alg: -7},
+      %PubKeyCredParams{alg: -257}
+    ],
+    authenticator_selection: %AuthenticatorSelection{
+      authenticator_attachment: :platform,
+      resident_key: :preferred,
+      user_verification: :preferred
+    },
+    hints: [],
+    exclude_credentials: [],
+    extensions: [],
     timeout: :timer.seconds(60)
   ]
 
