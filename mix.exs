@@ -45,6 +45,7 @@ defmodule WebauthnComponents.MixProject do
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 1.2"},
       {:phoenix, "~> 1.6"},
+      {:stream_data, "~> 1.4", only: [:dev, :test], optional: true},
       {:wax_, "~> 0.7"}
     ]
   end
@@ -60,6 +61,7 @@ defmodule WebauthnComponents.MixProject do
       ],
       groups_for_modules: [
         Components: ~r/Component$/,
+        Config: ~r/WebauthnComponents\.Config\./,
         Support: [
           WebauthnComponents.CoseKey,
           WebauthnComponents.Credential
