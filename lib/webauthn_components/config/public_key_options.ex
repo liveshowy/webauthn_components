@@ -59,7 +59,7 @@ defmodule WebauthnComponents.Config.PublicKeyOptions do
       |> Map.from_struct()
       |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
       |> Map.put(:attestationFormats, struct.attestation_formats)
-      |> Map.put(:attestationSelection, struct.authenticator_selection)
+      |> Map.put(:authenticatorSelection, struct.authenticator_selection)
       |> Map.put(:excludeCredentials, struct.exclude_credentials)
       |> Map.put(:pubKeyCredParams, struct.pub_key_cred_params)
       |> Map.drop([
@@ -78,7 +78,7 @@ defmodule WebauthnComponents.Config.PublicKeyOptions do
       |> Map.from_struct()
       |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
       |> Map.put(:attestationFormats, struct.attestation_formats)
-      |> Map.put(:attestationSelection, struct.authenticator_selection)
+      |> Map.put(:authenticatorSelection, struct.authenticator_selection)
       |> Map.put(:excludeCredentials, struct.exclude_credentials)
       |> Map.put(:pubKeyCredParams, struct.pub_key_cred_params)
       |> Map.drop([

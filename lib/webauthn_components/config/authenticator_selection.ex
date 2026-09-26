@@ -23,7 +23,7 @@ defmodule WebauthnComponents.Config.AuthenticatorSelection do
       struct
       |> Map.from_struct()
       |> Map.put(:authenticatorAttachment, struct.authenticator_attachment)
-      |> Map.put(:residentkey, struct.resident_key)
+      |> Map.put(:residentKey, struct.resident_key)
       |> Map.put(:userVerification, struct.user_verification)
       |> Map.drop([:authenticator_attachment, :resident_key, :user_verification])
       |> Jason.Encode.map(opts)
