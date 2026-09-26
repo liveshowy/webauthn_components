@@ -3,6 +3,68 @@ defmodule WebauthnComponents.RegistrationComponent do
   LiveComponent for creating a new Webauthn credential for a user.
 
   This component may be used when signing up a new user or adding a new Passkey for an existing user.
+
+  ## Credential Persistence
+
+  Once a credential has been successfully created, this component will send a `t:Wax.AuthenticatorData.t/0` message to the parent LiveView.
+  This struct contains data required to authenticate the user on subsequent visits, as well as some metadata from the authenticator device.
+
+  The following example illustrates how a user and credential may be registered (some details omitted):
+
+  ```
+  # some_live_view.ex
+  def handle_info(%Wax.AuthenticatorData{} = auth_data, socket) do
+    %{form: form} = socket.assigns
+    
+    with {:ok, user} <- MyApp.Identity.register_user(form.source),
+        {:ok, credential} <- MyApp.Identity.register_credential(user, auth_data) do
+        {
+          :noreply,
+          socket
+          |> put_flash(:info, "Welcome!")
+          |> redirect()
+          ...
+        }
+    end
+  end
+  ```
+
+  The `:attested_credential_data` field contains a `t:Wax.AttestedCredentialData.t/0` struct.
+  In this struct, the `:credential_id` and `:credential_public_key` fields must be persisted for future authentication.
+
+  `WebauthnComponents` **defers to the host application** for persistence. 
+  Whether the application follows CRUD or Event Sourcing patterns, it is recommended to define a schema dedicated to public key credential storage:
+
+  ### CRUD Example
+
+  ```
+  defmodule MyApp.Identity.PublicKeyCredential do
+    use Ecto.Schema
+    alias Ecto.Changeset
+    alias MyApp.Identity.User
+    alias WebauthnComponents.CoseKey
+    
+    @primary_key {:id, binary, autogenerate: false}
+    schema "public_key_credentials" do
+      field :public_key, CoseKey
+      belongs_to :user, User
+
+      # Optional: Save `:flag_*` and other fields from `t:Wax.AuthenticatorData/0`
+      field :flags, :map, default: %{}
+      field :sign_count, :integer
+      field :extensions, :map, default: %{}
+    end
+
+    def changeset(struct, params) do
+      fields = __MODULE__.__schema__(:fields)
+    
+      struct
+      |> Changeset.cast(params, fields)
+      |> Changeset.validate_required([:id, :public_key])
+      ...
+    end
+  end
+  ```
   """
   use Phoenix.LiveComponent
   alias WebauthnComponents.Config.PublicKeyOptions
