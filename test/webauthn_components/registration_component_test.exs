@@ -124,10 +124,8 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert {:noreply, _socket} =
                RegistrationComponent.handle_event("credential", credential, socket)
 
-      receive do
-        # Expect registration to fail due to the contrived credential
-        message -> assert %Wax.InvalidCBORError{} = message
-      end
+      # Expect registration to fail due to the contrived credential
+      assert_receive %Wax.InvalidCBORError{}
     end
   end
 end
