@@ -44,8 +44,8 @@ defmodule WebauthnComponents.Config.PublicKeyOptions do
     ],
     authenticator_selection: %AuthenticatorSelection{
       authenticator_attachment: :platform,
-      resident_key: :preferred,
-      user_verification: :preferred
+      resident_key: :required,
+      user_verification: :required
     },
     hints: [],
     exclude_credentials: [],
