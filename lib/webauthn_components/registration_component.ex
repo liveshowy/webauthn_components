@@ -109,7 +109,8 @@ defmodule WebauthnComponents.RegistrationComponent do
         attestation: to_string(public_key_options.attestation),
         origin: socket.endpoint.url(),
         rp_id: :auto,
-        trusted_attestation_types: trusted_attestation_types
+        trusted_attestation_types: trusted_attestation_types,
+        user_verification: to_string(public_key_options.authenticator_selection.user_verification)
       )
 
     public_key_options = %PublicKeyOptions{public_key_options | challenge: challenge.bytes}
