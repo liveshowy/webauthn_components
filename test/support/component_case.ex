@@ -12,6 +12,7 @@ defmodule ComponentCase do
     quote do
       import Factory
       import LiveIsolatedComponent
+      import Phoenix.Component
       import Phoenix.LiveViewTest
       import Phoenix.LiveView.Helpers
 
