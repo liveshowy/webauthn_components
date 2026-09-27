@@ -84,24 +84,8 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert %Wax.Challenge{} = challenge
     end
 
-    test "processes a `credential` event", %{socket: socket} do
-      public_key_options = %PublicKeyOptions{
-        rp: %RelyingParty{name: "Test"},
-        user: %User{id: "1234", name: "tester", display_name: "Tester"}
-      }
-
-      trusted_attestation_types = [:none, :basic]
-
-      socket =
-        socket
-        |> Map.put(:endpoint, TestEndpoint)
-        |> assign(
-          id: "test-component",
-          public_key_options: public_key_options,
-          trusted_attestation_types: trusted_attestation_types
-        )
-
-      assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
+    test "sends error with invalid CBOR", %{socket: socket} do
+      socket = assign_challenge(socket)
 
       client_data_json =
         %{
@@ -127,5 +111,37 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       # Expect registration to fail due to the contrived credential
       assert_receive %Wax.InvalidCBORError{}
     end
+
+    test "sends error with empty credential object", %{socket: socket} do
+      socket = assign_challenge(socket)
+
+      credential = %{}
+
+      assert {:noreply, _socket} =
+               RegistrationComponent.handle_event("credential", credential, socket)
+
+      assert_receive %Wax.InvalidAuthenticatorDataError{}
+    end
+  end
+
+  defp assign_challenge(socket) do
+    public_key_options = %PublicKeyOptions{
+      rp: %RelyingParty{name: "Test"},
+      user: %User{id: "1234", name: "tester", display_name: "Tester"}
+    }
+
+    trusted_attestation_types = [:none, :basic]
+
+    socket =
+      socket
+      |> Map.put(:endpoint, TestEndpoint)
+      |> assign(
+        id: "test-component",
+        public_key_options: public_key_options,
+        trusted_attestation_types: trusted_attestation_types
+      )
+
+    assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
+    socket
   end
 end
