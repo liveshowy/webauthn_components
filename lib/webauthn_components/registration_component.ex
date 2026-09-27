@@ -146,7 +146,11 @@ defmodule WebauthnComponents.RegistrationComponent do
         send(self(), error)
     end
 
-    {:noreply, socket}
+    {
+      :noreply,
+      socket
+      |> assign(:challenge, nil)
+    }
   end
 
   def handle_event("error", payload, socket) do
