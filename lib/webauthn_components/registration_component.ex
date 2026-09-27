@@ -135,6 +135,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       send(self(), authenticator_data)
     else
       :error -> send(self(), %Wax.InvalidAuthenticatorDataError{})
+      {:error, error} -> send(self(), error)
       error -> send(self(), error)
     end
 
