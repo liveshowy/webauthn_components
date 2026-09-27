@@ -124,26 +124,18 @@ defmodule WebauthnComponents.RegistrationComponent do
   end
 
   def handle_event("credential", credential, socket) do
-    %{challenge: %Wax.Challenge{} = challenge} = socket.assigns
-
-    credential =
-      credential
-      |> update_in(~w(response attestationObject), &Base.url_decode64!(&1, padding: false))
-      |> update_in(~w(response clientDataJSON), &Base.url_decode64!(&1, padding: false))
-
-    registration =
-      Wax.register(
-        credential["response"]["attestationObject"],
-        credential["response"]["clientDataJSON"],
-        challenge
-      )
-
-    case registration do
-      {:ok, {%Wax.AuthenticatorData{} = authenticator_data, _result}} ->
-        send(self(), authenticator_data)
-
-      {:error, error} ->
-        send(self(), error)
+    with {:ok, challenge} <- fetch_challenge(socket.assigns),
+         {:ok, response} <- Map.fetch(credential, "response"),
+         {:ok, attestation_object} <- Map.fetch(response, "attestationObject"),
+         {:ok, client_data_json} <- Map.fetch(response, "clientDataJSON"),
+         {:ok, attestation_object} <- Base.url_decode64(attestation_object, padding: false),
+         {:ok, client_data_json} <- Base.url_decode64(client_data_json, padding: false),
+         {:ok, {%Wax.AuthenticatorData{} = authenticator_data, _result}} <-
+           Wax.register(attestation_object, client_data_json, challenge) do
+      send(self(), authenticator_data)
+    else
+      :error -> send(self(), %Wax.InvalidAuthenticatorDataError{})
+      error -> send(self(), error)
     end
 
     {
@@ -157,4 +149,10 @@ defmodule WebauthnComponents.RegistrationComponent do
     send(self(), {:error, payload})
     {:noreply, socket}
   end
+
+  def fetch_challenge(%{challenge: %Wax.Challenge{} = challenge}) do
+    {:ok, challenge}
+  end
+
+  def fetch_challenge(_assigns), do: {:error, %Wax.ExpiredChallengeError{}}
 end
