@@ -4,13 +4,13 @@ defmodule WebauthnComponents.Config.PubKeyCredParams do
 
   ## Algorithms
 
-  By default, `WebauthnComponents.Config.PublicKeyOptions` includes the algorithms suggested by MDN documentation:
+  By default, `WebauthnComponents.Config.PublicKeyCredentialCreationOptions` includes the algorithms suggested by MDN documentation:
 
   - `-8` EdDSA
   - `-7` ES256
   - `-257` RS256
 
-  You may override the default list of `PubKeyCredParams` when creating the `PublicKeyOptions` struct.
+  You may override the default list of `PubKeyCredParams` when creating the `PublicKeyCredentialCreationOptions` struct.
 
   ## Resources
 

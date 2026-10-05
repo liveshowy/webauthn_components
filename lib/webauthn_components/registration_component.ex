@@ -9,6 +9,14 @@ defmodule WebauthnComponents.RegistrationComponent do
   Once a credential has been successfully created, this component will send a `t:Wax.AuthenticatorData.t/0` message to the parent LiveView.
   This struct contains data required to authenticate the user on subsequent visits, as well as some metadata from the authenticator device.
 
+  > #### Minimum Persistence {: .warning}
+  > 
+  > At a minimum, the `:id` and `:public_key` values must be persisted along with the `:user_id` (or appropriate foreign key).
+  >
+  > During future authentication attempts, the `WebauthnComponents.AuthenticationComponent` will send a `t:WebauthnComponents.FindUser.t/0` struct, which includes a `:user_handle` the server must use to locate the user.
+  >
+  > See `t:WebauthnComponents.Config.User.t/0` for details.
+
   The following example illustrates how a user and credential may be registered (some details omitted):
 
   ```
@@ -67,7 +75,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   ```
   """
   use Phoenix.LiveComponent
-  alias WebauthnComponents.Config.PublicKeyOptions
+  alias WebauthnComponents.Config.PublicKeyCredentialCreationOptions
 
   def mount(socket) do
     {
@@ -100,7 +108,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   def handle_event("register", _params, socket) do
     %{
       id: id,
-      public_key_options: %PublicKeyOptions{} = public_key_options,
+      public_key_options: %PublicKeyCredentialCreationOptions{} = public_key_options,
       trusted_attestation_types: trusted_attestation_types
     } = socket.assigns
 
@@ -113,7 +121,10 @@ defmodule WebauthnComponents.RegistrationComponent do
         user_verification: to_string(public_key_options.authenticator_selection.user_verification)
       )
 
-    public_key_options = %PublicKeyOptions{public_key_options | challenge: challenge.bytes}
+    public_key_options = %PublicKeyCredentialCreationOptions{
+      public_key_options
+      | challenge: challenge.bytes
+    }
 
     {
       :noreply,

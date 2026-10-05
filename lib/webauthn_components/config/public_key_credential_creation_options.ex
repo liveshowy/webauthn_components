@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.PublicKeyOptions do
+defmodule WebauthnComponents.Config.PublicKeyCredentialCreationOptions do
   @moduledoc """
   Struct representing options for registering a new credential.
 

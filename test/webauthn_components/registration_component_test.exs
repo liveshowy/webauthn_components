@@ -1,7 +1,7 @@
 defmodule WebauthnComponents.RegistrationComponentTest do
   use ComponentCase, async: true
   alias WebauthnComponents.RegistrationComponent
-  alias WebauthnComponents.Config.PublicKeyOptions
+  alias WebauthnComponents.Config.PublicKeyCredentialCreationOptions
   alias WebauthnComponents.Config.RelyingParty
   alias WebauthnComponents.Config.User
 
@@ -63,7 +63,7 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
   describe "handle_event/3" do
     test "processes a `register` event", %{socket: socket} do
-      public_key_options = %PublicKeyOptions{
+      public_key_options = %PublicKeyCredentialCreationOptions{
         rp: %RelyingParty{name: "Test"},
         user: %User{id: "1234", name: "tester", display_name: "Tester"}
       }
@@ -125,7 +125,7 @@ defmodule WebauthnComponents.RegistrationComponentTest do
   end
 
   defp assign_challenge(socket) do
-    public_key_options = %PublicKeyOptions{
+    public_key_options = %PublicKeyCredentialCreationOptions{
       rp: %RelyingParty{name: "Test"},
       user: %User{id: "1234", name: "tester", display_name: "Tester"}
     }
