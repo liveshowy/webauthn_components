@@ -133,7 +133,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
         {render_slot(@inner_block)}
       </button>
       <input
-        :if={@mediation == :conditional}
+        :if={@mediation == "conditional"}
         type="hidden"
         name="webauthn"
         autocomplete="webauthn"
@@ -153,41 +153,17 @@ defmodule WebauthnComponents.AuthenticationComponent do
   end
 
   def update(%{credentials: credentials}, socket) when is_list(credentials) do
-    %{challenge: %Wax.Challenge{} = challenge, credential: %PublicKeyCredential{} = credential} =
-      socket.assigns
+    case socket.assigns do
+      %{
+        challenge: %Wax.Challenge{} = challenge,
+        credential: %PublicKeyCredential{} = credential
+      } ->
+        verify_credentials(socket, challenge, credential, credentials)
 
-    %PublicKeyCredential{
-      id: id,
-      response: %AuthenticatorAssertionResponse{
-        authenticator_data: authenticator_data,
-        signature: signature,
-        client_data_json: client_data_json
-      }
-    } = credential
-
-    with {:ok, credential_pairs} <- get_credential_pairs(credentials),
-         {:ok, auth_data} <-
-           Wax.authenticate(
-             id,
-             authenticator_data,
-             signature,
-             client_data_json,
-             challenge,
-             credential_pairs
-           ),
-         %Wax.AuthenticatorData{} <- auth_data do
-      send(self(), {id, auth_data})
-    else
-      {:error, error} ->
-        send(self(), error)
+      _assigns ->
+        send(self(), %Wax.InvalidAuthenticatorDataError{})
+        {:ok, socket}
     end
-
-    {
-      :ok,
-      socket
-      |> assign(:challenge, nil)
-      |> assign(:credential, nil)
-    }
   end
 
   def update(assigns, socket) do
@@ -202,14 +178,14 @@ defmodule WebauthnComponents.AuthenticationComponent do
     }
   end
 
-  def handle_event("credential", credential, socket) do
+  def handle_event("credential", credential, socket) when is_map(credential) do
     with {:ok, _challenge} <- fetch_challenge(socket.assigns),
          {:ok, key_id} <- Map.fetch(credential, "id"),
          {:ok, type} <- Map.fetch(credential, "type"),
          {:ok, authenticator_attachment} <- Map.fetch(credential, "authenticatorAttachment"),
          {:ok, response} <- Map.fetch(credential, "response"),
          {:ok, user_handle} <- Map.fetch(response, "userHandle"),
-         {:ok, user_handle} <- Base.url_decode64(user_handle, padding: false),
+         {:ok, user_handle} <- decode_user_handle(user_handle),
          {:ok, authenticator_data} <- Map.fetch(response, "authenticatorData"),
          {:ok, client_data_json} <- Map.fetch(response, "clientDataJSON"),
          {:ok, signature} <- Map.fetch(response, "signature"),
@@ -231,20 +207,21 @@ defmodule WebauthnComponents.AuthenticationComponent do
         }
       }
 
-      {
-        :noreply,
-        socket
-        |> assign(:credential, credential)
-      }
+      {:noreply, assign(socket, :credential, credential)}
     else
-      :error ->
-        send(self(), %Wax.InvalidAuthenticatorDataError{})
-        {:noreply, assign(socket, :challenge, nil)}
-
-      {:error, error} ->
+      {:error, %Wax.ExpiredChallengeError{} = error} ->
         send(self(), error)
         {:noreply, assign(socket, :challenge, nil)}
+
+      _other ->
+        send(self(), %Wax.InvalidAuthenticatorDataError{})
+        {:noreply, assign(socket, :challenge, nil)}
     end
+  end
+
+  def handle_event("credential", _payload, socket) do
+    send(self(), %Wax.InvalidAuthenticatorDataError{})
+    {:noreply, assign(socket, :challenge, nil)}
   end
 
   def handle_event("error", payload, socket) do
@@ -262,13 +239,12 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
     challenge =
       Wax.new_authentication_challenge(
-        allow_credentials: public_key_credential_request_options.allow_credentials,
         origin: socket.endpoint.url(),
         rp_id: :auto,
-        user_verification: public_key_credential_request_options.user_verification
+        user_verification: to_string(public_key_credential_request_options.user_verification)
       )
 
-    publick_key = %PublicKeyCredentialRequestOptions{
+    public_key = %PublicKeyCredentialRequestOptions{
       public_key_credential_request_options
       | challenge: challenge.bytes,
         rp_id: challenge.rp_id
@@ -278,7 +254,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
     |> assign(:challenge, challenge)
     |> push_event("get-credential", %{
       id: id,
-      publicKey: publick_key,
+      publicKey: public_key,
       mediation: mediation
     })
   end
@@ -288,6 +264,40 @@ defmodule WebauthnComponents.AuthenticationComponent do
   end
 
   defp fetch_challenge(_assigns), do: {:error, %Wax.ExpiredChallengeError{}}
+
+  defp decode_user_handle(user_handle) when is_binary(user_handle) do
+    Base.url_decode64(user_handle, padding: false)
+  end
+
+  defp decode_user_handle(_user_handle), do: :error
+
+  defp verify_credentials(socket, challenge, credential, credentials) do
+    %PublicKeyCredential{
+      id: id,
+      response: %AuthenticatorAssertionResponse{
+        authenticator_data: authenticator_data,
+        signature: signature,
+        client_data_json: client_data_json
+      }
+    } = credential
+
+    with {:ok, credential_pairs} <- get_credential_pairs(credentials),
+         {:ok, %Wax.AuthenticatorData{} = auth_data} <-
+           Wax.authenticate(
+             id,
+             authenticator_data,
+             signature,
+             client_data_json,
+             challenge,
+             credential_pairs
+           ) do
+      send(self(), {id, auth_data})
+    else
+      {:error, error} -> send(self(), error)
+    end
+
+    {:ok, socket |> assign(:challenge, nil) |> assign(:credential, nil)}
+  end
 
   defp get_credential_pairs(credentials) do
     try do
