@@ -1,129 +1,168 @@
 defmodule WebauthnComponents.AuthenticationComponent do
   @moduledoc """
-  A LiveComponent for authentication via WebAuthn API.
+  LiveComponent for validating the identity of a user with a WebAuthn credential.
 
-  > Authentication = Sign In
+  This component may be used when signing in a user to an existing account or re-authenticating during sensitive operations (user security changes, destructive admin actions, etc.).
 
-  Authentication is the process of matching a registered key to an existing user.
+  ## User Lookup
 
-  With Passkeys, the user is presented with a native modal from the browser or OS.
+  After a user has approved client-side authentication, the component will pass a `t:WebauthnComponents.FindUser.t/0` message to the parent LiveView.
+  The host application must locate the user, apply any relevant validation (eg. user status check), and send a list of credential tuples to the component.
+  Each credential tuple must contain the credential id and public key so that the component can authorize the client-presented credential against the server-persisted credential.
 
-  - If the user has only one passkey registered to the application's origin URL, they will be prompted to confirm acceptance via biometric ID (touch, face, etc.), OS password, or an OS PIN.
-  - If multiple accounts are registered to the device for the origin URL, the user may select an account to use for the current session.
+  ## Autofill UI
 
-  ## Cross-Device Authentication
+  When `@mediation` is set to `"conditional"`, the component will include a hidden input field which triggers an automatic user prompt to sign in with a Passkey.
+  This makes the authentication process simpler for users by requiring fewer steps to sign in.
 
-  When a user attempts to authenticate on a device where their Passkey is **not** stored, they may scan a QR code to use a cloud-sync'd Passkey.
+  For best results, use `WebauthnComponents.ClientCapabilitiesComponent` to detect browser support, then update `WebauthnComponents.AuthenticationComponent` with the appropriate `@mediation` value.
 
-  ### Example
+  ```
+  # MyAppWeb.Authentication template
+  <.live_component
+    module={WebauthnComponents.ClientCapabilitiesComponent}
+    id="client-capabilities-component"
+  />
 
-  Imagine a user, Amal, registers a Passkey for example.com on their iPhone and it's stored in iCloud. When they attempt to sign into example.com on a non-Apple device or any browser which cannot access their OS keychain, they may choose to scan a QR code using their iPhone. Assuming the prompts on the iPhone are successful, the other device will be authenticated using the same web account which was initially registered on the iPhone.
+  <.live_component
+    module={WebauthnComponents.AuthenticationComponent}
+    id="authentication-component"
+    class="btn btn-primary w-full"
+  >
+    <span>Log in with a Passkey</span>
+  </.live_component>
+  ```
 
-  While this example refers to Apple's Passkey implementation, the process on other platforms may vary. Cross-device credential managers like 1Password may provide a more seamless flow for users who are not constrained to one OS or browser.
+  ```
+  defmodule MyAppWeb.Authentication do
+    ...
 
-  ## Assigns
+    def handle_info({:client_capabilities, capabilities}, socket) do
+      if capabilities["conditionalGet"] do
+        send_update(WebauthnComponents.AuthenticationComponent,
+          id: "passkey-authentication-component",
+          mediation: "conditional"
+        )
+      end
 
-  - `@challenge`: (Internal) A `Wax.Challenge` struct created by the component, used to request an existing credential in the client.
-  - `@display_text` (Optional) The text displayed inside the button. Defaults to "Sign In".
-  - `@show_icon?` (Optional) Controls visibility of the key icon. Defaults to `true`.
-  - `@class` (Optional) CSS classes for overriding the default button style.
-  - `@disabled` (Optional) Set to `true` when the `ClientCapabilitiesHook` indicates WebAuthn is not supported or enabled by the browser. Defaults to `false`.
-  - `@id` (Optional) An HTML element ID.
-  - `@skip_conditional_ui_check` (Optional) Set to `true` to skip the conditional UI check for Passkey autofill. Defaults to `false`.
+      {:noreply, socket}
+    end
+  end
+  ```
 
-  ## Events
+  ## Example
 
-  - `"authenticate"`: Triggered when a user clicks the `authenticate` button.
-  - `"authentication-challenge"`: Sent from the component to the client to request an existing credential registered to the endpoint URL.
-  - `"authentication-attestation"`: Sent by the client when a credential has been registered to the endpoint URL and activated by the user.
-  - `"error"` Sent by the client when an error occurs.
+  ```
+  defmodule MyAppWeb.Authentication do
+    ...
+    
+    def handle_info(%WebauthnComponents.FindUser{user_handle: user_id}, socket) do
+      with {:ok, user} <- MyApp.Identity.get_user(user_id),
+      %MyApp.Identity.User{status: :active, credentials: credentials} <- user do
+        credential_tuples = Enum.map(credentials, &{&1.id, &1.public_key})
+        send_update(WebauthnComponents.AuthenticationComponent,
+          id: "authentication-component",
+          credentials: credentials
+          )
+        
+        {:noreply, socket}
+      else
+        {:error, reason} ->
 
-  ## Messages
+          {
+            :noreply,
+            socket
+            |> put_flash(:error, "Authentication failed")
+          }
+      end
+    end
+  end
+  ```
 
-  - `{:find_credential, key_id: key_id}`
-    - `key_id` is a raw binary representing the id stored associated with the credential in both the client and server during registration.
-    - The parent LiveView must successfully lookup the user with this data before storing a token and redirecting to another view.
-  - `{:error, payload}`
-    - `payload` contains the `message`, `name`, and `stack` returned by the browser upon timeout or other client-side errors.
+  In the template, render the component:
 
-    Errors should be displayed to the user via [`Phoenix.LiveView.put_flash/3`](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html#put_flash/3). However, some errors may be too technical or cryptic to be useful to users, so the parent LiveView may paraphrase the message for clarity.
+  ```
+  <.live_component
+    id="authentication-component"
+    module={WebauthnComponents.AuthenticationComponent}
+    class="btn"
+  >
+    Sign in with a Passkey
+  </.live_component>
+  ```
+
+  ## Resources
+
+  - https://web.dev/articles/passkey-form-autofill
+  - https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#mediation
   """
   use Phoenix.LiveComponent
-  import WebauthnComponents.IconComponents
-  import WebauthnComponents.BaseComponents
+  alias WebauthnComponents.Config.PublicKeyCredentialRequestOptions
+  alias WebauthnComponents.Config.PublicKeyCredential
+  alias WebauthnComponents.Config.AuthenticatorAssertionResponse
+  alias WebauthnComponents.FindUser
+  alias WebauthnComponents.CredentialProtocol
 
   def mount(socket) do
     {
       :ok,
       socket
-      |> assign_new(:challenge, fn -> nil end)
-      |> assign_new(:id, fn -> "authentication-component" end)
-      |> assign_new(:class, fn -> "" end)
-      |> assign_new(:disabled, fn -> nil end)
-      |> assign_new(:display_text, fn -> "Sign In" end)
-      |> assign_new(:show_icon?, fn -> true end)
-      |> assign_new(:relying_party, fn -> nil end)
-      |> assign_new(:skip_conditional_ui_check, fn -> false end)
+      |> assign_new(:disabled, fn -> false end)
+      |> assign_new(:class, fn -> nil end)
+      |> assign_new(:rest, fn -> %{} end)
+      |> assign_new(:mediation, fn -> "optional" end)
+      |> assign_new(:public_key_credential_request_options, fn ->
+        %PublicKeyCredentialRequestOptions{}
+      end)
     }
   end
 
   def render(assigns) do
     ~H"""
     <span>
-      <.button
+      <button
         id={@id}
-        phx-hook="AuthenticationHook"
-        phx-target={@myself}
         type="button"
+        phx-hook="AuthenticationHook"
         phx-click="authenticate"
-        class={@class}
-        title="Use an existing account"
+        phx-target={@myself}
         disabled={@disabled}
-        data-skip-conditional-ui-check={if @skip_conditional_ui_check, do: "true"}
+        class={@class}
+        {@rest}
       >
-        <span :if={@show_icon?} class="w-4 aspect-square opacity-70"><.icon_key /></span>
-        <span>{@display_text}</span>
-      </.button>
-
-      <input type="hidden" autocomplete="webauthn" />
+        {render_slot(@inner_block)}
+      </button>
+      <input
+        :if={@mediation == "conditional"}
+        type="hidden"
+        name="webauthn"
+        autocomplete="webauthn"
+        autofocus
+      />
     </span>
     """
   end
 
-  def update(%{user_keys: user_keys} = assigns, socket) do
-    %{challenge: challenge, attestation: attestation} = socket.assigns
+  def update(%{mediation: "conditional"}, socket) do
+    {
+      :ok,
+      socket
+      |> assign(:mediation, "conditional")
+      |> get_credential()
+    }
+  end
 
-    %{
-      authenticator_data: authenticator_data,
-      client_data_array: client_data_array,
-      raw_id: raw_id,
-      signature: signature
-    } = attestation
+  def update(%{credentials: credentials}, socket) when is_list(credentials) do
+    case socket.assigns do
+      %{
+        challenge: %Wax.Challenge{} = challenge,
+        credential: %PublicKeyCredential{} = credential
+      } ->
+        verify_credentials(socket, challenge, credential, credentials)
 
-    credentials = Enum.map(user_keys, &{&1.key_id, &1.public_key})
-
-    wax_response =
-      Wax.authenticate(
-        raw_id,
-        authenticator_data,
-        signature,
-        client_data_array,
-        challenge,
-        credentials
-      )
-
-    case wax_response do
-      {:ok, auth_data} ->
-        send(self(), {:authentication_successful, auth_data})
-        {:ok, assign(socket, assigns)}
-
-      {:error, %{message: message}} ->
-        send(self(), {:authentication_failure, message: message})
-        {:ok, assign(socket, assigns)}
-
-      {:error, error} ->
-        send(self(), {:authentication_failure, message: error})
-        {:ok, assign(socket, assigns)}
+      _assigns ->
+        send(self(), %Wax.InvalidAuthenticatorDataError{})
+        {:ok, socket}
     end
   end
 
@@ -131,68 +170,58 @@ defmodule WebauthnComponents.AuthenticationComponent do
     {:ok, assign(socket, assigns)}
   end
 
-  def handle_event("authenticate", params, socket) do
-    %{assigns: assigns, endpoint: endpoint} = socket
-    %{id: id} = assigns
-
-    supports_passkey_autofill = Map.has_key?(params, "supports_passkey_autofill")
-
-    event =
-      if supports_passkey_autofill,
-        do: "authentication-challenge-with-conditional-ui",
-        else: "authentication-challenge"
-
-    challenge =
-      Wax.new_authentication_challenge(
-        origin: endpoint.url(),
-        rp_id: :auto,
-        user_verification: "preferred"
-      )
-
-    challenge_data = %{
-      challenge: Base.encode64(challenge.bytes, padding: false),
-      id: id,
-      rpId: challenge.rp_id,
-      allowCredentials: challenge.allow_credentials,
-      userVerification: challenge.user_verification
-    }
-
+  def handle_event("authenticate", _payload, socket) do
     {
       :noreply,
       socket
-      |> assign(:challenge, challenge)
-      |> push_event(event, challenge_data)
+      |> get_credential()
     }
   end
 
-  def handle_event("authentication-attestation", payload, socket) do
-    %{
-      "authenticatorData64" => authenticator_data_64,
-      "clientDataArray" => client_data_array,
-      "rawId64" => raw_id_64,
-      "signature64" => signature_64,
-      "type" => type
-    } = payload
+  def handle_event("credential", credential, socket) when is_map(credential) do
+    with {:ok, _challenge} <- fetch_challenge(socket.assigns),
+         {:ok, key_id} <- Map.fetch(credential, "id"),
+         {:ok, type} <- Map.fetch(credential, "type"),
+         {:ok, authenticator_attachment} <- Map.fetch(credential, "authenticatorAttachment"),
+         {:ok, response} <- Map.fetch(credential, "response"),
+         {:ok, user_handle} <- Map.fetch(response, "userHandle"),
+         {:ok, user_handle} <- decode_user_handle(user_handle),
+         {:ok, authenticator_data} <- Map.fetch(response, "authenticatorData"),
+         {:ok, client_data_json} <- Map.fetch(response, "clientDataJSON"),
+         {:ok, signature} <- Map.fetch(response, "signature"),
+         {:ok, key_id} <- Base.url_decode64(key_id, padding: false),
+         {:ok, client_data_json} <- Base.url_decode64(client_data_json, padding: false),
+         {:ok, authenticator_data} <- Base.url_decode64(authenticator_data, padding: false),
+         {:ok, signature} <- Base.url_decode64(signature, padding: false) do
+      send(self(), %FindUser{user_handle: user_handle})
 
-    authenticator_data = Base.decode64!(authenticator_data_64, padding: false)
-    raw_id = Base.decode64!(raw_id_64, padding: false)
-    signature = Base.decode64!(signature_64, padding: false)
+      credential = %PublicKeyCredential{
+        id: key_id,
+        type: type,
+        authenticator_attachment: authenticator_attachment,
+        response: %AuthenticatorAssertionResponse{
+          user_handle: user_handle,
+          authenticator_data: authenticator_data,
+          client_data_json: client_data_json,
+          signature: signature
+        }
+      }
 
-    attestation = %{
-      authenticator_data: authenticator_data,
-      client_data_array: client_data_array,
-      raw_id: raw_id,
-      signature: signature,
-      type: type
-    }
+      {:noreply, assign(socket, :credential, credential)}
+    else
+      {:error, %Wax.ExpiredChallengeError{} = error} ->
+        send(self(), error)
+        {:noreply, assign(socket, :challenge, nil)}
 
-    send(self(), {:find_credential, key_id: raw_id})
+      _other ->
+        send(self(), %Wax.InvalidAuthenticatorDataError{})
+        {:noreply, assign(socket, :challenge, nil)}
+    end
+  end
 
-    {
-      :noreply,
-      socket
-      |> assign(:attestation, attestation)
-    }
+  def handle_event("credential", _payload, socket) do
+    send(self(), %Wax.InvalidAuthenticatorDataError{})
+    {:noreply, assign(socket, :challenge, nil)}
   end
 
   def handle_event("error", payload, socket) do
@@ -200,8 +229,84 @@ defmodule WebauthnComponents.AuthenticationComponent do
     {:noreply, socket}
   end
 
-  def handle_event(event, payload, socket) do
-    send(self(), {:invalid_event, event, payload})
-    {:noreply, socket}
+  defp get_credential(socket) do
+    %{
+      id: id,
+      mediation: mediation,
+      public_key_credential_request_options:
+        %PublicKeyCredentialRequestOptions{} = public_key_credential_request_options
+    } = socket.assigns
+
+    challenge =
+      Wax.new_authentication_challenge(
+        origin: socket.endpoint.url(),
+        rp_id: :auto,
+        user_verification: to_string(public_key_credential_request_options.user_verification)
+      )
+
+    public_key = %PublicKeyCredentialRequestOptions{
+      public_key_credential_request_options
+      | challenge: challenge.bytes,
+        rp_id: challenge.rp_id
+    }
+
+    socket
+    |> assign(:challenge, challenge)
+    |> push_event("get-credential", %{
+      id: id,
+      publicKey: public_key,
+      mediation: mediation
+    })
+  end
+
+  defp fetch_challenge(%{challenge: %Wax.Challenge{} = challenge}) do
+    {:ok, challenge}
+  end
+
+  defp fetch_challenge(_assigns), do: {:error, %Wax.ExpiredChallengeError{}}
+
+  defp decode_user_handle(user_handle) when is_binary(user_handle) do
+    Base.url_decode64(user_handle, padding: false)
+  end
+
+  defp decode_user_handle(_user_handle), do: :error
+
+  defp verify_credentials(socket, challenge, credential, credentials) do
+    %PublicKeyCredential{
+      id: id,
+      response: %AuthenticatorAssertionResponse{
+        authenticator_data: authenticator_data,
+        signature: signature,
+        client_data_json: client_data_json
+      }
+    } = credential
+
+    with {:ok, credential_pairs} <- get_credential_pairs(credentials),
+         {:ok, %Wax.AuthenticatorData{} = auth_data} <-
+           Wax.authenticate(
+             id,
+             authenticator_data,
+             signature,
+             client_data_json,
+             challenge,
+             credential_pairs
+           ) do
+      send(self(), {id, auth_data})
+    else
+      {:error, error} -> send(self(), error)
+    end
+
+    {:ok, socket |> assign(:challenge, nil) |> assign(:credential, nil)}
+  end
+
+  defp get_credential_pairs(credentials) do
+    try do
+      for credential <- credentials do
+        {CredentialProtocol.id(credential), CredentialProtocol.public_key(credential)}
+      end
+      |> then(&{:ok, &1})
+    rescue
+      error -> {:error, error}
+    end
   end
 end

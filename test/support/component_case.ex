@@ -4,7 +4,11 @@ defmodule ComponentCase do
 
   setup do
     conn = Phoenix.ConnTest.build_conn()
-    socket = %Phoenix.LiveView.Socket{}
+
+    socket =
+      %Phoenix.LiveView.Socket{}
+      |> Map.put(:endpoint, TestEndpoint)
+
     %{conn: conn, socket: socket}
   end
 

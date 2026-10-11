@@ -1,4 +1,4 @@
-import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
+import { base64ToArray, handleError } from "./utils";
 
 export const RegistrationHook = {
   mounted() {
@@ -8,7 +8,7 @@ export const RegistrationHook = {
       if (id == this.el.id) {
         try {
           publicKey.challenge = base64ToArray(publicKey.challenge).buffer;
-          publicKey.user.id = base64ToArray(publicKey.user.id);
+          publicKey.user.id = base64ToArray(publicKey.user.id).buffer;
           const credential = await navigator.credentials.create({ publicKey });
           this.pushEventTo(this.el, "credential", credential);
         } catch (error) {

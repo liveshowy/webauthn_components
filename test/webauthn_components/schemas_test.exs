@@ -1,10 +1,11 @@
 defmodule WebauthnComponents.SchemasTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
+  alias WebauthnComponents.Config.AllowCredential
   alias WebauthnComponents.Config.AuthenticatorSelection
   alias WebauthnComponents.Config.ExcludedCredential
   alias WebauthnComponents.Config.PubKeyCredParams
-  alias WebauthnComponents.Config.PublicKeyOptions
+  alias WebauthnComponents.Config.PublicKeyCredentialCreationOptions
   alias WebauthnComponents.Config.RelyingParty
   alias WebauthnComponents.Config.User
 
@@ -12,13 +13,13 @@ defmodule WebauthnComponents.SchemasTest do
   @attestation_formats ~w(packed tpm android-key android-safetynet fido-u2f apple none)
   @hints ~w(security-key client-device hybrid)
 
-  describe "PublicKeyOptions" do
+  describe "PublicKeyCredentialCreationOptions" do
     test "missing keys raise an error" do
-      assert_raise ArgumentError, fn -> struct!(PublicKeyOptions) end
+      assert_raise ArgumentError, fn -> struct!(PublicKeyCredentialCreationOptions) end
     end
 
     test "can be built with only required fields" do
-      options = %PublicKeyOptions{
+      options = %PublicKeyCredentialCreationOptions{
         challenge: :crypto.strong_rand_bytes(32),
         rp: %RelyingParty{id: "example.com", name: "Example Org"},
         user: %User{id: Ecto.UUID.generate(), name: "example_user", display_name: "Example User"},
@@ -30,19 +31,19 @@ defmodule WebauthnComponents.SchemasTest do
       assert options.pub_key_cred_params.type == "public-key"
     end
 
-    property "a PublicKeyOptions struct can be built with random values" do
+    property "a PublicKeyCredentialCreationOptions struct can be built with random values" do
       check all public_key_options <- public_key_options() do
-        assert %PublicKeyOptions{} = public_key_options
+        assert %PublicKeyCredentialCreationOptions{} = public_key_options
       end
     end
 
-    property "valid PublicKeyOptions can be encoded via JSON" do
+    property "valid PublicKeyCredentialCreationOptions can be encoded via JSON" do
       check all public_key_options <- public_key_options() do
         assert public_key_options |> JSON.encode!() |> JSON.decode!()
       end
     end
 
-    property "valid PublicKeyOptions can be encoded via Jason" do
+    property "valid PublicKeyCredentialCreationOptions can be encoded via Jason" do
       check all public_key_options <- public_key_options() do
         assert public_key_options |> Jason.encode!() |> Jason.decode!()
       end
@@ -64,7 +65,7 @@ defmodule WebauthnComponents.SchemasTest do
             rp <- rp(),
             timeout <- integer(0..60_000),
             user <- user() do
-      %PublicKeyOptions{
+      %PublicKeyCredentialCreationOptions{
         attestation: attestation,
         attestation_formats: attestation_formats,
         authenticator_selection: authenticator_selection,
@@ -77,6 +78,17 @@ defmodule WebauthnComponents.SchemasTest do
         timeout: timeout,
         user: user
       }
+    end
+  end
+
+  describe "AllowCredential" do
+    test "encodes the credential id as base64" do
+      credential = %AllowCredential{id: <<0, 1, 2>>}
+
+      expected = %{"id" => "AAEC", "transports" => [], "type" => "public-key"}
+
+      assert credential |> Jason.encode!() |> Jason.decode!() == expected
+      assert credential |> JSON.encode!() |> JSON.decode!() == expected
     end
   end
 

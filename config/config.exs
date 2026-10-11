@@ -11,3 +11,7 @@ config :webauthn_components, TestEndpoint,
 if config_env() == :test do
   config :logger, level: :warning
 end
+
+if config_env() in [:test, :dev] do
+  config :mix_test_watch, clear: true
+end

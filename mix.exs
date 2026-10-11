@@ -16,9 +16,18 @@ defmodule WebauthnComponents.MixProject do
       elixirc_paths: elixirc_paths(Mix.env()),
       name: @name,
       package: package(),
+      cli: cli(),
       start_permanent: Mix.env() == :prod,
       source_url: @source_url,
       version: @version
+    ]
+  end
+
+  defp cli do
+    [
+      preferred_envs: [
+        "test.watch": :test
+      ]
     ]
   end
 
@@ -42,6 +51,7 @@ defmodule WebauthnComponents.MixProject do
       {:jason, "~> 1.0"},
       {:lazy_html, ">= 0.1.0", only: :test, optional: true},
       {:live_isolated_component, "~> 0.11", only: [:test], optional: true},
+      {:mix_test_watch, "~> 1.4", only: [:dev, :test], runtime: false},
       {:phoenix_ecto, "~> 4.4"},
       {:phoenix_live_view, "~> 1.2"},
       {:phoenix, "~> 1.6"},

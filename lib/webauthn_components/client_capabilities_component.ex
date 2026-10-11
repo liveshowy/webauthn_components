@@ -4,7 +4,13 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
 
   This component should be used in combination with `RegistrationComponent` and `AuthenticationComponent` to disable their buttons based on the client's capabilities.
 
-  An application may also use `ClientCapabilitiesComponent` to steer users away from traditional authentication to the more secure Passkey authentication method. For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
+  An application may also use `ClientCapabilitiesComponent` to steer users away from traditional authentication to the more secure Passkey authentication method.
+  For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
+
+  > ### Compatibility {: .info}
+  >
+  > As of February 2025, `PublicKeyCredential.getClientCapabilities()` is supported by all major browsers.
+  > Unsupported browsers will raise an error which will be passed to the parent LiveView.
 
   ## Assigns
 
@@ -12,13 +18,17 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
 
   ## Events
 
-  - `"client-capabilities"`: Sent by the client when Passkey support has been checked.
+  - `"client-capabilities"` (internal): Sent by the client when Passkey support has been checked.
 
   ## Messages
 
-  - `{:client_capabilities, capabilities}`
+  - `{:client_capabilities, capabilities}`: Sent to the parent LiveView.
+  - `{:invalid_event, event, payload}`: Sent when an invalid event is received. This will typically be a client-side error message.
 
-  Example capabilities:
+  ### Example Capabilities
+
+  The component passes the JSON-decoded capabilities map to the parent LiveView.
+  The keys are camelCase string keys as defined by the WebAuthn specification.
 
   ```elixir
   %{
@@ -36,13 +46,17 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
   }
   ```
 
-  This map allows detection of credential features supported by the current user's browser. You may allow or deny access based on your risk profile and security requirements.
+  This map allows detection of credential features supported by the current user's browser.
+  You may allow or deny access based on your risk profile and security requirements.
 
   See [`PublicKeyCredential.getClientCapabilities()`](https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredential/getClientCapabilities) for details.
 
-  ### Design Decision
-
-  You may notice this is a plain map with camelCase string keys, passed unmodified from the client. Why not create a `%ClientCredentials{}` struct to aid in type checking and validation? These features may evolve over time with changes to the WebAuthn specification, and this approach allows for flexibility with little maintenance overhead.
+  > ### Design Decision {: .info}
+  >
+  > You may notice this is a plain map with camelCase string keys, passed unmodified from the client.
+  > Why not create a `%ClientCredentials{}` struct to aid in type checking and validation?
+  >
+  > These features may evolve over time with changes to the WebAuthn specification, and this approach allows for flexibility with minimal maintenance to `WebauthnComponents`.
 
   ## Usage
 
@@ -64,7 +78,7 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
   end
   ```
 
-  In the render/1 function or Heex template, render the component(s):
+  In the `c:Phoenix.LiveView.render/1` function or Heex template, render the component(s):
 
   ```html
   <WebauthnComponents.ClientCapabilitiesComponent id="support-component" />
@@ -74,6 +88,10 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
     :if={!!@capabilities["conditionalCreate"] and !!@capabilities["userVerifyingPlatformAuthenticator"]}
   />
   ```
+
+  ## Resources
+
+  - https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredential/getClientCapabilities_static
   """
   use Phoenix.LiveComponent
 
