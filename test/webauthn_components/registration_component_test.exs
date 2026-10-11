@@ -72,7 +72,6 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
       socket =
         socket
-        |> Map.put(:endpoint, TestEndpoint)
         |> assign(
           id: "test-component",
           public_key_options: public_key_options,
@@ -134,7 +133,6 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
     socket =
       socket
-      |> Map.put(:endpoint, TestEndpoint)
       |> assign(
         id: "test-component",
         public_key_options: public_key_options,
