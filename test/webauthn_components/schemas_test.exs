@@ -1,6 +1,7 @@
 defmodule WebauthnComponents.SchemasTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
+  alias WebauthnComponents.Config.AllowCredential
   alias WebauthnComponents.Config.AuthenticatorSelection
   alias WebauthnComponents.Config.ExcludedCredential
   alias WebauthnComponents.Config.PubKeyCredParams
@@ -77,6 +78,17 @@ defmodule WebauthnComponents.SchemasTest do
         timeout: timeout,
         user: user
       }
+    end
+  end
+
+  describe "AllowCredential" do
+    test "encodes the credential id as base64" do
+      credential = %AllowCredential{id: <<0, 1, 2>>}
+
+      expected = %{"id" => "AAEC", "transports" => [], "type" => "public-key"}
+
+      assert credential |> Jason.encode!() |> Jason.decode!() == expected
+      assert credential |> JSON.encode!() |> JSON.decode!() == expected
     end
   end
 

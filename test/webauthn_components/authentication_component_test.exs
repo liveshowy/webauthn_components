@@ -2,6 +2,7 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
   use ComponentCase, async: true
   alias WebauthnComponents.AuthenticationComponent
   alias WebauthnComponents.Config.PublicKeyCredentialRequestOptions
+  alias WebauthnComponents.Config.AllowCredential
   alias WebauthnComponents.Config.PublicKeyCredential
   alias WebauthnComponents.Config.AuthenticatorAssertionResponse
   alias WebauthnComponents.FindUser
@@ -28,7 +29,7 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
 
     test "accepts custom assigns", %{socket: socket} do
       public_key_credential_request_options = %PublicKeyCredentialRequestOptions{
-        allow_credentials: [{<<0, 1, 2>>, %{}}]
+        allow_credentials: [%AllowCredential{id: <<0, 1, 2>>}]
       }
 
       socket =
@@ -51,19 +52,17 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
   end
 
   describe "render/1" do
-    test "is successful with required assigns" do
-      assigns = %{}
+    test "renders the passkey autofill input when mediation is conditional" do
+      html = render_component_html(mediation: "conditional")
 
-      heex = ~H"""
-      <.live_component
-        id="test-component"
-        module={AuthenticationComponent}
-      >
-        <span>Log in with a Passkey</span>
-      </.live_component>
-      """
+      assert html =~ ~s{autocomplete="webauthn"}
+      assert html =~ ~s{phx-hook="AuthenticationHook"}
+    end
 
-      assert %Phoenix.LiveView.Rendered{} = heex
+    test "omits the passkey autofill input when mediation is not conditional" do
+      html = render_component_html(mediation: "optional")
+
+      refute html =~ ~s{autocomplete="webauthn"}
     end
   end
 
@@ -147,6 +146,12 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
       assert_receive %Wax.InvalidClientDataError{reason: :credential_id_mismatch}
       assert %{challenge: nil, credential: nil} = socket.assigns
     end
+
+    test "sends error when no pending credential exists", %{socket: socket} do
+      assert {:ok, ^socket} = AuthenticationComponent.update(%{credentials: []}, socket)
+
+      assert_receive %Wax.InvalidAuthenticatorDataError{}
+    end
   end
 
   describe "handle_event/3" do
@@ -223,6 +228,33 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
 
       assert {:noreply, socket} =
                AuthenticationComponent.handle_event("credential", params, socket)
+
+      assert_receive %Wax.InvalidAuthenticatorDataError{}
+      assert %{challenge: nil} = socket.assigns
+    end
+
+    test "sends error when userHandle is missing", %{socket: socket} do
+      challenge = build_challenge()
+      credential = build_credential()
+      assertion = build_assertion(challenge, credential)
+
+      params =
+        build_credential_params(credential, assertion, "user_handle")
+        |> put_in(["response", "userHandle"], nil)
+
+      socket = assign(socket, challenge: challenge)
+
+      assert {:noreply, socket} =
+               AuthenticationComponent.handle_event("credential", params, socket)
+
+      assert_receive %Wax.InvalidAuthenticatorDataError{}
+      refute_received %FindUser{}
+      assert %{challenge: nil} = socket.assigns
+    end
+
+    test "sends error with a non-map payload", %{socket: socket} do
+      assert {:noreply, socket} =
+               AuthenticationComponent.handle_event("credential", "invalid", socket)
 
       assert_receive %Wax.InvalidAuthenticatorDataError{}
       assert %{challenge: nil} = socket.assigns
@@ -351,5 +383,24 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
         signature: assertion.signature
       }
     }
+  end
+
+  defp render_component_html(overrides) do
+    assigns =
+      Map.merge(
+        %{
+          id: @id,
+          disabled: false,
+          class: nil,
+          rest: %{},
+          mediation: "optional",
+          myself: nil,
+          inner_block: [],
+          public_key_credential_request_options: %PublicKeyCredentialRequestOptions{}
+        },
+        Map.new(overrides)
+      )
+
+    AuthenticationComponent.render(assigns) |> rendered_to_string()
   end
 end

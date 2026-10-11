@@ -7,9 +7,12 @@ export const AuthenticationHook = {
     this.handleEvent("get-credential", async ({ id, publicKey, mediation }) => {
       try {
         publicKey.challenge = base64ToArray(publicKey.challenge).buffer;
-        publicKey.allowCredentials = publicKey.allowCredentials.map((credential) => {
-            return credential.id = base64ToArray(credential.id).buffer;
-          });
+        publicKey.allowCredentials = publicKey.allowCredentials.map(
+          (credential) => ({
+            ...credential,
+            id: base64ToArray(credential.id).buffer,
+          })
+        );
         const credential = await navigator.credentials.get({
           publicKey,
           mediation,
