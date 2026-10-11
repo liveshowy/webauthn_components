@@ -1,4 +1,4 @@
-import { base64ToArray, arrayBufferToBase64, handleError } from "./utils";
+import { base64ToArray, handleError } from "./utils";
 
 export const RegistrationHook = {
   mounted() {
