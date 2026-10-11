@@ -25,7 +25,7 @@ defmodule WebauthnComponents.MixProject do
 
   defp cli do
     [
-      preferredenvscli_env: [
+      preferred_envs: [
         "test.watch": :test
       ]
     ]
