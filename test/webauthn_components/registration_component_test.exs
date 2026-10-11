@@ -5,6 +5,8 @@ defmodule WebauthnComponents.RegistrationComponentTest do
   alias WebauthnComponents.Config.RelyingParty
   alias WebauthnComponents.Config.User
 
+  @id "test-component"
+
   describe "mount/1" do
     test "sets default assigns", %{socket: socket} do
       assert {:ok, socket} = RegistrationComponent.mount(socket)
@@ -63,24 +65,55 @@ defmodule WebauthnComponents.RegistrationComponentTest do
 
   describe "handle_event/3" do
     test "processes a `register` event", %{socket: socket} do
-      public_key_options = %PublicKeyCredentialCreationOptions{
-        rp: %RelyingParty{name: "Test"},
-        user: %User{id: "1234", name: "tester", display_name: "Tester"}
-      }
-
-      trusted_attestation_types = [:none, :basic]
-
-      socket =
-        socket
-        |> assign(
-          id: "test-component",
-          public_key_options: public_key_options,
-          trusted_attestation_types: trusted_attestation_types
-        )
+      socket = assign_public_key_options(socket)
 
       assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
-      assert %{challenge: challenge} = socket.assigns
-      assert %Wax.Challenge{} = challenge
+
+      assert %{challenge: %Wax.Challenge{} = challenge} = socket.assigns
+
+      %{private: %{live_temp: %{push_events: push_events}}} = socket
+      assert [["registration-challenge", event_params]] = push_events
+
+      assert %{
+               id: @id,
+               publicKey: %PublicKeyCredentialCreationOptions{challenge: public_key_challenge}
+             } = event_params
+
+      assert public_key_challenge == challenge.bytes
+    end
+
+    test "processes a valid `credential` event", %{socket: socket} do
+      socket = assign_challenge(socket)
+      attestation = build_attestation(socket.assigns.challenge)
+      credential_id = attestation.credential_id
+      params = build_credential_params(attestation)
+
+      assert {:noreply, socket} =
+               RegistrationComponent.handle_event("credential", params, socket)
+
+      assert_receive %Wax.AuthenticatorData{
+        attested_credential_data: %{credential_id: ^credential_id}
+      }
+
+      assert %{challenge: nil} = socket.assigns
+    end
+
+    test "sends error when challenge is missing", %{socket: socket} do
+      assert {:noreply, socket} =
+               RegistrationComponent.handle_event("credential", %{}, socket)
+
+      assert_receive %Wax.ExpiredChallengeError{}
+      assert %{challenge: nil} = socket.assigns
+    end
+
+    test "sends error with missing credential fields", %{socket: socket} do
+      socket = assign_challenge(socket)
+
+      assert {:noreply, socket} =
+               RegistrationComponent.handle_event("credential", %{}, socket)
+
+      assert_receive %Wax.InvalidAuthenticatorDataError{}
+      assert %{challenge: nil} = socket.assigns
     end
 
     test "sends error with invalid CBOR", %{socket: socket} do
@@ -111,35 +144,99 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert_receive %Wax.InvalidCBORError{}
     end
 
-    test "sends error with empty credential object", %{socket: socket} do
-      socket = assign_challenge(socket)
+    test "processes an `error` event", %{socket: socket} do
+      payload = %{"message" => "Something went wrong"}
 
-      credential = %{}
+      assert {:noreply, _socket} = RegistrationComponent.handle_event("error", payload, socket)
 
-      assert {:noreply, _socket} =
-               RegistrationComponent.handle_event("credential", credential, socket)
-
-      assert_receive %Wax.InvalidAuthenticatorDataError{}
+      assert_receive {:error, ^payload}
     end
   end
 
-  defp assign_challenge(socket) do
-    public_key_options = %PublicKeyCredentialCreationOptions{
+  describe "registration flow" do
+    test "registers a credential from challenge to verification", %{socket: socket} do
+      socket = assign_public_key_options(socket)
+
+      assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
+
+      attestation = build_attestation(socket.assigns.challenge)
+      credential_id = attestation.credential_id
+      params = build_credential_params(attestation)
+
+      assert {:noreply, socket} =
+               RegistrationComponent.handle_event("credential", params, socket)
+
+      assert_receive %Wax.AuthenticatorData{
+        attested_credential_data: %{credential_id: ^credential_id}
+      }
+
+      assert %{challenge: nil} = socket.assigns
+    end
+  end
+
+  defp build_public_key_options do
+    %PublicKeyCredentialCreationOptions{
       rp: %RelyingParty{name: "Test"},
       user: %User{id: "1234", name: "tester", display_name: "Tester"}
     }
+  end
 
-    trusted_attestation_types = [:none, :basic]
+  defp assign_public_key_options(socket) do
+    assign(socket,
+      id: @id,
+      public_key_options: build_public_key_options(),
+      trusted_attestation_types: [:none, :basic]
+    )
+  end
 
-    socket =
-      socket
-      |> assign(
-        id: "test-component",
-        public_key_options: public_key_options,
-        trusted_attestation_types: trusted_attestation_types
-      )
+  defp assign_challenge(socket) do
+    socket = assign_public_key_options(socket)
 
     assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
     socket
+  end
+
+  defp build_attestation(%Wax.Challenge{} = challenge) do
+    {public_key, _private_key} = :crypto.generate_key(:ecdh, :secp256r1)
+    <<4, x::binary-size(32), y::binary-size(32)>> = public_key
+
+    cose_key = %{1 => 2, 3 => -7, -1 => 1, -2 => x, -3 => y}
+    credential_id = :crypto.strong_rand_bytes(32)
+
+    auth_data =
+      :crypto.hash(:sha256, challenge.rp_id) <>
+        <<0b01000101>> <>
+        <<0::unsigned-big-integer-size(32)>> <>
+        <<0::128>> <>
+        <<byte_size(credential_id)::unsigned-big-integer-size(16)>> <>
+        credential_id <>
+        CBOR.encode(cose_key)
+
+    attestation_object =
+      CBOR.encode(%{"fmt" => "none", "attStmt" => %{}, "authData" => auth_data})
+
+    client_data_json =
+      Jason.encode!(%{
+        "type" => "webauthn.create",
+        "challenge" => Base.url_encode64(challenge.bytes, padding: false),
+        "origin" => challenge.origin,
+        "clientExtensions" => %{}
+      })
+
+    %{
+      attestation_object: attestation_object,
+      client_data_json: client_data_json,
+      credential_id: credential_id
+    }
+  end
+
+  defp build_credential_params(attestation) do
+    %{
+      "id" => Base.url_encode64(attestation.credential_id, padding: false),
+      "response" => %{
+        "attestationObject" => Base.url_encode64(attestation.attestation_object, padding: false),
+        "clientDataJSON" => Base.url_encode64(attestation.client_data_json, padding: false)
+      }
+    }
   end
 end
