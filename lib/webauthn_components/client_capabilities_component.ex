@@ -2,23 +2,21 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
   @moduledoc """
   A LiveComponent for detecting WebAuthn support.
 
-  This component should be used in combination with `RegistrationComponent` and `AuthenticationComponent` to disable their buttons based on the client's capabilities.
+  This component should be used in combination with `WebauthnComponents.RegistrationComponent` and `WebauthnComponents.AuthenticationComponent` to enable their buttons based on the client's capabilities.
 
-  An application may also use `ClientCapabilitiesComponent` to steer users away from traditional authentication to the more secure Passkey authentication method.
+  An application may also use `WebauthnComponents.ClientCapabilitiesComponent` to steer users away from traditional authentication to the more secure Passkey authentication method.
   For example, an application that supports both traditional authentication and Passkeys may redirect users to a Passkey LiveView or render a message encouraging the new authentication method.
 
   > ### Compatibility {: .info}
   >
-  > As of February 2025, `PublicKeyCredential.getClientCapabilities()` is supported by all major browsers.
-  > Unsupported browsers will raise an error which will be passed to the parent LiveView.
+  > Since early 2025, major browsers support `PublicKeyCredential.getClientCapabilities()`.
+  > Unsupported browsers raise an error, which the component forwards to the parent LiveView as `{:invalid_event, "error", payload}`.
+  >
+  > See [caniuse](https://caniuse.com/?search=getClientCapabilities) for support details.
 
   ## Assigns
 
   - `@id` (Required) An HTML element ID.
-
-  ## Events
-
-  - `"client-capabilities"` (internal): Sent by the client when Passkey support has been checked.
 
   ## Messages
 
@@ -60,7 +58,7 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
 
   ## Usage
 
-  The following example demonstrates how to use the `ClientCapabilitiesComponent` to conditionally allow passkey registration based on the client's capabilities.
+  The following example demonstrates how to use the `WebauthnComponents.ClientCapabilitiesComponent` to conditionally allow passkey registration based on the client's capabilities.
 
   ```elixir
   defmodule MyAppWeb.AuthenticationLive do
@@ -78,14 +76,16 @@ defmodule WebauthnComponents.ClientCapabilitiesComponent do
   end
   ```
 
-  In the `c:Phoenix.LiveView.render/1` function or Heex template, render the component(s):
+  In the `c:Phoenix.LiveView.render/1` callback or an HEEx template, render the component(s):
 
-  ```html
-  <WebauthnComponents.ClientCapabilitiesComponent id="support-component" />
-    
-  <WebauthnComponents.RegistrationComponent
+  ```heex
+  <.live_component module={WebauthnComponents.ClientCapabilitiesComponent} id="client-capabilities-component" />
+
+  <.live_component
+    :if={@capabilities["conditionalCreate"] and @capabilities["userVerifyingPlatformAuthenticator"]}
+    module={WebauthnComponents.RegistrationComponent}
     id="registration-component"
-    :if={!!@capabilities["conditionalCreate"] and !!@capabilities["userVerifyingPlatformAuthenticator"]}
+    public_key_options={@public_key_options}
   />
   ```
 

@@ -1,10 +1,10 @@
 defmodule WebauthnComponents.AuthenticationComponentTest do
   use ComponentCase, async: true
   alias WebauthnComponents.AuthenticationComponent
-  alias WebauthnComponents.Config.PublicKeyCredentialRequestOptions
-  alias WebauthnComponents.Config.AllowCredential
-  alias WebauthnComponents.Config.PublicKeyCredential
-  alias WebauthnComponents.Config.AuthenticatorAssertionResponse
+  alias WebauthnComponents.PublicKeyCredentialRequestOptions
+  alias WebauthnComponents.AllowCredential
+  alias WebauthnComponents.PublicKeyCredential
+  alias WebauthnComponents.AuthenticatorAssertionResponse
   alias WebauthnComponents.FindUser
 
   @id "test-component"

@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.AuthenticatorAssertionResponse do
+defmodule WebauthnComponents.AuthenticatorAssertionResponse do
   @moduledoc false
   @type t :: %__MODULE__{
           authenticator_data: binary(),

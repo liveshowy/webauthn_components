@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.RelyingParty do
+defmodule WebauthnComponents.RelyingParty do
   @moduledoc """
   Struct used to identify the application associated with a credential.
 

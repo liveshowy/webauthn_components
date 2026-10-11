@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.User do
+defmodule WebauthnComponents.User do
   @moduledoc """
   Struct used to identify the user associated with a credential.
 

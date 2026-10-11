@@ -1,21 +1,37 @@
 defmodule WebauthnComponents.AuthenticationComponent do
   @moduledoc """
-  LiveComponent for validating the identity of a user with a WebAuthn credential.
+  LiveComponent for authenticating a user with a WebAuthn credential.
 
-  This component may be used when signing in a user to an existing account or re-authenticating during sensitive operations (user security changes, destructive admin actions, etc.).
+  Use this component to sign in an existing user or to re-authenticate during sensitive operations (security changes, destructive admin actions, and so on).
+
+  ## Assigns
+
+  - `@id` (Required) An HTML element ID.
+  - `@mediation` (Optional) `"optional"` (default) or `"conditional"`.
+  - `@disabled` (Optional) Disables the button. Defaults to `false`.
+  - `@class` (Optional) CSS classes for the button.
+  - `@rest` (Optional) Additional HTML attributes for the button.
+  - `@public_key_credential_request_options` (Optional) A `WebauthnComponents.PublicKeyCredentialRequestOptions` struct controlling the request (for example, `:timeout`, `:user_verification`, and `:allow_credentials`).
+
+  ## Messages
+
+  - `%WebauthnComponents.FindUser{}` — the user presented a credential. Reply with `send_update(WebauthnComponents.AuthenticationComponent, id: ..., credentials: credentials)`.
+  - `{credential_id, %Wax.AuthenticatorData{}}` — the credential was verified. `credential_id` is the raw credential id.
+  - `{:error, payload}` — a client-side error. `payload` contains the `message`, `name`, and `stack` reported by the browser.
+  - A `Wax` error struct (for example, `%Wax.InvalidClientDataError{}`) — server-side verification failed.
 
   ## User Lookup
 
-  After a user has approved client-side authentication, the component will pass a `t:WebauthnComponents.FindUser.t/0` message to the parent LiveView.
-  The host application must locate the user, apply any relevant validation (eg. user status check), and send a list of credential tuples to the component.
-  Each credential tuple must contain the credential id and public key so that the component can authorize the client-presented credential against the server-persisted credential.
+  After the user approves authentication in the browser, the component sends a `t:WebauthnComponents.FindUser.t/0` message to the parent LiveView.
+  The host application must locate the user, apply any relevant validation (for example, an account-status check), and send the user's credentials back with `Phoenix.LiveView.send_update/3`.
+  Each credential must expose a credential id and public key; by default the component reads the `:id` and `:public_key` fields from any struct or map.
+  Define an implementation of `WebauthnComponents.CredentialProtocol` when your schema uses different field names.
 
-  ## Autofill UI
+  ## Conditional UI
 
-  When `@mediation` is set to `"conditional"`, the component will include a hidden input field which triggers an automatic user prompt to sign in with a Passkey.
-  This makes the authentication process simpler for users by requiring fewer steps to sign in.
+  Set `@mediation` to `"conditional"` to render a hidden input that lets the browser offer a Passkey while the user interacts with the page, reducing the number of steps required to sign in.
 
-  For best results, use `WebauthnComponents.ClientCapabilitiesComponent` to detect browser support, then update `WebauthnComponents.AuthenticationComponent` with the appropriate `@mediation` value.
+  For best results, use `WebauthnComponents.ClientCapabilitiesComponent` to detect browser support, then update `@mediation` with the appropriate value.
 
   ```
   # MyAppWeb.Authentication template
@@ -40,7 +56,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
     def handle_info({:client_capabilities, capabilities}, socket) do
       if capabilities["conditionalGet"] do
         send_update(WebauthnComponents.AuthenticationComponent,
-          id: "passkey-authentication-component",
+          id: "authentication-component",
           mediation: "conditional"
         )
       end
@@ -55,26 +71,31 @@ defmodule WebauthnComponents.AuthenticationComponent do
   ```
   defmodule MyAppWeb.Authentication do
     ...
-    
-    def handle_info(%WebauthnComponents.FindUser{user_handle: user_id}, socket) do
-      with {:ok, user} <- MyApp.Identity.get_user(user_id),
-      %MyApp.Identity.User{status: :active, credentials: credentials} <- user do
-        credential_tuples = Enum.map(credentials, &{&1.id, &1.public_key})
+
+    def handle_info(%WebauthnComponents.FindUser{user_handle: user_handle}, socket) do
+      with {:ok, user} <- MyApp.Identity.get_user(user_handle),
+           %MyApp.Identity.User{status: :active, credentials: credentials} <- user do
         send_update(WebauthnComponents.AuthenticationComponent,
           id: "authentication-component",
           credentials: credentials
-          )
-        
+        )
+
         {:noreply, socket}
       else
-        {:error, reason} ->
-
+        error ->
+          Logger.warning(error)
+          
           {
             :noreply,
             socket
             |> put_flash(:error, "Authentication failed")
           }
       end
+    end
+
+    def handle_info({_credential_id, %Wax.AuthenticatorData{}}, socket) do
+      # Authentication succeeded. Sign the user in.
+      {:noreply, socket}
     end
   end
   ```
@@ -95,11 +116,12 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   - https://web.dev/articles/passkey-form-autofill
   - https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#mediation
+  - https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API#discoverable_and_non-discoverable_credentials
   """
   use Phoenix.LiveComponent
-  alias WebauthnComponents.Config.PublicKeyCredentialRequestOptions
-  alias WebauthnComponents.Config.PublicKeyCredential
-  alias WebauthnComponents.Config.AuthenticatorAssertionResponse
+  alias WebauthnComponents.PublicKeyCredentialRequestOptions
+  alias WebauthnComponents.PublicKeyCredential
+  alias WebauthnComponents.AuthenticatorAssertionResponse
   alias WebauthnComponents.FindUser
   alias WebauthnComponents.CredentialProtocol
 
@@ -119,7 +141,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   def render(assigns) do
     ~H"""
-    <span>
+    <span class="contents">
       <button
         id={@id}
         type="button"

@@ -4,7 +4,7 @@ defmodule WebauthnComponents.MixProject do
   # Don't forget to change the version in `package.json`
   @name "WebauthnComponents"
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.10.0"
+  @version "0.11.0"
 
   def project do
     [
@@ -71,9 +71,22 @@ defmodule WebauthnComponents.MixProject do
       ],
       groups_for_modules: [
         Components: ~r/Component$/,
-        Config: ~r/WebauthnComponents\.Config\./,
+        Structs: [
+          WebauthnComponents.AllowCredential,
+          WebauthnComponents.AuthenticatorAssertionResponse,
+          WebauthnComponents.AuthenticatorSelection,
+          WebauthnComponents.ExcludedCredential,
+          WebauthnComponents.FindUser,
+          WebauthnComponents.PubKeyCredParams,
+          WebauthnComponents.PublicKeyCredential,
+          WebauthnComponents.PublicKeyCredentialCreationOptions,
+          WebauthnComponents.PublicKeyCredentialRequestOptions,
+          WebauthnComponents.RelyingParty,
+          WebauthnComponents.User
+        ],
         Support: [
-          WebauthnComponents.CoseKey
+          WebauthnComponents.CoseKey,
+          WebauthnComponents.CredentialProtocol
         ]
       ],
       source_url: @source_url,
