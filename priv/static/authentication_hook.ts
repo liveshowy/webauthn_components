@@ -8,7 +8,7 @@ export const AuthenticationHook = {
       try {
         publicKey.challenge = base64ToArray(publicKey.challenge).buffer;
         publicKey.allowCredentials = publicKey.allowCredentials.map((credential) => {
-            credential.id = base64ToArray(credential.id).buffer;
+            return credential.id = base64ToArray(credential.id).buffer;
           });
         const credential = await navigator.credentials.get({
           publicKey,
