@@ -1,13 +1,13 @@
 defmodule WebauthnComponents.SchemasTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
-  alias WebauthnComponents.Config.AllowCredential
-  alias WebauthnComponents.Config.AuthenticatorSelection
-  alias WebauthnComponents.Config.ExcludedCredential
-  alias WebauthnComponents.Config.PubKeyCredParams
-  alias WebauthnComponents.Config.PublicKeyCredentialCreationOptions
-  alias WebauthnComponents.Config.RelyingParty
-  alias WebauthnComponents.Config.User
+  alias WebauthnComponents.AllowCredential
+  alias WebauthnComponents.AuthenticatorSelection
+  alias WebauthnComponents.ExcludedCredential
+  alias WebauthnComponents.PubKeyCredParams
+  alias WebauthnComponents.PublicKeyCredentialCreationOptions
+  alias WebauthnComponents.RelyingParty
+  alias WebauthnComponents.User
 
   @attestation ~w(none direct enterprise indirect)
   @attestation_formats ~w(packed tpm android-key android-safetynet fido-u2f apple none)

@@ -1,19 +1,19 @@
-defmodule WebauthnComponents.Config.PublicKeyCredentialCreationOptions do
+defmodule WebauthnComponents.PublicKeyCredentialCreationOptions do
   @moduledoc """
   Struct representing options for registering a new credential.
 
-  The struct is defined as an Ecto embedded schema to document the shape and provide guidance during implementation. The field keys are converted to camelCase when encoded as JSON.
+  This struct documents the shape of the WebAuthn `PublicKeyCredentialCreationOptions` dictionary. Field keys are converted to camelCase when encoded as JSON.
 
   ## Resources
 
   - https://developer.mozilla.org/en-US/docs/Web/API/PublicKeyCredentialCreationOptions
   - https://w3c.github.io/webauthn/#dictionary-makecredentialoptions
   """
-  alias WebauthnComponents.Config.AuthenticatorSelection
-  alias WebauthnComponents.Config.ExcludedCredential
-  alias WebauthnComponents.Config.PubKeyCredParams
-  alias WebauthnComponents.Config.User
-  alias WebauthnComponents.Config.RelyingParty
+  alias WebauthnComponents.AuthenticatorSelection
+  alias WebauthnComponents.ExcludedCredential
+  alias WebauthnComponents.PubKeyCredParams
+  alias WebauthnComponents.User
+  alias WebauthnComponents.RelyingParty
 
   @type t :: %__MODULE__{
           attestation: :none | :direct | :enterprise | :indirect,

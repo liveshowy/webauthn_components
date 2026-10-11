@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.ExcludedCredential do
+defmodule WebauthnComponents.ExcludedCredential do
   @moduledoc """
   Struct representing credentials which are already associated with the user, which should not be duplicated.
 

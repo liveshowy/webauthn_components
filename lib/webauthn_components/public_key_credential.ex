@@ -1,6 +1,6 @@
-defmodule WebauthnComponents.Config.PublicKeyCredential do
+defmodule WebauthnComponents.PublicKeyCredential do
   @moduledoc false
-  alias WebauthnComponents.Config.AuthenticatorAssertionResponse
+  alias WebauthnComponents.AuthenticatorAssertionResponse
 
   @type t :: %__MODULE__{
           authenticator_attachment: String.t(),

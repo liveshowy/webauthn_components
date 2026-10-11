@@ -4,6 +4,21 @@ defmodule WebauthnComponents.RegistrationComponent do
 
   This component may be used when signing up a new user or adding a new Passkey for an existing user.
 
+  ## Assigns
+
+  - `@id` (Required) An HTML element ID.
+  - `@public_key_options` (Required) A `WebauthnComponents.PublicKeyCredentialCreationOptions` struct describing the credential to create.
+  - `@trusted_attestation_types` (Optional) Attestation types accepted by the server. Defaults to `[:none, :basic]`. See `t:Wax.Attestation.type/0` for possible values.
+  - `@disabled` (Optional) Disables the button. Defaults to `false`.
+  - `@class` (Optional) CSS classes for the button.
+  - `@rest` (Optional) Additional HTML attributes for the button.
+
+  ## Messages
+
+  - `%Wax.AuthenticatorData{}` — the credential was created. Persist the attested credential data (see above).
+  - `{:error, payload}` — a client-side error. `payload` contains the `message`, `name`, and `stack` reported by the browser.
+  - A `Wax` error struct (for example, `%Wax.InvalidCBORError{}` or `%Wax.ExpiredChallengeError{}`) — server-side verification failed.
+
   ## Credential Persistence
 
   Once a credential has been successfully created, this component will send a `t:Wax.AuthenticatorData.t/0` message to the parent LiveView.
@@ -15,7 +30,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   >
   > During future authentication attempts, the `WebauthnComponents.AuthenticationComponent` will send a `t:WebauthnComponents.FindUser.t/0` struct, which includes a `:user_handle` the server must use to locate the user.
   >
-  > See `t:WebauthnComponents.Config.User.t/0` for details.
+  > See `t:WebauthnComponents.User.t/0` for details.
 
   The following example illustrates how a user and credential may be registered (some details omitted):
 
@@ -40,7 +55,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   The `:attested_credential_data` field contains a `t:Wax.AttestedCredentialData.t/0` struct.
   In this struct, the `:credential_id` and `:credential_public_key` fields must be persisted for future authentication.
 
-  `WebauthnComponents` **defers to the host application** for persistence. 
+  `WebauthnComponents` **defers to the host application** for credential persistence and session management. 
   Whether the application follows CRUD or Event Sourcing patterns, it is recommended to define a schema dedicated to public key credential storage:
 
   ### CRUD Example
@@ -57,7 +72,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       field :public_key, CoseKey
       belongs_to :user, User
 
-      # Optional: Save `:flag_*` and other fields from `t:Wax.AuthenticatorData/0`
+      # Optional: Save `:flag_*` and other fields from `t:Wax.AuthenticatorData.t/0`
       field :flags, :map, default: %{}
       field :sign_count, :integer
       field :extensions, :map, default: %{}
@@ -75,7 +90,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   ```
   """
   use Phoenix.LiveComponent
-  alias WebauthnComponents.Config.PublicKeyCredentialCreationOptions
+  alias WebauthnComponents.PublicKeyCredentialCreationOptions
 
   def mount(socket) do
     {

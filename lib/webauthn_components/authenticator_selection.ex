@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.AuthenticatorSelection do
+defmodule WebauthnComponents.AuthenticatorSelection do
   @moduledoc """
   Struct used to constrain allowed authenticators used to create a new credential.
 
@@ -35,7 +35,7 @@ defmodule WebauthnComponents.Config.AuthenticatorSelection do
       struct
       |> Map.from_struct()
       |> Map.put(:authenticatorAttachment, struct.authenticator_attachment)
-      |> Map.put(:residentkey, struct.resident_key)
+      |> Map.put(:residentKey, struct.resident_key)
       |> Map.put(:userVerification, struct.user_verification)
       |> Map.drop([:authenticator_attachment, :resident_key, :user_verification])
       |> JSON.encode!(opts)

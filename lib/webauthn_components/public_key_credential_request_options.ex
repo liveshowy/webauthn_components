@@ -1,6 +1,8 @@
-defmodule WebauthnComponents.Config.PublicKeyCredentialRequestOptions do
+defmodule WebauthnComponents.PublicKeyCredentialRequestOptions do
   @moduledoc """
   Struct used to fetch a credential from a client authenticator device.
+
+  Pass an instance to `WebauthnComponents.AuthenticationComponent` through the `@public_key_credential_request_options` assign to control the request, such as the `:timeout`, `:user_verification`, and `:allow_credentials` values.
 
   ## Resources
 

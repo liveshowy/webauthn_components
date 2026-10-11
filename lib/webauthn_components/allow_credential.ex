@@ -1,4 +1,4 @@
-defmodule WebauthnComponents.Config.AllowCredential do
+defmodule WebauthnComponents.AllowCredential do
   @moduledoc """
   Struct representing a credential registered to a user which may be used for authentication.
 

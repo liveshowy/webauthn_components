@@ -1,19 +1,13 @@
 # WebAuthn Flows
 
-- [WebAuthn Flows](#webauthn-flows)
-  - [Client Capabilities](#client-capabilities)
-  - [Registration](#registration)
-  - [Authentication](#authentication)
-  - [Token Management](#token-management)
 
+`WebauthnComponents` provides modular LiveComponents for detecting Passkey support, registering credentials, and authenticating existing users. See each component's module documentation for assigns, events, and messages.
 
-`WebauthnComponents` contains a few modular components which may be combined to detect passkey support, register new keys, authenticate keys for existing users, and manage session tokens in the client.
-
-See module documentation for each component for more detailed descriptions.
-
-> 🧯 The following charts focus on the success path, where no error has ocurred.
+> The diagrams below illustrate the success path only. Error handling is described in the module documentation for each component.
 
 ## Client Capabilities
+
+On mount, the client checks browser support with `PublicKeyCredential.getClientCapabilities()` and reports the result to the parent LiveView. The parent may use this to disable components in unsupported browsers.
 
 ```mermaid
 sequenceDiagram
@@ -25,14 +19,14 @@ sequenceDiagram
    participant AuthenticationComponent
 
    Client->>ClientCapabilitiesComponent: "client-capabilities"
-   ClientCapabilitiesComponent->>ParentLiveView: `{:client_capabilities, map}`
-   ParentLiveView->>RegistrationComponent: `@disabled = !@client_capabilities["passkeyPlatformAuthenticator"]`
-   ParentLiveView->>AuthenticationComponent: `@disabled = !@client_capabilities["passkeyPlatformAuthenticator"]`
+   ClientCapabilitiesComponent->>ParentLiveView: `{:client_capabilities, capabilities}`
+   ParentLiveView->>RegistrationComponent: `@disabled = !capabilities["passkeyPlatformAuthenticator"]`
+   ParentLiveView->>AuthenticationComponent: `@disabled = !capabilities["passkeyPlatformAuthenticator"]`
 ```
 
 ## Registration
 
-A user wants to create a **new** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
+A user creates a new credential, whether for a new account or an additional Passkey on an existing account.
 
 ```mermaid
 sequenceDiagram
@@ -42,20 +36,20 @@ sequenceDiagram
    participant RegistrationComponent
    participant ParentLiveView
 
-   User->>Client: Click `register`
+   User->>Client: Click the register button
    Client->>RegistrationComponent: "register"
    RegistrationComponent->>Client: "registration-challenge"
-   Client->>RegistrationComponent: "registration-attestation"
-   RegistrationComponent->>ParentLiveView: `{:registration_successful, ...}`
+   Client->>RegistrationComponent: "credential"
+   RegistrationComponent->>ParentLiveView: `%Wax.AuthenticatorData{}`
 ```
 
-Once the parent LiveView receives the `{:registration_successful, ...}` message, it must persist the `%User{}` and `%UserKey{}`. The `wac.install` generator casts the new user key as an association in the user params, so both are created at once.
+When the parent LiveView receives the `%Wax.AuthenticatorData{}` message, it must persist the user's new credential. The `:attested_credential_data` field contains the `:credential_id` and `:credential_public_key` required for future authentication. See `WebauthnComponents.RegistrationComponent` for a schema example.
 
-To keep the user signed in, the LiveView may [create a session token](#token-management).
+User session management is handled by the host application.
 
 ## Authentication
 
-A user wants to sign into an **existing** account. If the user is already authenticated when they navigate to `/sign-in`, the LiveView will redirect to `/`.
+A user signs in to an existing account.
 
 ```mermaid
 sequenceDiagram
@@ -65,77 +59,16 @@ sequenceDiagram
    participant AuthenticationComponent
    participant ParentLiveView
 
-   User->>Client: Click `authenticate`
+   User->>Client: Click the authenticate button
    Client->>AuthenticationComponent: "authenticate"
-   AuthenticationComponent->>Client: "authentication-challenge"
-   Client->>AuthenticationComponent: "authentication-attestation"
-   AuthenticationComponent->>ParentLiveView: `{:find_credential, ...}`
-   ParentLiveView->>AuthenticationComponent: update: `%{user_keys: user_keys}`
-   AuthenticationComponent->>AuthenticationComponent: validate challenge against user_keys
-   AuthenticationComponent->>ParentLiveView: `{:authentication_successful, ...}`
+   AuthenticationComponent->>Client: "get-credential"
+   Client->>AuthenticationComponent: "credential"
+   AuthenticationComponent->>ParentLiveView: `%WebauthnComponents.FindUser{user_handle: user_handle}`
+   ParentLiveView->>AuthenticationComponent: `send_update(credentials: credentials)`
+   AuthenticationComponent->>AuthenticationComponent: Verify the assertion against the credentials
+   AuthenticationComponent->>ParentLiveView: `{credential_id, %Wax.AuthenticatorData{}}`
 ```
 
-Once the parent LiveView receives the `{:find_credential, ...}` message, it must lookup the user via the user's existing key. To keep the user signed in, the LiveView may [create a session token](#token-management), Base64-encode the token, and pass it to `TokenComponent` for persistence in the client's `sessionStorage`.
+When the parent LiveView receives the `%WebauthnComponents.FindUser{}` message, it must locate the user by `:user_handle`, apply any relevant validation (for example, an account-status check), and send the user's credentials back with `Phoenix.LiveView.send_update/3`. The component then verifies the client's assertion and reports the result. See `WebauthnComponents.AuthenticationComponent` for a complete example.
 
-## Token Management
-
-A user has successfully registered or authenticated.
-
-The LiveView will render a separate hidden form on the page, with a text input for the `%UserToken{}` value. When this form is rendered, it will trigger a JS click on its own submit button, which will result in a `POST` to `/session`, protected by Phoenix's default CSRF protections ([Plug docs](https://hexdocs.pm/plug/Plug.CSRFProtection.html)).
-
-The `Session` controller then validates the token before updating the connection session and redirecting to `/` upon success. If the token is invalid, the user will be redirected to `/sign-in` with a flash message to sign in.
-
-**Successful Registration or Authentication**
-
-A user has successfully registered or authenticated.
-
-```mermaid
-sequenceDiagram
-   autonumber
-   participant ParentLiveView
-   participant TokenForm
-   participant HomePage
-   participant Router
-
-   ParentLiveView->>TokenForm: `@form[:value].value = b64_token`
-   TokenForm->>Session: submit POST to `/session`
-   Session->>Session: create/2
-   Session->>Session: lookup user by token
-   Session->>Session: update conn session
-   Session->>Router: redirect to `/`
-```
-
-**Active Session**
-
-A user already has a valid session token.
-
-```mermaid
-sequenceDiagram
-   autonumber
-   participant Router
-   participant Session
-
-   Router->>Session: fetch_current_user/2
-   Session->>Session: get session token
-   Session->>Session: find user
-   Session->>Session: put user_id in session
-   Session->>Router: continue
-```
-
-**Sign Out**
-
-A user has clicked the "Sign Out" button.
-
-```mermaid
-sequenceDiagram
-   autonumber
-   participant Client
-   participant SignOut
-   participant Router
-
-   Client->>SignOut: Click
-   SignOut->>Session: DELETE /session
-   Session->>Session: delete all session tokens for user_id
-   Session->>Session: clear the conn session
-   Session->>Router: redirect to `/`
-```
+User session management is handled by the host application.
