@@ -6,13 +6,49 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   ## User Lookup
 
-  After a user has approved client-side authentication, the component will pass a `t:WebauthnComponents.FindUser.t/0` message to the parent LiveView. The host application must locate the user, apply any relevant validation (eg. user status check), and send a list of credential tuples to the component. Each credential tuple must contain the credential id and public key so that the component can authorize the client-presented credential against the server-persisted credential.
+  After a user has approved client-side authentication, the component will pass a `t:WebauthnComponents.FindUser.t/0` message to the parent LiveView.
+  The host application must locate the user, apply any relevant validation (eg. user status check), and send a list of credential tuples to the component.
+  Each credential tuple must contain the credential id and public key so that the component can authorize the client-presented credential against the server-persisted credential.
 
   ## Autofill UI
 
-  When `@mediation` is set to `:conditional` (default), the component will include a hidden input field which triggers an automatic user prompt to sign in with a Passkey. This makes the authentication process simpler for users by requiring fewer steps to sign in.
+  When `@mediation` is set to `"conditional"`, the component will include a hidden input field which triggers an automatic user prompt to sign in with a Passkey.
+  This makes the authentication process simpler for users by requiring fewer steps to sign in.
 
-  To disable this behavior, set `@mediation` to one of the other [available values](https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#mediation).
+  For best results, use `WebauthnComponents.ClientCapabilitiesComponent` to detect browser support, then update `WebauthnComponents.AuthenticationComponent` with the appropriate `@mediation` value.
+
+  ```
+  # MyAppWeb.Authentication template
+  <.live_component
+    module={WebauthnComponents.ClientCapabilitiesComponent}
+    id="client-capabilities-component"
+  />
+
+  <.live_component
+    module={WebauthnComponents.AuthenticationComponent}
+    id="authentication-component"
+    class="btn btn-primary w-full"
+  >
+    <span>Log in with a Passkey</span>
+  </.live_component>
+  ```
+
+  ```
+  defmodule MyAppWeb.Authentication do
+    ...
+
+    def handle_info({:client_capabilities, capabilities}, socket) do
+      if capabilities["conditionalGet"] do
+        send_update(WebauthnComponents.AuthenticationComponent,
+          id: "passkey-authentication-component",
+          mediation: "conditional"
+        )
+      end
+
+      {:noreply, socket}
+    end
+  end
+  ```
 
   ## Example
 
@@ -58,12 +94,14 @@ defmodule WebauthnComponents.AuthenticationComponent do
   ## Resources
 
   - https://web.dev/articles/passkey-form-autofill
+  - https://developer.mozilla.org/en-US/docs/Web/API/CredentialsContainer/get#mediation
   """
   use Phoenix.LiveComponent
   alias WebauthnComponents.Config.PublicKeyCredentialRequestOptions
   alias WebauthnComponents.Config.PublicKeyCredential
   alias WebauthnComponents.Config.AuthenticatorAssertionResponse
   alias WebauthnComponents.FindUser
+  alias WebauthnComponents.CredentialProtocol
 
   def mount(socket) do
     {
@@ -72,7 +110,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:disabled, fn -> false end)
       |> assign_new(:class, fn -> nil end)
       |> assign_new(:rest, fn -> %{} end)
-      |> assign_new(:mediation, fn -> nil end)
+      |> assign_new(:mediation, fn -> "optional" end)
       |> assign_new(:public_key_credential_request_options, fn ->
         %PublicKeyCredentialRequestOptions{}
       end)
@@ -103,16 +141,16 @@ defmodule WebauthnComponents.AuthenticationComponent do
     """
   end
 
-  def update(%{mediation: :conditional}, socket) do
+  def update(%{mediation: "conditional"}, socket) do
     {
       :ok,
       socket
-      |> assign(:mediation, :conditional)
+      |> assign(:mediation, "conditional")
       |> get_credential()
     }
   end
 
-  def update(%{credential_pairs: credential_pairs}, socket) do
+  def update(%{credentials: credentials}, socket) when is_list(credentials) do
     %{challenge: %Wax.Challenge{} = challenge, credential: %PublicKeyCredential{} = credential} =
       socket.assigns
 
@@ -125,7 +163,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       }
     } = credential
 
-    with {:ok, credential_pairs} <- validate_credential_pairs(credential_pairs),
+    with {:ok, credential_pairs} <- get_credential_pairs(credentials),
          {:ok, auth_data} <-
            Wax.authenticate(
              id,
@@ -207,6 +245,11 @@ defmodule WebauthnComponents.AuthenticationComponent do
     end
   end
 
+  def handle_event("error", payload, socket) do
+    send(self(), {:error, payload})
+    {:noreply, socket}
+  end
+
   defp get_credential(socket) do
     %{
       id: id,
@@ -244,14 +287,14 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   defp fetch_challenge(_assigns), do: {:error, %Wax.ExpiredChallengeError{}}
 
-  defp validate_credential_pairs(credentials) when is_list(credentials) do
-    if Enum.all?(credentials, fn
-         {id, public_key} -> is_binary(id) and is_map(public_key)
-         _ -> false
-       end) do
-      {:ok, credentials}
-    else
-      {:error, :invalid_credentials}
+  defp get_credential_pairs(credentials) do
+    try do
+      for credential <- credentials do
+        {CredentialProtocol.id(credential), CredentialProtocol.public_key(credential)}
+      end
+      |> then(&{:ok, &1})
+    rescue
+      error -> {:error, error}
     end
   end
 end
