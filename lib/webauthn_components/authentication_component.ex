@@ -119,25 +119,27 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
   def render(assigns) do
     ~H"""
-    <button
-      id={@id}
-      type="button"
-      phx-hook="AuthenticationHook"
-      phx-click="authenticate"
-      phx-target={@myself}
-      disabled={@disabled}
-      class={@class}
-      {@rest}
-    >
-      {render_slot(@inner_block)}
+    <span>
+      <button
+        id={@id}
+        type="button"
+        phx-hook="AuthenticationHook"
+        phx-click="authenticate"
+        phx-target={@myself}
+        disabled={@disabled}
+        class={@class}
+        {@rest}
+      >
+        {render_slot(@inner_block)}
+      </button>
       <input
         :if={@mediation == :conditional}
         type="hidden"
-        name="username"
-        autocomplete="username webauthn"
+        name="webauthn"
+        autocomplete="webauthn"
         autofocus
       />
-    </button>
+    </span>
     """
   end
 
