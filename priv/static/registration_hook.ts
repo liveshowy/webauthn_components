@@ -9,6 +9,12 @@ export const RegistrationHook = {
         try {
           publicKey.challenge = base64ToArray(publicKey.challenge).buffer;
           publicKey.user.id = base64ToArray(publicKey.user.id).buffer;
+          publicKey.excludeCredentials = (
+            publicKey.excludeCredentials || []
+          ).map((credential) => ({
+            ...credential,
+            id: base64ToArray(credential.id).buffer,
+          }));
           const credential = await navigator.credentials.create({ publicKey });
           this.pushEventTo(this.el, "credential", credential);
         } catch (error) {

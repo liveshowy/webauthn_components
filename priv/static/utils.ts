@@ -1,5 +1,7 @@
 export function base64ToArray(base64String) {
-  return Uint8Array.from(window.atob(base64String), (c) => c.charCodeAt(0));
+  const base64 = base64String.replace(/-/g, "+").replace(/_/g, "/");
+  const padding = "=".repeat((4 - (base64.length % 4)) % 4);
+  return Uint8Array.from(window.atob(base64 + padding), (c) => c.charCodeAt(0));
 }
 
 export function handleError(error, context) {

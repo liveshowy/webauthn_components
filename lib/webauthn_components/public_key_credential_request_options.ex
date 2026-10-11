@@ -32,7 +32,7 @@ defmodule WebauthnComponents.PublicKeyCredentialRequestOptions do
     def encode(struct, opts) do
       struct
       |> Map.from_struct()
-      |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
+      |> Map.update!(:challenge, &Base.url_encode64(&1, padding: false))
       |> Map.put(:rpId, struct.rp_id)
       |> Map.put(:allowCredentials, struct.allow_credentials)
       |> Map.put(:userVerification, struct.user_verification)
@@ -45,7 +45,7 @@ defmodule WebauthnComponents.PublicKeyCredentialRequestOptions do
     def encode(struct, opts) do
       struct
       |> Map.from_struct()
-      |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
+      |> Map.update!(:challenge, &Base.url_encode64(&1, padding: false))
       |> Map.put(:rpId, struct.rp_id)
       |> Map.put(:allowCredentials, struct.allow_credentials)
       |> Map.put(:userVerification, struct.user_verification)

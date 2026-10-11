@@ -92,6 +92,47 @@ defmodule WebauthnComponents.SchemasTest do
     end
   end
 
+  describe "ExcludedCredential" do
+    test "encodes a binary credential id as base64" do
+      credential = %ExcludedCredential{id: <<0, 1, 2>>, transports: [:usb]}
+
+      expected = %{"id" => "AAEC", "transports" => ["usb"], "type" => "public-key"}
+
+      assert credential |> Jason.encode!() |> Jason.decode!() == expected
+      assert credential |> JSON.encode!() |> JSON.decode!() == expected
+    end
+
+    test "encodes non-UTF-8 credential ids" do
+      id = :crypto.strong_rand_bytes(32)
+      credential = %ExcludedCredential{id: id}
+
+      decoded = credential |> Jason.encode!() |> Jason.decode!()
+
+      assert decoded["id"] == Base.url_encode64(id, padding: false)
+    end
+  end
+
+  describe "PublicKeyCredentialCreationOptions - exclude_credentials" do
+    test "encodes nested excluded credentials with base64 ids" do
+      options = %PublicKeyCredentialCreationOptions{
+        challenge: <<0, 1, 2>>,
+        rp: %RelyingParty{id: "example.com", name: "Example Org"},
+        user: %User{id: <<0, 1, 2>>, name: "example_user", display_name: "Example User"},
+        exclude_credentials: [
+          %ExcludedCredential{id: <<0, 1, 2>>, transports: [:usb]}
+        ]
+      }
+
+      expected = [%{"id" => "AAEC", "transports" => ["usb"], "type" => "public-key"}]
+
+      assert options |> Jason.encode!() |> Jason.decode!() |> Map.fetch!("excludeCredentials") ==
+               expected
+
+      assert options |> JSON.encode!() |> JSON.decode!() |> Map.fetch!("excludeCredentials") ==
+               expected
+    end
+  end
+
   defp authenticator_selection do
     gen all authenticator_attachment <- member_of(~w(platform cross-platform)),
             resident_key <- member_of(~w(discouraged preferred required)),
@@ -105,7 +146,7 @@ defmodule WebauthnComponents.SchemasTest do
   end
 
   defp exclude_credentials do
-    gen all id <- string(:alphanumeric, min_length: 4),
+    gen all id <- binary(min_length: 4, max_length: 32),
             transports <- list_of(member_of(~w(ble hybrid internal nfc usb))),
             type <- string(:alphanumeric, min_length: 4) do
       %ExcludedCredential{id: id, transports: transports, type: type}

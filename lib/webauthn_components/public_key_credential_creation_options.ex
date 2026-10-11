@@ -57,7 +57,7 @@ defmodule WebauthnComponents.PublicKeyCredentialCreationOptions do
     def encode(struct, opts) do
       struct
       |> Map.from_struct()
-      |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
+      |> Map.update!(:challenge, &Base.url_encode64(&1, padding: false))
       |> Map.put(:attestationFormats, struct.attestation_formats)
       |> Map.put(:authenticatorSelection, struct.authenticator_selection)
       |> Map.put(:excludeCredentials, struct.exclude_credentials)
@@ -76,7 +76,7 @@ defmodule WebauthnComponents.PublicKeyCredentialCreationOptions do
     def encode(struct, opts) do
       struct
       |> Map.from_struct()
-      |> Map.update!(:challenge, &Base.encode64(&1, padding: false))
+      |> Map.update!(:challenge, &Base.url_encode64(&1, padding: false))
       |> Map.put(:attestationFormats, struct.attestation_formats)
       |> Map.put(:authenticatorSelection, struct.authenticator_selection)
       |> Map.put(:excludeCredentials, struct.exclude_credentials)
