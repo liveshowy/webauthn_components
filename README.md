@@ -2,144 +2,76 @@
 
 Passkey authentication for Phoenix LiveView applications.
 
-- [WebauthnComponents](#webauthncomponents)
-    - [Project Status](#project-status)
-  - [Roadmap](#roadmap)
-  - [Quick Start](#quick-start)
-  - [Installation Details](#installation-details)
-    - [Create a new Phoenix Project](#create-a-new-phoenix-project)
-    - [Add the Dependency](#add-the-dependency)
-    - [Generate and Modify Code](#generate-and-modify-code)
-  - [Webauthn Flows](#webauthn-flows)
-  - [WebAuthn and Passkeys](#webauthn-and-passkeys)
-    - [Benefits](#benefits)
-    - [Cross-Device Authentication](#cross-device-authentication)
-      - [Example](#example)
-    - [Known Issues](#known-issues)
-  - [Browser Support](#browser-support)
-  - [Additional Resources](#additional-resources)
 
+## Scope
 
-### Project Status
+WebauthnComponents wraps the client-server coordination of the WebAuthn ceremonies so that implementers can focus on the data model, business logic, and user experience. It provides:
 
-- This package is a **work in progress**, and it is in early **beta** status.
-- Please **do not use WebauthnComponents in a production environment** until it has completed _beta_ testing.
-- Feel free to experiment with this package and contribute feedback in [Elixir Forum](https://elixirforum.com/t/webauthnlivecomponent-passwordless-auth-for-liveview-apps/49941).
+- `WebauthnComponents.ClientCapabilitiesComponent` — detect Passkey support in the browser.
+- `WebauthnComponents.RegistrationComponent` — create a new credential.
+- `WebauthnComponents.AuthenticationComponent` — authenticate with an existing credential.
 
-## Roadmap
+Credential persistence, user lookup, and session management are the host application's responsibility. Persist at least the credential id, public key, and a reference to the user, then use them to verify future visits. See `WebauthnComponents.RegistrationComponent` and `WebauthnComponents.AuthenticationComponent` for details.
 
-View the planned work for this repo in the public [WebauthnComponents v1](https://github.com/orgs/liveshowy/projects/3/views/1) project on GitHub.
+> The `wac.install` Mix task and the bundled code generators were removed in v0.10. Implementers are free to follow CRUD, Event Sourcing, or other patterns for user and credential management.
 
-## Quick Start
+## Installation
 
-> The `wac.install` Mix Task is no longer supported as of v0.10.
-> This task generated boilerplate code to ease initial setup, but its use was limited to greenfield apps.
->
-> As of v0.10, scope is limited to credential registration and authentication.
-> With this change, implementers may choose to follow CRUD, Event Sourcing, and other patterns based on an application's needs.
-
-### Installation
-
-Add the dependency to your `mix.exs` file:
+Add the dependency to your `mix.exs`:
 
 ```elixir
 # my_app/mix.exs
 def deps do
   [
     ...
-    {:webauthn_components, "~> 0.10"}
+    {:webauthn_components, "~> 0.11"}
   ]
 end
 ```
 
-Then, run `mix do deps.get + compile` to install and compile the dependency.
+Install and compile the dependency:
 
-### Usage
+```shell
+mix deps.get
+mix compile
+```
 
-Some decisions must be made when using WebauthnComponents. This package wraps the client-server coordination so that implementers can focus on the data model, business logic, and user experience.
+Register the package's JavaScript hooks with your `LiveSocket`. They are exported from `priv/static/main.ts`:
 
-On the backend, engineers and product owners may choose to follow the CRUD pattern for user and credential management. Event Sourcing may also by suitable when audit trails, evolving integrations, and data recovery are important.
+- `ClientCapabilitiesHook`
+- `RegistrationHook`
+- `AuthenticationHook`
 
-The components in this package are designed to support a variety of user-facing authentication flows. An application may have separate registration and authentication pages, a consolidated page, and these features may be rendered directly in a global navbar. To manage credentials, it's common to have a section or page for user settings.
+Each component sets a matching `phx-hook` attribute, so the hook names must be registered globally with `LiveSocket`.
 
-See component module documentation for examples, options, and messages which are passed to LiveView processes.
+## Usage
 
-## Webauthn Flows
+The components are designed to support a variety of user-facing flows: separate registration and authentication pages, a consolidated page, or features rendered in a global navbar. Credential management commonly lives on a user settings page.
 
-Documentation and illustrations for WebauthnComponent flows can be found in [Webauthn Flows](./webauthn_flows.md).
+See the component module documentation for assigns, events, and the messages each component sends to its parent LiveView. Sequence diagrams are available in [Webauthn Flows](./webauthn_flows.md).
 
-## WebAuthn and Passkeys
+## Support & Limitations
 
-What is the difference between "WebAuthn" and "Passkeys"? The first is an API available in modern browsers, and the second is an implementation where public key credentials created by the WebAuthn API can be saved to the client device and/or a cloud provider.
+### WebAuthn vs. Passkeys
 
-The following quotes were chosen for their brevity and clarity.
-
-From MDN:
-
-> The Web Authentication API is an extension of the Credential Management API that enables strong authentication with public key cryptography, enabling passwordless authentication and/or secure second-factor authentication without SMS texts.
->
-> https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API
-
-From Google:
-
-> A passkey is a FIDO login credential, tied to an origin (website or application) and a physical device. Passkeys allow users to authenticate without having to enter a username, password, or provide any additional authentication factor. This technology aims to replace passwords as the primary authentication mechanism.
->
-> https://developers.google.com/identity/fido
-
-\* While a user may *technically* be registered without a username or email, this is often a practical requirement for both a business and its users. By requiring an email, WebauthnComponents ensures each registered Passkey can be identified by the user when reviewing their collection of credentials. Email is often a required identifier for a business, especially when it needs to communicate with its users outside of its applications.
+WebAuthn is the browser API; a Passkey is a credential created with that API. A Passkey may be stored on a single device or synchronized through a credential provider such as iCloud Keychain, Google Password Manager, or 1Password.
 
 ### Benefits
 
-There are many benefits to users and application maintainers when passwords are decommissioned.
+Passkeys eliminate password reuse, mitigate credential-stuffing attacks, and resist phishing.
 
-- Eliminates password reuse by users.
-- Mitigates credential stuffing attacks by hackers.
-- Eliminates phishing attacks by hackers.
+### Browser support
 
-For users on a device with Passkey support, WebAuthn credentials may be stored in the cloud. This allows the user to authenticate from other cloud-connected devices without registering each device individually.
+Passkey support is broad across modern browsers; see [caniuse](https://caniuse.com/?search=webauthn). While this package targets browser-based WebAuthn, credentials may also be usable in native applications with appropriate configuration.
 
-### Cross-Device Authentication
+### Limitations
 
-Passkeys may be synchronized across mutliple devices connected to a user's cloud account, where credentials are managed.
-
-- [iCloud Keychain on MacOS](https://developer.apple.com/passkeys/)
-- [Android & Chrome](https://developers.google.com/identity/passkeys/supported-environments)
-- [1Password](https://1password.com/product/passkeys)
-
-When a user attempts to authenticate on a device where their Passkey is **not** synchronized, they may scan a QR code to use a Passkey stored on the registered device. The browser will detect that no Passkey is registered for the site and render the QR code to be scanned by the device where the Passkey can be accessed.
-
-#### Example
-
-Imagine a user, Amal, registers a Passkey for example.com on their iPhone and it's stored in iCloud. When they attempt to sign into example.com on a non-Apple device or any browser which cannot access their OS keychain, they may choose to scan a QR code using their iPhone. Assuming the prompts on the iPhone are successful, the other device will be authenticated using the same web account which was initially registered on the iPhone.
-
-While this example refers to Apple's Passkey implementation, the process on other platforms may vary. Cross-device credential managers like 1Password may provide a more seamless flow for users who are not constrained to one OS or browser.
-
-### Known Issues
-
-While WebAuthn provides an API for improved authentication security, there are a few limitations to consider before adopting this component.
-
-- As of 2026, Passkey support is supported in all modern browsers, with some caveats (see [Browser Support](#browser-support)).
-- Cloud-synced credentials are only accessible to devices authenticated to the cloud account.
-  - For example, a credential saved to iCloud Keychain will not be synced automatically to Android's credential manager.
-  - 1Password has released Passkey support out of beta as of 9/2023.
-  - Services like 1Password synchronize these credentials across platforms, but often require a subscription.
-- If a user registers or authenticates on a device without Passkey support, the generated key pair will only function on the device where it was registered. Each device must be registered in order to access an account.
-
-## Browser Support
-
-With some caveats, the client-side WebAuthn API has broad support across modern browsers.
-
-- https://caniuse.com/?search=webauthn
-
-While this package is scoped to browser-based WebAuthn, it may be possible to use credentials in native/mobile applications with appropriate configuration.
-
-- https://developer.apple.com/documentation/authenticationservices/supporting-passkeys
-- https://developer.android.com/design/ui/mobile/guides/patterns/passkeys
+Cloud-synced credentials are only reachable from devices signed in to the same credential provider.
 
 ## Additional Resources
 
 - [Webauthn Guide](https://webauthn.guide/)
-- MDN: [Web Authentication API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API)
-- FIDO: [FIDO2: Web Authentication (WebAuthn)](https://fidoalliance.org/fido2-2/fido2-web-authentication-webauthn/)
-- W3: [Web Authentication: An API for accessing Public Key Credentials Level 2](https://www.w3.org/TR/webauthn-2/)
-- Apple: [Passkeys Overview](https://developer.apple.com/passkeys/)
+- [MDN: Web Authentication API](https://developer.mozilla.org/en-US/docs/Web/API/Web_Authentication_API)
+- [FIDO2: Web Authentication (WebAuthn)](https://fidoalliance.org/fido2-2/fido2-web-authentication-webauthn/)
+- [W3C: Web Authentication: An API for accessing Public Key Credentials Level 2](https://www.w3.org/TR/webauthn-2/)
+- [Apple: Passkeys Overview](https://developer.apple.com/passkeys/)
