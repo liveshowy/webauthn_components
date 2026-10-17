@@ -4,7 +4,7 @@ defmodule WebauthnComponents.MixProject do
   # Don't forget to change the version in `package.json`
   @name "WebauthnComponents"
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.11.0"
+  @version "0.11.1"
 
   def project do
     [
@@ -112,7 +112,7 @@ defmodule WebauthnComponents.MixProject do
 
   defp before_closing_body_tag(:html) do
     """
-    <script src="https://cdn.jsdelivr.net/npm/mermaid@8.13.3/dist/mermaid.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         mermaid.initialize({ startOnLoad: false });
