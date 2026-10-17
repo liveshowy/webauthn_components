@@ -4,7 +4,7 @@ defmodule WebauthnComponents.MixProject do
   # Don't forget to change the version in `package.json`
   @name "WebauthnComponents"
   @source_url "https://github.com/liveshowy/webauthn_components"
-  @version "0.11.1"
+  @version "0.11.2"
 
   def project do
     [
@@ -114,17 +114,26 @@ defmodule WebauthnComponents.MixProject do
     """
     <script src="https://cdn.jsdelivr.net/npm/mermaid@12.2.0/dist/mermaid.min.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        mermaid.initialize({ startOnLoad: false });
+      let initialized = false;
+
+      window.addEventListener("exdoc:loaded", () => {
+        if (!initialized) {
+          mermaid.initialize({
+            startOnLoad: false,
+            theme: document.body.className.includes("dark") ? "dark" : "default"
+          });
+          initialized = true;
+        }
+
         let id = 0;
         for (const codeEl of document.querySelectorAll("pre code.mermaid")) {
           const preEl = codeEl.parentElement;
           const graphDefinition = codeEl.textContent;
           const graphEl = document.createElement("div");
           const graphId = "mermaid-graph-" + id++;
-          mermaid.render(graphId, graphDefinition, function (svgSource, bindListeners) {
-            graphEl.innerHTML = svgSource;
-            bindListeners && bindListeners(graphEl);
+          mermaid.render(graphId, graphDefinition).then(({svg, bindFunctions}) => {
+            graphEl.innerHTML = svg;
+            bindFunctions?.(graphEl);
             preEl.insertAdjacentElement("afterend", graphEl);
             preEl.remove();
           });
