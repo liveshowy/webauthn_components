@@ -21,8 +21,9 @@ Examples use `MyApp` and `MyAppWeb`; substitute your own module names.
 9. [Update `Settings` and `Login` LiveViews](#update-settings-and-login-liveviews)
 10. [Update `UserSessionController`](#update-usersessioncontroller)
 11. [Verify the Integration](#verify-the-integration)
-12. [Security Considerations](#security-considerations)
-13. [Further Reading](#further-reading)
+12. [Testing](#testing)
+13. [Security Considerations](#security-considerations)
+14. [Further Reading](#further-reading)
 
 ## Prerequisites
 
@@ -804,6 +805,277 @@ Chrome DevTools provides a virtual authenticator for testing:
 2. Enable **Enable virtual authenticator environment**.
 3. Add an authenticator with the desired transport and resident-key support.
 4. Use the authenticator to register and authenticate without physical hardware.
+
+## Testing
+
+WebAuthn ceremonies depend on browser APIs, so cover the integration at several levels:
+
+- **Context tests** exercise credential persistence and CRUD without a browser.
+- **LiveView tests** verify rendering and message handling. They cannot execute `navigator.credentials`.
+- **Controller tests** verify the session hand-off contract.
+- **End-to-end tests** with a virtual authenticator exercise the JavaScript hooks and the real ceremony.
+
+### Add a credential fixture
+
+Add a helper to `test/support/fixtures/accounts_fixtures.ex`:
+
+```elixir
+@credential_public_key %{
+  1 => 2,
+  3 => -7,
+  -1 => 1,
+  -2 => :binary.copy(<<1>>, 32),
+  -3 => :binary.copy(<<2>>, 32)
+}
+
+def public_key_credential_fixture(user, attrs \\ %{}) do
+  attrs =
+    Map.merge(
+      %{
+        id: :crypto.strong_rand_bytes(16),
+        label: "Test Passkey",
+        public_key: @credential_public_key,
+        user_id: user.id
+      },
+      attrs
+    )
+
+  {:ok, credential} = Accounts.register_credential(attrs)
+  credential
+end
+```
+
+The map is a minimal EC2 COSE key. It is sufficient for CRUD tests; the end-to-end test exercises a real key.
+
+### Test credential CRUD
+
+Create `test/my_app/accounts_credential_test.exs`:
+
+```elixir
+defmodule MyApp.AccountsCredentialTest do
+  use MyApp.DataCase, async: true
+
+  alias MyApp.Accounts
+  alias MyApp.Accounts.PublicKeyCredential
+  import MyApp.AccountsFixtures
+
+  describe "register_credential/1" do
+    test "stores a credential for a user" do
+      user = user_fixture()
+      credential = public_key_credential_fixture(user, label: "Laptop")
+
+      assert %PublicKeyCredential{} = credential
+      assert credential.label == "Laptop"
+      assert credential.user_id == user.id
+
+      stored = Accounts.get_credential(credential.id)
+      assert is_map(stored.public_key)
+    end
+
+    test "validates required fields" do
+      assert {:error, changeset} = Accounts.register_credential(%{})
+
+      assert %{
+               id: ["can't be blank"],
+               public_key: ["can't be blank"],
+               user_id: ["can't be blank"]
+             } = errors_on(changeset)
+    end
+  end
+
+  describe "get_credential/2" do
+    test "returns the credential and preloads the user" do
+      user = user_fixture()
+      credential = public_key_credential_fixture(user)
+
+      assert %PublicKeyCredential{user: %{id: user_id}} =
+               Accounts.get_credential(credential.id, [:user])
+
+      assert user_id == user.id
+    end
+
+    test "returns nil for an unknown credential" do
+      refute Accounts.get_credential(:crypto.strong_rand_bytes(16))
+    end
+  end
+
+  describe "rename_credential/2" do
+    test "updates the label" do
+      credential = public_key_credential_fixture(user_fixture())
+
+      assert {:ok, %PublicKeyCredential{label: "Renamed"}} =
+               Accounts.rename_credential(credential, %{"label" => "Renamed"})
+    end
+
+    test "rejects a blank label" do
+      credential = public_key_credential_fixture(user_fixture())
+
+      assert {:error, changeset} =
+               Accounts.rename_credential(credential, %{"label" => ""})
+
+      assert %{label: ["can't be blank"]} = errors_on(changeset)
+    end
+  end
+
+  describe "delete_credential/1" do
+    test "deletes the credential" do
+      credential = public_key_credential_fixture(user_fixture())
+
+      assert {:ok, _} = Accounts.delete_credential(credential)
+      refute Accounts.get_credential(credential.id)
+    end
+  end
+end
+```
+
+### Test the LiveView wiring
+
+Add these cases to the generated settings tests:
+
+```elixir
+describe "passkeys" do
+  test "renders the passkeys section", %{conn: conn} do
+    {:ok, _view, html} =
+      conn
+      |> log_in_user(user_fixture())
+      |> live(~p"/users/settings")
+
+    assert html =~ "Passkeys"
+  end
+
+  test "shows the registration button when the browser supports passkeys", %{conn: conn} do
+    {:ok, view, _html} =
+      conn
+      |> log_in_user(user_fixture())
+      |> live(~p"/users/settings")
+
+    send(view.pid, {:client_capabilities, %{"userVerifyingPlatformAuthenticator" => true}})
+
+    assert render(view) =~ "Add a Passkey"
+  end
+
+  test "lists the user's credentials", %{conn: conn} do
+    user = user_fixture()
+    credential = public_key_credential_fixture(user, label: "Laptop")
+
+    {:ok, _view, html} =
+      conn
+      |> log_in_user(user)
+      |> live(~p"/users/settings")
+
+    assert html =~ credential.label
+  end
+end
+```
+
+Add these cases to the generated login tests:
+
+```elixir
+describe "passkey login" do
+  test "renders the passkey login button", %{conn: conn} do
+    {:ok, _view, html} = live(conn, ~p"/users/log-in")
+
+    assert html =~ "Log in with a Passkey"
+  end
+
+  test "renders the conditional UI input when supported", %{conn: conn} do
+    {:ok, view, _html} = live(conn, ~p"/users/log-in")
+
+    send(view.pid, {:client_capabilities, %{"conditionalGet" => true}})
+
+    assert render(view) =~ ~s(autocomplete="webauthn")
+  end
+end
+```
+
+The LiveView tests simulate the messages the components send to their parent. They do not run the JavaScript hooks or the browser ceremony.
+
+The registration `handle_info/2` path can also be covered by sending a `%Wax.AuthenticatorData{}` struct to the settings LiveView and asserting that the credential is persisted. This is optional because the end-to-end test exercises the same path with a real authenticator.
+
+### Test the session hand-off
+
+Add these cases to the generated user session controller tests:
+
+```elixir
+describe "POST /users/log-in - passkey" do
+  test "logs the user in with a valid credential", %{conn: conn} do
+    user = user_fixture()
+    credential = public_key_credential_fixture(user)
+
+    conn =
+      post(conn, ~p"/users/log-in", %{
+        "credential" => %{"credential_id" => Base.url_encode64(credential.id)}
+      })
+
+    assert get_session(conn, :user_token)
+    assert redirected_to(conn) == ~p"/"
+    assert Phoenix.Flash.get(conn.assigns.flash, :info) =~ "Welcome back!"
+  end
+
+  test "rejects an unknown credential", %{conn: conn} do
+    conn =
+      post(conn, ~p"/users/log-in", %{
+        "credential" => %{
+          "credential_id" => Base.url_encode64(:crypto.strong_rand_bytes(16))
+        }
+      })
+
+    refute get_session(conn, :user_token)
+    assert Phoenix.Flash.get(conn.assigns.flash, :error) == "Invalid credential"
+    assert redirected_to(conn) == ~p"/users/log-in"
+  end
+end
+```
+
+If you implemented the signed-token hand-off from [Security Considerations](#security-considerations), post `credential[token]` instead and add cases for a valid token, a tampered token, and an expired token.
+At minimum, add a test that posts a credential ID without a valid token and asserts that no session is created.
+The credential-ID-only test above applies to the reference implementation.
+
+These controller tests cover the session hand-off contract only. They do not prove that a WebAuthn assertion occurred; the end-to-end test below covers the ceremony.
+
+### End-to-end tests
+
+The browser ceremony cannot be exercised by LiveView tests. Use Playwright or another tool with Chrome DevTools Protocol support to add a virtual authenticator:
+
+```js
+const client = await context.newCDPSession(page)
+await client.send("WebAuthn.enable")
+await client.send("WebAuthn.addVirtualAuthenticator", {
+  options: {
+    protocol: "ctap2",
+    transport: "internal",
+    hasResidentKey: true,
+    hasUserVerification: true,
+    isUserVerified: true,
+  },
+})
+```
+
+The virtual authenticator persists for the lifetime of the browser context, so use the same context for registration and authentication.
+Then:
+
+1. Register a user and confirm the account.
+2. Add a Passkey in settings.
+3. Sign out.
+4. Sign in with the same virtual authenticator.
+5. Rename and delete the credential.
+
+These tests cover the JavaScript hooks, the component events, and the real registration and authentication ceremonies.
+
+### Run the tests
+
+```shell
+mix test
+```
+
+To run only the new tests:
+
+```shell
+mix test test/my_app/accounts_credential_test.exs
+mix test test/my_app_web/live/user_live/settings_test.exs
+mix test test/my_app_web/live/user_live/login_test.exs
+mix test test/my_app_web/controllers/user_session_controller_test.exs
+```
 
 ## Security Considerations
 
