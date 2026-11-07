@@ -104,7 +104,7 @@ import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/my_app"
 import topbar from "../vendor/topbar"
-import * as WebauthnHooks from "webauthn_components"
+import * as WebauthnHooks from "../../deps/webauthn_components/priv/static/webauthn_hooks.js"
 
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
@@ -116,12 +116,9 @@ const liveSocket = new LiveSocket("/live", Socket, {
 
 > **Bundler note**
 >
-> The hooks are defined in the dependency at `priv/static/webauthn_hooks.js`.
-> If your bundler cannot resolve the package entry point, import that file directly instead:
->
-> ```js
-> import * as WebauthnHooks from "../../deps/webauthn_components/priv/static/webauthn_hooks.js"
-> ```
+> The hooks are defined in the dependency at `priv/static/webauthn_hooks.js`, so the example imports that file directly.
+> If your bundler resolves the package entry point, you may use `import * as WebauthnHooks from "webauthn_components"` instead.
+> If esbuild reports that it cannot resolve `webauthn_components`, use the direct import shown above.
 
 ## Add `PublicKeyCredential` schema and migration
 
@@ -185,8 +182,9 @@ defmodule MyApp.Accounts.PublicKeyCredential do
 
   def label_changeset(public_key_credential, attrs) do
     public_key_credential
-    |> cast(attrs, [:label])
+    |> cast(attrs, [:label], empty_values: [])
     |> validate_required([:label])
+    |> validate_format(:label, ~r/\S/, message: "can't be blank")
   end
 end
 ```
@@ -197,6 +195,7 @@ Key details:
 - `WebauthnComponents.CoseKey` encodes and decodes the COSE public key as CBOR when reading and writing the database.
 - `:label` is user-facing metadata and does not participate in the ceremony.
 - `belongs_to :user` associates each credential with its owner.
+- `empty_values: []` and `validate_format/3` reject a blank label. Without them, `cast/4` skips an empty string and keeps the existing label.
 
 Run the migration:
 
@@ -345,7 +344,7 @@ Add the Passkeys section to `render/1` after the existing divider that follows t
 
 <div class="grid gap-x-1 gap-y-4 grid-cols-[1fr_auto_auto]">
   <div :for={credential <- @current_scope.user.public_key_credentials} class="contents">
-    <% credential_id = Base.encode64(credential.id) %>
+    <% credential_id = Base.url_encode64(credential.id, padding: false) %>
     <.form
       id={"credential-form-" <> credential_id}
       for={%{"label" => credential.label}}
@@ -394,7 +393,7 @@ The existing password form follows this section.
 
 `@capabilities` starts as an empty map and is populated by `ClientCapabilitiesComponent`.
 The registration component is rendered only when the browser reports `userVerifyingPlatformAuthenticator`.
-Credential IDs are Base64-encoded for use in form values and `phx-value-*` attributes.
+Credential IDs are URL-safe Base64-encoded for use in form values, element IDs, and `phx-value-*` attributes. URL-safe encoding avoids `+`, `/`, and `=` characters that complicate CSS selectors in tests.
 
 Update `mount/3` to build the registration options and preload the user's credentials:
 
@@ -501,7 +500,7 @@ Add the event handlers for renaming and deleting credentials:
 def handle_event("update-credential-label", params, socket) do
   %{"credential_id" => credential_id, "label" => label} = params
 
-  with {:ok, credential_id} <- Base.decode64(credential_id),
+  with {:ok, credential_id} <- Base.url_decode64(credential_id, padding: false),
        %PublicKeyCredential{} = credential <- Accounts.get_credential(credential_id),
        {:ok, _} <- Accounts.rename_credential(credential, %{"label" => label}) do
     {
@@ -520,7 +519,7 @@ end
 def handle_event("delete-credential", params, socket) do
   %{"credential_id" => credential_id} = params
 
-  with {:ok, credential_id} <- Base.decode64(credential_id),
+  with {:ok, credential_id} <- Base.url_decode64(credential_id, padding: false),
        %PublicKeyCredential{} = credential <- Accounts.get_credential(credential_id),
        {:ok, _} <- Accounts.delete_credential(credential) do
     {
@@ -648,9 +647,9 @@ def handle_info(%FindUser{user_handle: user_id}, socket) do
   {:noreply, socket}
 end
 
-def handle_info({credential_id, %Wax.AuthenticatorData{sign_count: 0}}, socket) do
-  # NOTE: This example simply accepts authenticator data with a sign count of 0 to start a user session.
-  # Consider checking other fields based on your security requirements.
+def handle_info({credential_id, %Wax.AuthenticatorData{}}, socket) do
+  # NOTE: This example does not verify the signature counter before starting a user session.
+  # Consider checking the counter and other fields based on your security requirements.
   # See https://www.w3.org/TR/webauthn-1/#verifying-assertion for suggested verification steps.
   credential_form =
     to_form(%{"credential_id" => Base.url_encode64(credential_id)}, as: "credential")
@@ -693,8 +692,8 @@ The flow is:
 
 > **Sign count**
 >
-> The example accepts only authenticator data with `sign_count: 0`, which simplifies the demonstration.
-> A production application should verify the signature counter according to its security requirements and decide how to handle a counter that does not increase.
+> The example accepts any `%Wax.AuthenticatorData{}` and does not verify the signature counter.
+> A production application should persist the counter, compare it on each authentication, and decide how to handle a counter that does not increase.
 
 ## Update `UserSessionController`
 
@@ -830,20 +829,19 @@ Add a helper to `test/support/fixtures/accounts_fixtures.ex`:
 
 def public_key_credential_fixture(user, attrs \\ %{}) do
   attrs =
-    Map.merge(
-      %{
-        id: :crypto.strong_rand_bytes(16),
-        label: "Test Passkey",
-        public_key: @credential_public_key,
-        user_id: user.id
-      },
-      attrs
-    )
+    Enum.into(attrs, %{
+      id: :crypto.strong_rand_bytes(16),
+      label: "Test Passkey",
+      public_key: @credential_public_key,
+      user_id: user.id
+    })
 
   {:ok, credential} = Accounts.register_credential(attrs)
   credential
 end
 ```
+
+`Enum.into/2` accepts either a keyword list or a map, so calls like `public_key_credential_fixture(user, label: "Laptop")` work.
 
 The map is a minimal EC2 COSE key. It is sufficient for CRUD tests; the end-to-end test exercises a real key.
 
@@ -965,6 +963,44 @@ describe "passkeys" do
 
     assert html =~ credential.label
   end
+
+  test "renames a credential", %{conn: conn} do
+    user = user_fixture()
+    credential = public_key_credential_fixture(user, label: "Laptop")
+    credential_id = Base.url_encode64(credential.id, padding: false)
+
+    {:ok, view, _html} =
+      conn
+      |> log_in_user(user)
+      |> live(~p"/users/settings")
+
+    view
+    |> form("#credential-form-" <> credential_id, %{"label" => "Desktop"})
+    |> render_submit()
+
+    assert_redirect(view, ~p"/users/settings")
+    assert Accounts.get_credential(credential.id).label == "Desktop"
+  end
+
+  test "deletes a credential", %{conn: conn} do
+    user = user_fixture()
+    credential = public_key_credential_fixture(user, label: "Laptop")
+    credential_id = Base.url_encode64(credential.id, padding: false)
+
+    {:ok, view, _html} =
+      conn
+      |> log_in_user(user)
+      |> live(~p"/users/settings")
+
+    view
+    |> element(
+      "button[phx-value-credential_id='#{credential_id}'][title='Delete credential']"
+    )
+    |> render_click()
+
+    assert_redirect(view, ~p"/users/settings")
+    refute Accounts.get_credential(credential.id)
+  end
 end
 ```
 
@@ -983,6 +1019,8 @@ describe "passkey login" do
 
     send(view.pid, {:client_capabilities, %{"conditionalGet" => true}})
 
+    # send_update/2 is asynchronous; wait for the component's pushed event.
+    assert_push_event(view, "get-credential", %{mediation: "conditional"})
     assert render(view) =~ ~s(autocomplete="webauthn")
   end
 end
@@ -1047,6 +1085,7 @@ await client.send("WebAuthn.addVirtualAuthenticator", {
     hasResidentKey: true,
     hasUserVerification: true,
     isUserVerified: true,
+    automaticPresenceSimulation: true,
   },
 })
 ```
@@ -1077,6 +1116,12 @@ mix test test/my_app_web/live/user_live/login_test.exs
 mix test test/my_app_web/controllers/user_session_controller_test.exs
 ```
 
+> **Test mailer noise**
+>
+> The generated settings tests may log a `FunctionClauseError` for `{:email, %Swoosh.Email{}}`.
+> The Swoosh test adapter delivers the message to the LiveView process, which does not handle it.
+> This is unrelated to Passkeys. Add `def handle_info({:email, _}, socket), do: {:noreply, socket}` to the settings LiveView if you want clean test output.
+
 ## Security Considerations
 
 The reference implementation focuses on demonstrating the CRUD integration. Review these points before deploying to production:
@@ -1086,7 +1131,7 @@ The reference implementation focuses on demonstrating the CRUD integration. Revi
 - **Handle invalid input.** `Base.url_decode64!/1` raises on malformed input. Use `Base.url_decode64/2` and handle the error tuple.
 - **Handle unknown user handles.** `Accounts.get_user!/2` raises when no user matches. Use a lookup that returns a result tuple and reject unknown credentials instead of crashing the LiveView.
 - **Handle all ceremony errors.** Add clauses for Wax errors sent by the components, not just client-side `{:error, payload}` messages.
-- **Verify the signature counter.** The login example only matches `sign_count: 0`. Decide how to persist and compare counters to detect cloned authenticators.
+- **Verify the signature counter.** The login example accepts any `%Wax.AuthenticatorData{}`. Persist and compare counters to detect cloned authenticators.
 - **Require user verification when appropriate.** Creation defaults to `user_verification: :required`; request options default to `:preferred`. Set `:required` if your threat model calls for it.
 - **Use a stable user handle.** The examples use `user.id`. Do not use an email address or another mutable value as the WebAuthn user ID.
 - **Use HTTPS in production.** WebAuthn requires a secure context. The relying party ID must match the site's effective domain.
