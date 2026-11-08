@@ -91,7 +91,10 @@ defmodule WebauthnComponents.MixProject do
       ],
       source_url: @source_url,
       before_closing_body_tag: &before_closing_body_tag/1,
-      extras: ["README.md", "webauthn_flows.md"]
+      extras: ["README.md", "webauthn_flows.md", "guides/CRUD_INTEGRATION.md"],
+      groups_for_extras: [
+        Guides: Path.wildcard("guides/*.md")
+      ]
     ]
   end
 
