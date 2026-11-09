@@ -180,6 +180,24 @@ defmodule WebauthnComponents.AuthenticationComponentTest do
       assert %PublicKeyCredentialRequestOptions{} = public_key
     end
 
+    test "uses the `origin` assign for the challenge when set", %{socket: socket} do
+      origin = "https://canary.example.com"
+
+      socket =
+        assign(socket,
+          id: @id,
+          mediation: "optional",
+          origin: origin,
+          public_key_credential_request_options: %PublicKeyCredentialRequestOptions{}
+        )
+
+      assert {:noreply, socket} =
+               AuthenticationComponent.handle_event("authenticate", %{}, socket)
+
+      assert %{challenge: %Wax.Challenge{origin: ^origin, rp_id: "canary.example.com"}} =
+               socket.assigns
+    end
+
     test "processes a `credential` event", %{socket: socket} do
       challenge = build_challenge()
       credential = build_credential()

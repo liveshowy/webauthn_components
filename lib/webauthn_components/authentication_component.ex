@@ -12,6 +12,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
   - `@class` (Optional) CSS classes for the button.
   - `@rest` (Optional) Additional HTML attributes for the button.
   - `@public_key_credential_request_options` (Optional) A `WebauthnComponents.PublicKeyCredentialRequestOptions` struct controlling the request (for example, `:timeout`, `:user_verification`, and `:allow_credentials`).
+  - `@origin` (Optional) Origin used for the WebAuthn challenge, for example `"https://app.example.com"`. Defaults to `endpoint.url()`. Set it when one endpoint serves several hosts so the challenge matches the actual request origin.
 
   ## Messages
 
@@ -133,6 +134,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
       |> assign_new(:class, fn -> nil end)
       |> assign_new(:rest, fn -> %{} end)
       |> assign_new(:mediation, fn -> "optional" end)
+      |> assign_new(:origin, fn -> nil end)
       |> assign_new(:public_key_credential_request_options, fn ->
         %PublicKeyCredentialRequestOptions{}
       end)
@@ -261,7 +263,7 @@ defmodule WebauthnComponents.AuthenticationComponent do
 
     challenge =
       Wax.new_authentication_challenge(
-        origin: socket.endpoint.url(),
+        origin: socket.assigns[:origin] || socket.endpoint.url(),
         rp_id: :auto,
         user_verification: to_string(public_key_credential_request_options.user_verification)
       )

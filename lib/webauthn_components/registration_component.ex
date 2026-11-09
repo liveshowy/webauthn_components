@@ -12,6 +12,7 @@ defmodule WebauthnComponents.RegistrationComponent do
   - `@disabled` (Optional) Disables the button. Defaults to `false`.
   - `@class` (Optional) CSS classes for the button.
   - `@rest` (Optional) Additional HTML attributes for the button.
+  - `@origin` (Optional) Origin used for the WebAuthn challenge, for example `"https://app.example.com"`. Defaults to `endpoint.url()`. Set it when one endpoint serves several hosts so the challenge matches the actual request origin.
 
   ## Messages
 
@@ -100,6 +101,7 @@ defmodule WebauthnComponents.RegistrationComponent do
       |> assign_new(:class, fn -> nil end)
       |> assign_new(:rest, fn -> %{} end)
       |> assign_new(:trusted_attestation_types, fn -> [:none, :basic] end)
+      |> assign_new(:origin, fn -> nil end)
     }
   end
 
@@ -130,7 +132,7 @@ defmodule WebauthnComponents.RegistrationComponent do
     challenge =
       Wax.new_registration_challenge(
         attestation: to_string(public_key_options.attestation),
-        origin: socket.endpoint.url(),
+        origin: socket.assigns[:origin] || socket.endpoint.url(),
         rp_id: :auto,
         trusted_attestation_types: trusted_attestation_types,
         user_verification: to_string(public_key_options.authenticator_selection.user_verification)

@@ -82,6 +82,16 @@ defmodule WebauthnComponents.RegistrationComponentTest do
       assert public_key_challenge == challenge.bytes
     end
 
+    test "uses the `origin` assign for the challenge when set", %{socket: socket} do
+      origin = "https://canary.example.com"
+      socket = socket |> assign_public_key_options() |> assign(:origin, origin)
+
+      assert {:noreply, socket} = RegistrationComponent.handle_event("register", %{}, socket)
+
+      assert %{challenge: %Wax.Challenge{origin: ^origin, rp_id: "canary.example.com"}} =
+               socket.assigns
+    end
+
     test "processes a valid `credential` event", %{socket: socket} do
       socket = assign_challenge(socket)
       attestation = build_attestation(socket.assigns.challenge)
